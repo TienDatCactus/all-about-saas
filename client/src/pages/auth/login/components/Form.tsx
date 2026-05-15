@@ -1,4 +1,4 @@
-import type { LoginIn } from "@/services/users/types"
+import { LoginIn } from "@/services/users/types"
 import React from "react"
 import type z from "zod"
 import { useForm, formOptions } from "@tanstack/react-form"
@@ -14,6 +14,9 @@ const formOpts = formOptions({
   defaultValues: defaultValue,
   onSubmit: (values) => {
     console.log(JSON.stringify(values))
+  },
+  validators: {
+    onSubmit: LoginIn,
   },
 })
 const LoginForm: React.FC = () => {

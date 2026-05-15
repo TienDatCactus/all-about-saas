@@ -1,10 +1,6 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { type JSX, type SVGProps } from "react"
-import Providers from "./components/Providers"
 import LoginForm from "./components/Form"
+import Providers from "./components/Providers"
 
 const Login: React.FC = () => {
   return (
