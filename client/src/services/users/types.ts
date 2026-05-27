@@ -1,17 +1,20 @@
 import * as z from "zod"
 import { validationMessages } from "./message"
-export const LoginIn = z
+
+export const LoginInSchema = z // all zod types gonna called schema
   .object({
-    email: z.email({
-      error: validationMessages.email.invalid,
+    email: z.string().email({
+      message: validationMessages.email.invalid,
     }),
     password: z
       .string()
       .min(6, {
-        error: validationMessages.password.min,
+        message: validationMessages.password.min,
       })
       .max(20, {
-        error: validationMessages.password.max,
+        message: validationMessages.password.max,
       }),
   })
   .required()
+
+export type LoginIn = z.infer<typeof LoginInSchema>

@@ -1,0 +1,14 @@
+import { http } from "@/lib/http"
+import { AUTH } from "../url"
+import type { LoginIn } from "./types"
+
+export const usersApi = {
+  login: async (data: LoginIn): Promise<string> => {
+    return http.post(AUTH.login, data)
+  },
+  logout: async (): Promise<void> => {},
+  loginWithProvider: async (provider: string): Promise<void> => {
+
+    
+  },
+}

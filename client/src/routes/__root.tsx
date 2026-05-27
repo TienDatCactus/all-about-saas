@@ -3,6 +3,8 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 
 import appCss from "../styles.css?url"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "@/components/ui/sonner"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -31,16 +33,18 @@ export const Route = createRootRoute({
       <p>The requested page could not be found.</p>
     </main>
   ),
-  shellComponent: RootDocument,
+  shellComponent: Providers,
 })
+
+const queryClient = new QueryClient()
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <TanStackDevtools
           config={{
@@ -56,5 +60,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
+  )
+}
+
+function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RootDocument>{children}</RootDocument>
+      <Toaster />
+    </QueryClientProvider>
   )
 }

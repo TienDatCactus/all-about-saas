@@ -17,8 +17,9 @@ import { CaslModule } from './casl/casl.module';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './common/config/configuration';
 import database from './common/config/database';
-import { validate } from './common/others/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RolesModule } from './roles/roles.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -29,9 +30,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}.local`],
       isGlobal: true,
       load: [configuration, database],
-      validate,
     }),
     TypeOrmModule.forRootAsync(database.asProvider()),
+    RolesModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
   ],
   controllers: [AppController],
   providers: [

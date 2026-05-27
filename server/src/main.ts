@@ -7,7 +7,10 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-
+import { TransformInterceptor } from './common/interceptor/transform.interceptor';
+import { HttpExceptionFilter } from './common/filter/http-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import configuration from './common/config/configuration';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
@@ -16,16 +19,29 @@ async function bootstrap() {
       prefix: 'all-about-saas',
     }),
   });
-
   app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
     }),
   );
+  app.set('trust proxy', 'loopback');
+  app.useGlobalInterceptors(
+    new TransformInterceptor(),
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
+  app.useGlobalFilters(new HttpExceptionFilter());
 
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  const config = new DocumentBuilder()
+    .setTitle('SaaS API')
+    .setDescription('The SaaS API core documentation')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
   app.use(helmet());
-  await app.listen(process.env.PORT ?? 8000);
+  await app.listen(configuration().port ?? 8000);
 }
 bootstrap();
