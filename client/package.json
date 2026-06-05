@@ -3,12 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=4096' vite dev --port 3000",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' vp dev --port 3000",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' vp build",
+    "preview": "vp preview",
+    "test": "vp test run",
     "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
+    "format": "vp fmt \"**/*.{ts,tsx,js,jsx}\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -63,11 +63,15 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "^27.4.0",
-    "prettier": "^3.8.1",
-    "prettier-plugin-tailwindcss": "^0.7.2",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vitest": "^3.2.4",
-    "web-vitals": "^5.1.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest",
+    "web-vitals": "^5.1.0",
+    "vite-plus": "latest"
+  },
+  "packageManager": "npm@11.16.0",
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
   }
 }
