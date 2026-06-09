@@ -1,10 +1,10 @@
-import { User } from '../users/entities/user.entity';
+import { Users } from '../users/entities/users.entity';
 
 const policyRegex = /\${user\.(\w+)}/g;
 export class PolicyParser {
   static parseConditions(
     conditions: Record<string, any>,
-    user: User,
+    user: Users,
   ): Record<string, any> {
     if (!conditions) return {};
     const jsonString = JSON.stringify(conditions);

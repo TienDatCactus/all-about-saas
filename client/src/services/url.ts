@@ -1,4 +1,4 @@
 export const AUTH = {
   login: "/auth/login",
-  withGoogle: "/auth/google",
-}
+  googleLogin: `${import.meta.env.VITE_API_BASE_URL}/auth/google`,
+};

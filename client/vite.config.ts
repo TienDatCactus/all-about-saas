@@ -1,13 +1,17 @@
-import { defineConfig } from "vite-plus";
-import { devtools } from "@tanstack/devtools-vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import viteReact from "@vitejs/plugin-react";
-import viteTsConfigPaths from "vite-tsconfig-paths";
-import tailwindcss from "@tailwindcss/vite";
-import { nitro } from "nitro/vite";
+import { defineConfig } from "vite-plus"
+import { devtools } from "@tanstack/devtools-vite"
+import { tanstackStart } from "@tanstack/react-start/plugin/vite"
+import viteReact from "@vitejs/plugin-react"
+import viteTsConfigPaths from "vite-tsconfig-paths"
+import tailwindcss from "@tailwindcss/vite"
+import { nitro } from "nitro/vite"
 
 const config = defineConfig({
-  lint: {"jsPlugins":[{"name":"vite-plus","specifier":"vite-plus/oxlint-plugin"}],"rules":{"vite-plus/prefer-vite-plus-imports":"error"},"options":{"typeAware":true,"typeCheck":true}},
+  lint: {
+    jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
+    rules: { "vite-plus/prefer-vite-plus-imports": "error" },
+    options: { typeAware: true, typeCheck: true },
+  },
   fmt: {
     endOfLine: "lf",
     semi: false,
@@ -38,6 +42,6 @@ const config = defineConfig({
       overlay: false,
     },
   },
-});
+})
 
-export default config;
+export default config

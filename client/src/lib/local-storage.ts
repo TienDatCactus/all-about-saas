@@ -17,7 +17,8 @@ export const storage = {
 
   set: <T>(key: string, value: T): void => {
     try {
-      const valueToStore = typeof value === 'string' ? value : JSON.stringify(value);
+      const valueToStore =
+        typeof value === "string" ? value : JSON.stringify(value);
       localStorage.setItem(key, valueToStore);
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);
@@ -36,7 +37,14 @@ export const storage = {
     try {
       localStorage.clear();
     } catch (error) {
-      console.error('Error clearing localStorage:', error);
+      console.error("Error clearing localStorage:", error);
     }
+  },
+  keys: () => {
+    return {
+      accessToken: "access_token",
+      refreshToken: "refresh_token",
+      userProfile: "user_profile",
+    };
   },
 };

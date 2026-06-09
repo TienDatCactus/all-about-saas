@@ -1,10 +1,10 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
-import { TanStackDevtools } from "@tanstack/react-devtools"
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { TanStackDevtools } from "@tanstack/react-devtools";
 
-import appCss from "../styles.css?url"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { Toaster } from "@/components/ui/sonner"
+import appCss from "../styles.css?url";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -17,7 +17,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "All About SaaS",
       },
     ],
     links: [
@@ -34,9 +34,9 @@ export const Route = createRootRoute({
     </main>
   ),
   shellComponent: Providers,
-})
+});
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -60,7 +60,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }
 
 function Providers({ children }: { children: React.ReactNode }) {
@@ -69,5 +69,5 @@ function Providers({ children }: { children: React.ReactNode }) {
       <RootDocument>{children}</RootDocument>
       <Toaster />
     </QueryClientProvider>
-  )
+  );
 }

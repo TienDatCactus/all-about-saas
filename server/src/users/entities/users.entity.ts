@@ -11,9 +11,9 @@ import { Role } from '../../roles/entities/role.entity';
 import { OAuthAccount } from './oauth-account.entity';
 
 @Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class Users {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   email: string;

@@ -1,16 +1,24 @@
-import { Module } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { forwardRef, Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
+import { Users } from './entities/users.entity';
 import { CaslModule } from '../casl/casl.module';
 import { Role } from '../roles/entities/role.entity';
 import { OAuthAccount } from './entities/oauth-account.entity';
+import { AuthModule } from '../auth/auth.module';
+import { UsersService } from './services/users.service';
+import { UsersCommandService } from './services/users-command.service';
+import { UsersQueryService } from './services/users-query.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role, OAuthAccount]), CaslModule],
+  imports: [
+    TypeOrmModule.forFeature([Users, Role, OAuthAccount]),
+    CaslModule,
+
+    forwardRef(() => AuthModule),
+  ],
   controllers: [UsersController],
-  providers: [UsersService],
-  exports: [UsersService],
+  providers: [UsersService, UsersCommandService, UsersQueryService],
+  exports: [UsersService, UsersQueryService, UsersCommandService],
 })
 export class UsersModule {}

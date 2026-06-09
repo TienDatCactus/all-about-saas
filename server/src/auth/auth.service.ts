@@ -1,21 +1,33 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginDto } from './dto/sign-in.dto';
-import { PayloadDto } from './dto/jwt-payload.dto';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
+import { Users } from '../users/entities/users.entity';
+import { UsersService } from '../users/services/users.service';
+import { PayloadDto } from './dto/jwt-payload.dto';
+import { UsersQueryService } from '../users/services/users-query.service';
+import { UsersCommandService } from '../users/services/users-command.service';
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    private readonly uqService: UsersQueryService,
+    private readonly ucService: UsersCommandService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
   async generateToken(payload: PayloadDto): Promise<string> {
     return await this.jwtService.signAsync(payload);
   }
   async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOneBy({ email });
+    const user = await this.uqService.findOneBy({ email });
     if (user) {
       const isMatch = await bcrypt.compare(pass, user.password);
       if (isMatch) {
@@ -28,7 +40,7 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Not a valid user');
     }
     const payload: PayloadDto = {
       email: user.email,
@@ -36,14 +48,21 @@ export class AuthService {
     };
     return await this.generateToken(payload);
   }
-  async signup(email: string) {
-    const existingUser = await this.usersService.findOneBy({ email });
+  async signup(email: string, password?: string): Promise<Users> {
+    const existingUser = await this.uqService.findOneBy({ email });
     if (existingUser) {
       throw new UnauthorizedException('Email already in use');
     }
-    return await this.usersService.create({
+    const passwordHash = password
+      ? await this.hashPassword(password)
+      : await this.hashPassword(
+          this.configService.get<string>('basePassword')!,
+        ); // Generate a random password if not provided
+    const newUser = await this.ucService.create({
       email,
+      password: passwordHash,
     });
+    return newUser;
   }
   async hashPassword(password: string): Promise<string> {
     const saltOrRounds = 10;
@@ -56,23 +75,29 @@ export class AuthService {
     email: string,
     profileData: any,
   ) {
-    const user = await this.usersService.findOrCreateOAuthUser(
+    Logger.log(`OAuth access for provider: ${provider}, email: ${email}`);
+    let user = await this.usersService.findOrCreateOAuthUser(
       provider,
       providerId,
       email,
       profileData,
     );
     if (!user) {
-      const token = await this.signup(email);
-      return {
-        user: email,
-        accessToken: await this.login(email, token.password),
-      };
+      Logger.debug('this 1');
+      const newUser = await this.signup(email);
+      Logger.debug(
+        `Created new user from OAuth data: ${JSON.stringify(newUser)}`,
+      );
+      if (newUser) {
+        user = newUser;
+      }
+      throw new UnauthorizedException('Failed to create user from OAuth data');
     }
-    const token = await this.login(user.email, user.password);
+    const payload: PayloadDto = { email: user.email, sub: user.id };
+    const accessToken = await this.generateToken(payload);
     return {
       user,
-      accessToken: token,
+      accessToken,
     };
   }
 }
