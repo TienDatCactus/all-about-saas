@@ -5,7 +5,7 @@ export const validationMessages = {
   password: {
     required: "Password is required",
     min: "Password must be at least 6 characters",
-    max: "Password must be at most 20 characters",
+    max: "Password must be at most 50 characters",
     invalid: "Password is not valid",
   },
-}
+};

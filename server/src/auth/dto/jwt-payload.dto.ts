@@ -1,4 +1,8 @@
+import { IsString } from 'class-validator';
+
 export class PayloadDto {
-  sub: string = '';
-  email: string = '';
+  @IsString()
+  sub: string;
+  @IsString()
+  email: string;
 }

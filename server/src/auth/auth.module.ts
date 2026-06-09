@@ -10,6 +10,7 @@ import { GoogleStrategy } from './strategy/google.strategy';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { UsersModule } from '../users/users.module';
 import { ConfigService } from '@nestjs/config';
+import { TokensUtils } from './utils/tokens.utils';
 
 @Module({
   imports: [
@@ -23,11 +24,12 @@ import { ConfigService } from '@nestjs/config';
       }),
     }),
     PassportModule,
-    forwardRef(() => UsersModule),
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
+    TokensUtils,
     LocalAuthGuard,
     LocalStrategy,
     JwtStrategy,

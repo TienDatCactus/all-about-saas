@@ -1,10 +1,12 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { OAuthAccount } from '../entities/oauth-account.entity';
 import { Users } from '../entities/users.entity';
-import { AuthService } from '../../auth/auth.service';
 import { UsersQueryService } from './users-query.service';
+import { UsersCommandService } from './users-command.service';
 
 @Injectable()
 export class UsersService {
@@ -12,9 +14,9 @@ export class UsersService {
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
     private readonly dataSource: DataSource,
-    @Inject(forwardRef(() => AuthService))
-    private readonly authService: AuthService,
     private readonly uqService: UsersQueryService,
+    private readonly ucService: UsersCommandService,
+    private readonly configService: ConfigService,
   ) {}
 
   async findOrCreateOAuthUser(
@@ -35,7 +37,12 @@ export class UsersService {
     } else {
       let user = await this.uqService.findOneBy({ email });
       if (!user) {
-        user = await this.authService.signup(email);
+        const password = this.configService.get<string>('basePassword');
+        const passwordHash = await bcrypt.hash(password ?? providerUserId, 10);
+        user = await this.ucService.create({
+          email,
+          password: passwordHash,
+        });
       }
       oauthAccount = this.dataSource.getRepository(OAuthAccount).create({
         provider,

@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { Public } from '../common/decorator/is-public.decorator';
 import { LoginDto } from './dto/sign-in.dto';
+import { SignUpDto } from './dto/sign-up.dto';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
@@ -23,9 +24,16 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  @Public()
   @Post('login')
   async login(@Body() body: LoginDto) {
     return this.authService.login(body.email, body.password);
+  }
+
+  @Public()
+  @Post('signup')
+  async signup(@Body() body: SignUpDto) {
+    return this.authService.signup(body.email, body.password);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -45,20 +53,18 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleAuthRedirect(@Request() req, @Response() res) {
-    const user = await this.authService.oauthAccess(
+    const authResult = await this.authService.oauthAccess(
       'google',
       req.user.id,
       req.user.email,
       req.user,
     );
-    res.cookie('session', user.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-    });
+    const frontendUrl =
+      this.configService.get<string>('frontendUrl') || 'http://localhost:3000';
+    const redirectUrl = new URL('/login', frontendUrl);
+    redirectUrl.searchParams.set('accessToken', authResult.accessToken);
+    redirectUrl.searchParams.set('provider', 'google');
 
-    return res.redirect(
-      this.configService.get<string>('frontendUrl') || 'http://localhost:3000',
-    );
+    return res.redirect(redirectUrl.toString());
   }
 }

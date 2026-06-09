@@ -13,7 +13,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import configuration from './common/config/configuration';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bodyParser: false,
     logger: new ConsoleLogger({
       logLevels: ['error', 'debug', 'verbose', 'fatal'],
       prefix: 'all-about-saas',
@@ -23,6 +22,8 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
   app.set('trust proxy', 'loopback');

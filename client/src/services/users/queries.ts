@@ -24,8 +24,7 @@ export const useGoogleLoginMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => usersApi.loginWithGoogle(),
-    onSuccess: (res) => {
-      storage.set(storage.keys().accessToken, res);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });

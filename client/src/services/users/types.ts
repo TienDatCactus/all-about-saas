@@ -1,5 +1,5 @@
-import * as z from "zod"
-import { validationMessages } from "./message"
+import * as z from "zod";
+import { validationMessages } from "./message";
 
 export const LoginInSchema = z // all zod types gonna called schema
   .object({
@@ -11,10 +11,10 @@ export const LoginInSchema = z // all zod types gonna called schema
       .min(6, {
         message: validationMessages.password.min,
       })
-      .max(20, {
+      .max(50, {
         message: validationMessages.password.max,
       }),
   })
-  .required()
+  .required();
 
-export type LoginIn = z.infer<typeof LoginInSchema>
+export type LoginIn = z.infer<typeof LoginInSchema>;
