@@ -1,21 +1,19 @@
 import {
+  Body,
   Controller,
   Get,
   Post,
-  Request,
+  Req,
+  Res,
   UseGuards,
-  Body,
-  Response,
-  Redirect,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { LocalAuthGuard } from '../common/guard/local-auth.guard';
-import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
-import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
+import { ConfigService } from '@nestjs/config';
 import { Public } from '../common/decorator/is-public.decorator';
+import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
+import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
+import { AuthService } from './auth.service';
 import { LoginDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
@@ -26,8 +24,15 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  async login(@Body() body: LoginDto) {
-    return this.authService.login(body.email, body.password);
+  async login(@Body() body: LoginDto, @Res({ passthrough: true }) res) {
+    const resp = await this.authService.login(body.email, body.password);
+    const { refreshToken } = resp;
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
+    return resp;
   }
 
   @Public()
@@ -38,7 +43,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
+  getProfile(@Req() req) {
     return req.user;
   }
 
@@ -52,19 +57,21 @@ export class AuthController {
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  async googleAuthRedirect(@Request() req, @Response() res) {
+  async googleAuthRedirect(@Req() req, @Res() res) {
     const authResult = await this.authService.oauthAccess(
       'google',
       req.user.id,
       req.user.email,
       req.user,
     );
-    const frontendUrl =
-      this.configService.get<string>('frontendUrl') || 'http://localhost:3000';
-    const redirectUrl = new URL('/login', frontendUrl);
-    redirectUrl.searchParams.set('accessToken', authResult.accessToken);
-    redirectUrl.searchParams.set('provider', 'google');
+    const frontendUrl = this.configService.get<string>('frontendUrl');
+    const refreshToken = authResult.refreshToken;
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
 
-    return res.redirect(redirectUrl.toString());
+    return res.redirect(frontendUrl);
   }
 }

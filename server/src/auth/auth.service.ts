@@ -16,19 +16,36 @@ export class AuthService {
     private readonly tokensUtils: TokensUtils,
   ) {}
 
-  async login(email: string, password: string) {
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const user = await this.ucService.validateUser(email, password);
     if (!user) {
-      throw new UnauthorizedException('Not a valid user');
+      throw new UnauthorizedException('Invalid email or password');
     }
     const payload: PayloadDto = {
       email: user.email,
       sub: user.id,
     };
-    return await this.tokensUtils.generateToken(payload);
+    const refreshToken = await this.tokensUtils.generateRefreshToken(payload);
+    const accessToken = await this.tokensUtils.generateAccessToken(payload);
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
-  async signup(email: string, password?: string): Promise<string> {
+  async signup(
+    email: string,
+    password?: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const existingUser = await this.uqService.findOneBy({ email });
     if (existingUser) {
       throw new UnauthorizedException('Email already in use');
@@ -46,7 +63,10 @@ export class AuthService {
       email: newUser.email,
       sub: newUser.id,
     };
-    return await this.tokensUtils.generateToken(payload);
+    return {
+      accessToken: await this.tokensUtils.generateAccessToken(payload),
+      refreshToken: await this.tokensUtils.generateRefreshToken(payload),
+    };
   }
 
   async oauthAccess(
@@ -54,21 +74,28 @@ export class AuthService {
     providerId: string,
     email: string,
     profileData: any,
-  ) {
+  ): Promise<{
+    user: Users;
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const { accessToken: ssoAccessToken, ...profile } = profileData;
     const user = await this.usersService.findOrCreateOAuthUser(
       provider,
       providerId,
       email,
-      profileData,
+      profile,
     );
     if (!user) {
       throw new UnauthorizedException('Failed to create user from OAuth data');
     }
     const payload: PayloadDto = { email: user.email, sub: user.id };
-    const accessToken = await this.tokensUtils.generateToken(payload);
+    const accessToken = await this.tokensUtils.generateAccessToken(payload);
+    const refreshToken = await this.tokensUtils.generateRefreshToken(payload);
     return {
       user,
       accessToken,
+      refreshToken,
     };
   }
 }

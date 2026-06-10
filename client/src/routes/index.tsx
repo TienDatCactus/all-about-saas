@@ -1,7 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { Button } from "@/components/ui/button"
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { storage } from "@/lib/local-storage";
 
-export const Route = createFileRoute("/")({ component: App })
+export const Route = createFileRoute("/")({
+  component: App,
+  validateSearch: (search) => ({
+    accessToken:
+      typeof search.accessToken === "string" ? search.accessToken : undefined,
+  }),
+  beforeLoad: ({ search }) => {
+    if (!search.accessToken) {
+      return;
+    }
+
+    storage.set(storage.keys().accessToken, search.accessToken);
+
+    throw redirect({
+      to: "/",
+      search: {
+        accessToken: undefined,
+      },
+    });
+  },
+});
 
 function App() {
   return (
@@ -15,5 +36,5 @@ function App() {
         </div>
       </div>
     </div>
-  )
+  );
 }

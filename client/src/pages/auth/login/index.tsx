@@ -1,22 +1,9 @@
-import { storage } from "@/lib/local-storage";
 import { Separator } from "@/components/ui/separator";
+import React from "react";
 import LoginForm from "./components/Form";
 import Providers from "./components/Providers";
-import React from "react";
 
 const Login: React.FC = () => {
-  React.useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const accessToken = searchParams.get("accessToken");
-
-    if (!accessToken) {
-      return;
-    }
-
-    storage.set(storage.keys().accessToken, accessToken);
-    window.location.replace("/");
-  }, []);
-
   return (
     <div className="flex min-h-dvh items-center justify-center">
       <div className="flex flex-1 flex-col justify-center px-4 py-10 lg:px-6">

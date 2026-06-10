@@ -1,36 +1,47 @@
-import { AddonInput as Input } from "@/components/custom/addon-input"
-import { FormField } from "@/components/custom/form-field"
-import { Button } from "@/components/custom/stateful-button"
-import { FieldGroup } from "@/components/ui/field"
-import { LoginInSchema, useLoginMutation, type LoginIn } from "@/services/users"
-import { formOptions, useForm } from "@tanstack/react-form"
-import React from "react"
-const defaultValue: LoginIn = { email: "", password: "" }
+import { AddonInput as Input } from "@/components/custom/addon-input";
+import { FormField } from "@/components/custom/form-field";
+import { Button } from "@/components/custom/stateful-button";
+import { FieldGroup } from "@/components/ui/field";
+import {
+  LoginInSchema,
+  useLoginMutation,
+  type LoginIn,
+} from "@/services/users";
+import { formOptions, useForm } from "@tanstack/react-form";
+import { useNavigate } from "@tanstack/react-router";
+import React from "react";
+const defaultValue: LoginIn = { email: "", password: "" };
 
 const formOpts = formOptions({
   defaultValues: defaultValue,
   validators: {
     onSubmit: LoginInSchema,
   },
-})
+});
 const LoginForm: React.FC = () => {
-  const { mutate, status } = useLoginMutation()
+  const navigate = useNavigate();
+  const { mutate, status } = useLoginMutation();
   const form = useForm({
     ...formOpts,
     onSubmit: (form) => {
       mutate(LoginInSchema.parse(form.value), {
-        onError: (err) => {
-          console.error("Login failed:", err)
+        onSuccess: (data) => {
+          navigate({
+            to: "/",
+            search: {
+              accessToken: data,
+            },
+          });
         },
-      })
+      });
     },
-  })
+  });
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
+        e.preventDefault();
+        form.handleSubmit();
       }}
       method="post"
       className="mt-6 space-y-4"
@@ -59,7 +70,7 @@ const LoginForm: React.FC = () => {
         Sign in
       </Button>
     </form>
-  )
-}
+  );
+};
 
-export default LoginForm
+export default LoginForm;

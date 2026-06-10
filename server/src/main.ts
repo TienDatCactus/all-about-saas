@@ -11,6 +11,7 @@ import { TransformInterceptor } from './common/interceptor/transform.interceptor
 import { HttpExceptionFilter } from './common/filter/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import configuration from './common/config/configuration';
+import cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: new ConsoleLogger({
@@ -41,7 +42,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
+  app.use(cookieParser());
   app.use(helmet());
   await app.listen(configuration().port ?? 8000);
 }
