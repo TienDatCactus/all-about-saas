@@ -98,4 +98,16 @@ export class AuthService {
       refreshToken,
     };
   }
+
+  async refresh(refreshToken: string): Promise<string> {
+    try {
+      const payload = await this.tokensUtils.verifyRefreshToken(refreshToken);
+      const newAccessToken =
+        await this.tokensUtils.generateAccessToken(payload);
+      return newAccessToken;
+    } catch (error) {
+      console.error(error);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 }

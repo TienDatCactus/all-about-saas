@@ -40,11 +40,4 @@ export const storage = {
       console.error("Error clearing localStorage:", error);
     }
   },
-  keys: () => {
-    return {
-      accessToken: "access_token",
-      refreshToken: "refresh_token",
-      userProfile: "user_profile",
-    };
-  },
 };

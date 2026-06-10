@@ -5,6 +5,7 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -14,6 +15,7 @@ import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -42,6 +44,13 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refresh_token');
+    return { message: 'Logged out successfully' };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Req() req) {
     return req.user;
@@ -52,6 +61,16 @@ export class AuthController {
   @Get('google')
   googleAuth() {
     // Triggers the Passport Google authentication flow
+  }
+
+  @Post('refresh')
+  async refresh(@Req() req, @Res({ passthrough: true }) res) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      throw new Error('Refresh token not found');
+    }
+    const newAccessToken = await this.authService.refresh(refreshToken);
+    return newAccessToken;
   }
 
   @Public()

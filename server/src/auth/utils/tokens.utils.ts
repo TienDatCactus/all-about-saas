@@ -21,4 +21,13 @@ export class TokensUtils {
     const hashedPassword = await bcrypt.hash(password, saltOrRounds);
     return hashedPassword;
   }
+
+  async verifyRefreshToken(token: string): Promise<PayloadDto> {
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+      return payload;
+    } catch (error) {
+      throw new Error('Invalid refresh token');
+    }
+  }
 }
