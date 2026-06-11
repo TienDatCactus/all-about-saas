@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from '../common/guard/local-auth.guard';
@@ -11,9 +12,12 @@ import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { UsersModule } from '../users/users.module';
 import { ConfigService } from '@nestjs/config';
 import { TokensUtils } from './utils/tokens.utils';
+import { Session } from './entities/session.entity';
+import { VerificationToken } from './entities/verification-token.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Session, VerificationToken]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

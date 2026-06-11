@@ -16,7 +16,10 @@ export interface ApiResponse<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -24,15 +27,26 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
     const ctx = context.switchToHttp();
     const response = ctx.getResponse();
     const statusCode = response.statusCode;
-
     return next.handle().pipe(
-      map((data) => ({
-        success: true,
-        statusCode,
-        message: 'Success',
-        data: data ?? null,
-        timestamp: new Date().toISOString(),
-      })),
+      map((data) => {
+        if (response.headersSent) {
+          return data;
+        }
+        let message = 'Request successful';
+        let actualData = data;
+        if (data && typeof data === 'object') {
+          const { message: msg, ...rest } = data;
+          if (msg) message = msg;
+          actualData = Object.keys(rest).length > 0 ? rest : (data ?? null);
+        }
+        return {
+          success: true,
+          statusCode,
+          message,
+          data: actualData ?? null,
+          timestamp: new Date().toISOString(),
+        };
+      }),
     );
   }
 }

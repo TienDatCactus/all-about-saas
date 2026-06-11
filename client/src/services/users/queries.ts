@@ -1,6 +1,7 @@
-import { storage } from "@/lib/local-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usersApi, type LoginIn } from ".";
+import { storage } from "@/lib/utils/local-storage";
+import { AppConstants } from "@/lib/utils/constants";
 
 export const userKeys = {
   all: ["users"] as const,
@@ -14,7 +15,7 @@ export const useLoginMutation = () => {
   return useMutation({
     mutationFn: (data: LoginIn) => usersApi.login(data),
     onSuccess: (res) => {
-      storage.set(storage.keys().accessToken, res);
+      storage.set(AppConstants.tokenKey, res);
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });
@@ -28,4 +29,4 @@ export const useGoogleLoginMutation = () => {
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });
-}
+};

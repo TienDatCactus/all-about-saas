@@ -4,15 +4,15 @@ import {
   Scripts,
   createRootRoute,
   redirect,
-  useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
-import { storage } from "@/lib/utils/local-storage";
+import { AuthProvider } from "@/lib/context/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/lib/context/auth";
+import { storage } from "@/lib/utils/local-storage";
+import { AppConstants } from "@/lib/utils/constants";
 
 export const Route = createRootRoute({
   head: () => ({

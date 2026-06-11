@@ -3,16 +3,16 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { OAuthAccount } from '../entities/oauth-account.entity';
-import { Users } from '../entities/users.entity';
+import { OAuthAccount, OAuthProvider } from '../entities/oauth-account.entity';
+import { User } from '../entities/user.entity';
 import { UsersQueryService } from './users-query.service';
 import { UsersCommandService } from './users-command.service';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(Users)
-    private readonly usersRepository: Repository<Users>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     private readonly dataSource: DataSource,
     private readonly uqService: UsersQueryService,
     private readonly ucService: UsersCommandService,
@@ -28,7 +28,7 @@ export class UsersService {
     let oauthAccount = await this.dataSource
       .getRepository(OAuthAccount)
       .findOne({
-        where: { provider, providerUserId },
+        where: { provider: provider as OAuthProvider, providerUserId },
         relations: ['user'],
       });
 
@@ -41,11 +41,11 @@ export class UsersService {
         const passwordHash = await bcrypt.hash(password ?? providerUserId, 10);
         user = await this.ucService.create({
           email,
-          password: passwordHash,
+          passwordHash,
         });
       }
       oauthAccount = this.dataSource.getRepository(OAuthAccount).create({
-        provider,
+        provider: provider as OAuthProvider,
         providerUserId,
         profileData,
         user,

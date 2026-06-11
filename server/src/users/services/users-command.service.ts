@@ -1,8 +1,6 @@
-// CREAT-UPDATE_DELETE
-
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { Users } from '../entities/users.entity';
+import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuthAccount } from '../entities/oauth-account.entity';
 import { UsersQueryService } from './users-query.service';
@@ -11,19 +9,19 @@ import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UsersCommandService {
   constructor(
-    @InjectRepository(Users)
-    private readonly usersRepository: Repository<Users>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     private readonly uqService: UsersQueryService,
     private readonly dataSource: DataSource,
   ) {}
-  async createMany(dto: Users[]) {
+  async createMany(dto: User[]) {
     await this.dataSource.transaction(async (manager) => {
       for (const user of dto) {
-        await manager.save(Users, user);
+        await manager.save(User, user);
       }
     });
   }
-  async create(dto: Partial<Users>) {
+  async create(dto: Partial<User>) {
     const user = this.usersRepository.create(dto);
     return await this.usersRepository.save(user);
   }
@@ -39,10 +37,10 @@ export class UsersCommandService {
       return null;
     }
     const user = await this.uqService.findOneBy({ email });
-    if (user?.password) {
-      const isMatch = await bcrypt.compare(pass, user.password);
+    if (user?.passwordHash) {
+      const isMatch = await bcrypt.compare(pass, user.passwordHash);
       if (isMatch) {
-        const { password, ...result } = user;
+        const { passwordHash, ...result } = user;
         return result;
       }
     }

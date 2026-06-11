@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Users } from '../entities/users.entity';
+import { User } from '../entities/user.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class UsersQueryService {
   constructor(
-    @InjectRepository(Users)
-    private readonly usersRepository: Repository<Users>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
-  async findOneBy(q: FindOptionsWhere<Users>) {
+  async findOneBy(q: FindOptionsWhere<User>) {
     return await this.usersRepository.findOneBy(q);
   }
   async findAll() {

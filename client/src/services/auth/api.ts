@@ -1,4 +1,4 @@
-import { http } from "@/lib/http";
+import { http } from "@/lib/utils/http";
 import { AUTH } from "../url";
 import type { LoginIn } from "./types";
 

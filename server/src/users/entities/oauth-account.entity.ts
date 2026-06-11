@@ -1,22 +1,73 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Users } from './users.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from './user.entity';
 
+export enum OAuthProvider {
+  GOOGLE = 'google',
+  GITHUB = 'github',
+  DISCORD = 'discord',
+}
 @Entity()
+@Unique(['provider', 'providerUserId'])
 export class OAuthAccount {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ManyToOne(() => User, (user) => user.oauthAccounts, {
+    onDelete: 'CASCADE',
+  })
+  user: User;
+
+  @Column({
+    type: 'enum',
+    enum: OAuthProvider,
+  })
+  provider: OAuthProvider;
+
   @Column()
-  provider: string; // e.g. 'google', 'github', 'discord'
+  providerUserId: string;
 
   @Column({
     nullable: true,
   })
-  providerUserId: string; // The user ID returned by the OAuth provider (Google sub, GitHub id, etc.)
+  providerEmail?: string;
 
-  @Column({ type: 'jsonb', nullable: true })
-  profileData: Record<string, any>; // Store raw profile payload from provider
+  @Column({
+    nullable: true,
+  })
+  providerUsername?: string;
 
-  @ManyToOne(() => Users, (user) => user.oauthAccounts, { onDelete: 'CASCADE' })
-  user: Users;
+  @Column({
+    nullable: true,
+  })
+  avatarUrl?: string;
+
+  @Column({
+    nullable: true,
+  })
+  accessToken?: string;
+
+  @Column({
+    nullable: true,
+  })
+  refreshToken?: string;
+
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+  })
+  profileData?: Record<string, any>;
+
+  @CreateDateColumn()
+  linkedAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

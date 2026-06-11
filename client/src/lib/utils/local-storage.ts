@@ -10,7 +10,7 @@ export const storage = {
         return item as unknown as T;
       }
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
+      console.error(`Error reading window.localStorage key "${key}":`, error);
       return null;
     }
   },
@@ -21,7 +21,7 @@ export const storage = {
         typeof value === "string" ? value : JSON.stringify(value);
       localStorage.setItem(key, valueToStore);
     } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
+      console.error(`Error setting window.localStorage key "${key}":`, error);
     }
   },
 
@@ -29,7 +29,7 @@ export const storage = {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      console.error(`Error removing localStorage key "${key}":`, error);
+      console.error(`Error removing window.localStorage key "${key}":`, error);
     }
   },
 
@@ -37,7 +37,7 @@ export const storage = {
     try {
       localStorage.clear();
     } catch (error) {
-      console.error("Error clearing localStorage:", error);
+      console.error("Error clearing window.localStorage:", error);
     }
   },
 };

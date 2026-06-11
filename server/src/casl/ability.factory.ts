@@ -4,14 +4,14 @@ import {
   MongoAbility,
 } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
-import { Users } from '../users/entities/users.entity';
+import { User } from '../users/entities/user.entity';
 import { PolicyParser } from './policy-parser';
 
 export type AppAbility = MongoAbility;
 
 @Injectable()
 export class CaslAbilityFactory {
-  createForUser(user: Users, dbPerms: any[]): AppAbility {
+  createForUser(user: User, dbPerms: any[]): AppAbility {
     const { can, cannot, build } = new AbilityBuilder(createMongoAbility);
     dbPerms.forEach((perm) => {
       // Process each permission

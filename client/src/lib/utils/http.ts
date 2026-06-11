@@ -1,12 +1,12 @@
+import { authApi } from "@/services/auth";
 import axios, {
   type AxiosInstance,
   type AxiosRequestConfig,
   type AxiosResponse,
 } from "axios";
+import { toast } from "sonner";
 import { AppConstants } from "./constants";
 import { storage } from "./local-storage";
-import { toast } from "sonner";
-import { authApi } from "@/services/auth";
 
 export class HttpClient {
   private axiosInstance!: AxiosInstance;
@@ -30,6 +30,8 @@ export class HttpClient {
       timeout: 10000,
     });
   }
+  private isRefreshing = false;
+  private refreshPromise: Promise<string> | null = null;
 
   private setupInterceptors(): void {
     // Request interceptor
@@ -49,16 +51,17 @@ export class HttpClient {
     // Response interceptor
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-        // Automatically unwrap NestJS standard response format { success, data, message }
+        const message =
+          response.data?.message ||
+          response.data.data?.message ||
+          "Request successful";
+        toast.success(message);
         if (response.data && response.data.success !== undefined) {
           return response.data.data;
         }
         return response.data;
       },
       async (error) => {
-        let isRefreshing = false;
-        let refreshPromise: Promise<string> | null = null;
-
         const status =
           error.response?.status || error.response?.data?.statusCode;
         const message =
@@ -66,27 +69,33 @@ export class HttpClient {
         const timestamp =
           error.response?.data?.timestamp || new Date().toISOString();
         if (status === 401) {
-          if (!isRefreshing) {
-            isRefreshing = true;
-            refreshPromise = authApi.refresh();
-            refreshPromise.catch(() => {
-              storage.remove(AppConstants.tokenKey);
+          if (!this.isRefreshing) {
+            this.isRefreshing = true;
+            this.refreshPromise = authApi.refresh();
+            this.refreshPromise.catch(() => {
+              storage.clear();
               authApi.logout();
             });
-            refreshPromise.finally(() => {
-              isRefreshing = false;
+            this.refreshPromise.finally(() => {
+              this.isRefreshing = false;
+              this.refreshPromise = null;
             });
           }
-          const token = await refreshPromise;
-          storage.set(AppConstants.tokenKey, token);
-          const originalRequest = error.config;
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return this.axiosInstance(originalRequest);
+          try {
+            const token = await this.refreshPromise;
+            storage.set(AppConstants.tokenKey, token);
+            const originalRequest = error.config;
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return this.axiosInstance(originalRequest);
+          } catch (error) {
+            storage.remove(AppConstants.tokenKey);
+            authApi.logout();
+            return Promise.reject(error);
+          }
         }
         toast.error(message, {
           description: `Status: ${status} - ${timestamp}`,
         });
-        // Reject with the error payload returned by our HttpExceptionFilter
         return Promise.reject(error.response?.data || error);
       },
     );

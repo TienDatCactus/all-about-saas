@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Redirect,
   Req,
   Res,
   UnauthorizedException,
@@ -34,16 +35,22 @@ export class AuthController {
       secure: true,
       sameSite: 'lax',
     });
-    return resp;
+    return {
+      accessToken: resp.accessToken,
+      message: 'Login successful',
+    };
   }
 
   @Public()
   @Post('signup')
   async signup(@Body() body: SignUpDto) {
-    return this.authService.signup(body.email, body.password);
+    return {
+      ...(await this.authService.signup(body.email, body.password)),
+      message: 'User registered successfully',
+    };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token');
@@ -53,7 +60,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Req() req) {
-    return req.user;
+    return { user: req.user, message: 'Profile retrieved successfully' };
   }
 
   @Public()
@@ -70,27 +77,29 @@ export class AuthController {
       throw new Error('Refresh token not found');
     }
     const newAccessToken = await this.authService.refresh(refreshToken);
-    return newAccessToken;
+    return {
+      accessToken: newAccessToken,
+      message: 'Token refreshed successfully',
+    };
   }
 
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  async googleAuthRedirect(@Req() req, @Res() res) {
-    const authResult = await this.authService.oauthAccess(
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    const result = await this.authService.oauthAccess(
       'google',
       req.user.id,
       req.user.email,
       req.user,
     );
-    const frontendUrl = this.configService.get<string>('frontendUrl');
-    const refreshToken = authResult.refreshToken;
-    res.cookie('refresh_token', refreshToken, {
+
+    res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
     });
-
+    const frontendUrl = this.configService.get<string>('frontendUrl')!;
     return res.redirect(frontendUrl);
   }
 }

@@ -7,14 +7,14 @@ import {
   CHECK_POLICIES_KEY,
   PolicyHandler,
 } from '../decorator/check-policies.decorator';
-import { Users } from '../../users/entities/users.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class PoliciesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private caslAbilityFactory: CaslAbilityFactory,
-    @InjectRepository(Users) private readonly userRepository: Repository<Users>,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const policyHandlers =

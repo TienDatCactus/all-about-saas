@@ -1,6 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Users } from '../users/entities/users.entity';
+import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/services/users.service';
 import { PayloadDto } from './dto/jwt-payload.dto';
 import { UsersQueryService } from '../users/services/users-query.service';
@@ -25,7 +29,7 @@ export class AuthService {
   }> {
     const user = await this.ucService.validateUser(email, password);
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new HttpException('Invalid email or password', 400);
     }
     const payload: PayloadDto = {
       email: user.email,
@@ -48,7 +52,7 @@ export class AuthService {
   }> {
     const existingUser = await this.uqService.findOneBy({ email });
     if (existingUser) {
-      throw new UnauthorizedException('Email already in use');
+      throw new HttpException('Email already in use', 400);
     }
     const passwordHash = password
       ? await this.tokensUtils.hashPassword(password)
@@ -57,7 +61,7 @@ export class AuthService {
         );
     const newUser = await this.ucService.create({
       email,
-      password: passwordHash,
+      passwordHash,
     });
     const payload: PayloadDto = {
       email: newUser.email,
@@ -75,7 +79,7 @@ export class AuthService {
     email: string,
     profileData: any,
   ): Promise<{
-    user: Users;
+    user: User;
     accessToken: string;
     refreshToken: string;
   }> {
@@ -87,7 +91,7 @@ export class AuthService {
       profile,
     );
     if (!user) {
-      throw new UnauthorizedException('Failed to create user from OAuth data');
+      throw new HttpException('Failed to create user from OAuth data', 400);
     }
     const payload: PayloadDto = { email: user.email, sub: user.id };
     const accessToken = await this.tokensUtils.generateAccessToken(payload);
@@ -106,8 +110,7 @@ export class AuthService {
         await this.tokensUtils.generateAccessToken(payload);
       return newAccessToken;
     } catch (error) {
-      console.error(error);
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new HttpException('Invalid refresh token', 401);
     }
   }
 }
