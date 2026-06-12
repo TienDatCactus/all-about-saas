@@ -61,7 +61,7 @@ export class AuthService {
         );
     const newUser = await this.ucService.create({
       email,
-      passwordHash,
+      password: passwordHash,
     });
     const payload: PayloadDto = {
       email: newUser.email,

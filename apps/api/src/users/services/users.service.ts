@@ -41,7 +41,7 @@ export class UsersService {
         const passwordHash = await bcrypt.hash(password ?? providerUserId, 10);
         user = await this.ucService.create({
           email,
-          passwordHash,
+          password: passwordHash,
         });
       }
       oauthAccount = this.dataSource.getRepository(OAuthAccount).create({
