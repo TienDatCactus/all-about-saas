@@ -2,10 +2,10 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "eslint.config.js",
+    "../new-repo/apps/web/eslint.config.js",
     "prettier.config.js",
     "vite.config.js"
-  ],
+,     "../new-repo/apps/web/vite.config.ts"  ],
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",

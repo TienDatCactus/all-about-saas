@@ -24,7 +24,7 @@ export class User {
   email: string;
 
   @Column({ nullable: true })
-  passwordHash: string | null;
+  password: string;
 
   @Column({ default: true })
   isActive: boolean;

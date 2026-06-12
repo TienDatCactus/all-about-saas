@@ -37,10 +37,10 @@ export class UsersCommandService {
       return null;
     }
     const user = await this.uqService.findOneBy({ email });
-    if (user?.passwordHash) {
-      const isMatch = await bcrypt.compare(pass, user.passwordHash);
+    if (user?.password) {
+      const isMatch = await bcrypt.compare(pass, user.password);
       if (isMatch) {
-        const { passwordHash, ...result } = user;
+        const { password, ...result } = user;
         return result;
       }
     }
