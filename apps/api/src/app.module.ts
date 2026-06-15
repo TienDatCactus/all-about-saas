@@ -3,23 +3,20 @@ import {
   Module,
   NestModule,
   RequestMethod,
-  Post,
 } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import helmet from 'helmet';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
 import { AuthModule } from './auth/auth.module';
-import helmet from 'helmet';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { CaslModule } from './casl/casl.module';
-import { ConfigModule } from '@nestjs/config';
 import configuration from './common/config/configuration';
 import database from './common/config/database';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
 import { RolesModule } from './roles/roles.module';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
