@@ -51,11 +51,16 @@ export class HttpClient {
     // Response interceptor
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
+        const method = response.config.method?.toUpperCase();
         const message =
           response.data?.message ||
           response.data.data?.message ||
           "Request successful";
-        toast.success(message);
+
+        if (method && method !== "GET") {
+          toast.success(message);
+        }
+
         if (response.data && response.data.success !== undefined) {
           return response.data.data;
         }
@@ -68,31 +73,48 @@ export class HttpClient {
           error.response?.data?.message || error.message || "An error occurred";
         const timestamp =
           error.response?.data?.timestamp || new Date().toISOString();
-        if (status === 401) {
+
+        const requestUrl = error.config?.url || "";
+        const isAuthRequest =
+          requestUrl.includes("/auth/refresh") ||
+          requestUrl.includes("/auth/logout");
+
+        if (status === 401 && !isAuthRequest) {
           if (!this.isRefreshing) {
             this.isRefreshing = true;
             this.refreshPromise = authApi.refresh();
+
             this.refreshPromise.catch(() => {
               storage.clear();
-              authApi.logout();
+              window.location.href = "/login";
             });
+
             this.refreshPromise.finally(() => {
               this.isRefreshing = false;
               this.refreshPromise = null;
             });
           }
+
           try {
             const token = await this.refreshPromise;
             storage.set(AppConstants.tokenKey, token);
+
             const originalRequest = error.config;
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return this.axiosInstance(originalRequest);
-          } catch (error) {
-            storage.remove(AppConstants.tokenKey);
-            authApi.logout();
-            return Promise.reject(error);
+          } catch (refreshError) {
+            return Promise.reject(refreshError);
           }
         }
+
+        if (status === 401 && isAuthRequest) {
+          storage.clear();
+          if (requestUrl.includes("/auth/refresh")) {
+            window.location.href = "/login";
+          }
+          return Promise.reject(error);
+        }
+
         toast.error(message, {
           description: `Status: ${status} - ${timestamp}`,
         });
