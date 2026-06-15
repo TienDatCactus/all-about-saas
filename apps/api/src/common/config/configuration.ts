@@ -17,6 +17,13 @@ export default () => ({
     expiresIn: process.env.JWT_EXPIRES_IN,
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
   },
+  email: {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: process.env.EMAIL_SECURE,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
   basePassword: process.env.BASE_PASSWORD,
   frontendUrl: process.env.FRONTEND_URL,
 });

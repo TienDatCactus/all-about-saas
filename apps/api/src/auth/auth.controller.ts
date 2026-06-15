@@ -3,20 +3,18 @@ import {
   Controller,
   Get,
   Post,
-  Redirect,
   Req,
   Res,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -24,16 +22,24 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {}
-
   @Public()
   @Post('login')
-  async login(@Body() body: LoginDto, @Res({ passthrough: true }) res) {
-    const resp = await this.authService.login(body.email, body.password);
-    const { refreshToken } = resp;
-    res.cookie('refresh_token', refreshToken, {
+  async login(
+    @Body() body: LoginDto,
+    @Res({ passthrough: true }) res,
+    @Req() req,
+  ) {
+    const sessionInfo = this.authService.getSessionInfo(req);
+    const resp = await this.authService.login(
+      body.email,
+      body.password,
+      sessionInfo,
+    );
+    res.cookie('refresh_token', resp.refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      maxAge: this.configService.get('jwt.refreshExpiresIn'),
     });
     return {
       accessToken: resp.accessToken,
@@ -44,15 +50,26 @@ export class AuthController {
   @Public()
   @Post('signup')
   async signup(@Body() body: SignUpDto) {
+    const resp = await this.authService.signup(body.email, body.password);
     return {
-      ...(await this.authService.signup(body.email, body.password)),
+      accessToken: resp.accessToken,
       message: 'User registered successfully',
     };
   }
 
   @Public()
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Req() req,
+    @Res({
+      passthrough: true,
+    })
+    res,
+  ) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
+    }
     res.clearCookie('refresh_token');
     return { message: 'Logged out successfully' };
   }
@@ -87,17 +104,20 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    const sessionInfo = this.authService.getSessionInfo(req);
     const result = await this.authService.oauthAccess(
       'google',
       req.user.id,
       req.user.email,
       req.user,
+      sessionInfo,
     );
 
     res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
+      maxAge: this.configService.get('jwt.refreshExpiresIn'),
     });
     const frontendUrl = this.configService.get<string>('frontendUrl')!;
     return res.redirect(frontendUrl);

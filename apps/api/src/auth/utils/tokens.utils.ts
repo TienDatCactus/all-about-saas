@@ -23,11 +23,7 @@ export class TokensUtils {
   }
 
   async verifyRefreshToken(token: string): Promise<PayloadDto> {
-    try {
-      const payload = await this.jwtService.verifyAsync(token);
-      return payload;
-    } catch (error) {
-      throw new Error('Invalid refresh token');
-    }
+    const payload = await this.jwtService.verifyAsync(token);
+    return payload;
   }
 }

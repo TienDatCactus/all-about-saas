@@ -1,5 +1,5 @@
 {
-  "name": "new-repo",
+  "name": "@aas",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -20,5 +20,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "ua-parser-js": "^2.0.10"
+  }
 }

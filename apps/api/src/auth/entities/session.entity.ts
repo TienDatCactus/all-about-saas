@@ -29,6 +29,9 @@ export class Session {
   @Column()
   ipAddress: string;
 
+  @Column({ nullable: true })
+  revokedAt?: Date;
+
   @Column()
   expiresAt: Date;
 
