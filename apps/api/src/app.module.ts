@@ -10,9 +10,9 @@ import { CaslModule } from "./casl/casl.module";
 import configuration from "./common/config/configuration";
 import database from "./common/config/database";
 import { LoggerMiddleware } from "./common/middleware/logger/logger.middleware";
-import { MailModule } from "./mail/mail.module";
 import { RolesModule } from "./roles/roles.module";
 import { UsersModule } from "./users/users.module";
+import { MailModule } from "./mail/mail.module";
 
 @Module({
   imports: [
