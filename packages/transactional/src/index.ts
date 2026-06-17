@@ -6,10 +6,9 @@ import React, { Attributes } from "react";
 export const emails = {
   welcome: Email,
 };
-export function renderTemplate<T>(
-  template: keyof typeof emails,
-  props: Attributes,
-) {
+export type EmailTemplate = keyof typeof emails;
+
+export function renderTemplate(template: EmailTemplate, props?: any) {
   const EmailComponent = emails[template];
 
   return render(React.createElement(EmailComponent, props));

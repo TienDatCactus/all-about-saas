@@ -1,18 +1,11 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import {
-  HeadContent,
-  Scripts,
-  createRootRoute,
-  redirect,
-} from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/context/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import appCss from "../styles.css?url";
-import { storage } from "@/lib/utils/local-storage";
-import { AppConstants } from "@/lib/utils/constants";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -33,6 +26,20 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/favicon-16x16.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/favicon-32x32.png",
+      },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   notFoundComponent: () => (

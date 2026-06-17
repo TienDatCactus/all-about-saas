@@ -14,13 +14,17 @@ export default () => ({
   },
   jwt: {
     secret: process.env.JWT_SECRET,
-    expiresIn: process.env.JWT_EXPIRES_IN,
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+    expiresIn: process.env.JWT_EXPIRES_IN
+      ? parseInt(process.env.JWT_EXPIRES_IN, 10)
+      : 3600,
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN
+      ? parseInt(process.env.JWT_REFRESH_EXPIRES_IN, 10)
+      : 604800,
   },
   email: {
     host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_SECURE,
+    port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 587,
+    secure: process.env.EMAIL_SECURE === 'true',
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },

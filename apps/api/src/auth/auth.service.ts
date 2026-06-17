@@ -10,6 +10,7 @@ import { PayloadDto } from './dto/jwt-payload.dto';
 import { TokensUtils } from './utils/tokens.utils';
 import { Repository } from 'typeorm';
 import { Session } from './entities/session.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 interface SessionInfo {
   ipAddress: string;
@@ -31,6 +32,7 @@ export class AuthService {
     private readonly uqService: UsersQueryService,
     private readonly ucService: UsersCommandService,
     private readonly configService: ConfigService,
+    @InjectRepository(Session)
     private readonly sessionRepo: Repository<Session>,
     private readonly tokensUtils: TokensUtils,
   ) {}
@@ -58,7 +60,7 @@ export class AuthService {
         ipAddress: sessionInfo.ipAddress,
         userAgent: sessionInfo.userAgent,
         expiresAt: new Date(
-          Date.now() + this.configService.get('jwt.refreshExpiresIn'),
+          Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
         ),
       }),
     );
@@ -118,7 +120,6 @@ export class AuthService {
     const accessToken = await this.tokensUtils.generateAccessToken(payload);
     const refreshToken = await this.tokensUtils.generateRefreshToken(payload);
 
-    // SỬA: Tạo và lưu session vào Database cho User đăng nhập bằng Google
     const session = this.sessionRepo.create({
       user: user,
       refreshToken: refreshToken,
@@ -126,7 +127,7 @@ export class AuthService {
       ipAddress: sessionInfo.ipAddress,
       userAgent: sessionInfo.userAgent,
       expiresAt: new Date(
-        Date.now() + this.configService.get('jwt.refreshExpiresIn'),
+        Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
       ),
     });
     await this.sessionRepo.save(session);

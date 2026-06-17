@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { http } from "@/lib/utils/http";
 import { useLogoutMutation } from "@/services/auth";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
@@ -10,12 +11,13 @@ function App() {
   const { mutate: logout } = useLogoutMutation();
   const navigate = useNavigate();
   const handleLogout = () => {
-    logout(undefined, {
-      onSuccess: () =>
-        navigate({
-          to: "/login",
-        }),
-    });
+    // logout(undefined, {
+    //   onSuccess: () =>
+    //     navigate({
+    //       to: "/login",
+    //     }),
+    // });
+    http.post("mail/try");
   };
   return (
     <div className="flex min-h-svh p-6">

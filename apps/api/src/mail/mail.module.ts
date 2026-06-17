@@ -2,6 +2,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from './mail.service';
+import { MailController } from './mail.controller';
 
 @Module({
   imports: [
@@ -16,6 +17,9 @@ import { MailService } from './mail.service';
             user: configService.get('email.user'),
             pass: configService.get('email.pass'),
           },
+          lookup: (hostname, options, callback) => {
+            require('dns').lookup(hostname, { family: 4 }, callback);
+          },
         },
         defaults: {
           from: '"No Reply" <' + configService.get('email.user') + '>',
@@ -24,5 +28,6 @@ import { MailService } from './mail.service';
     }),
   ],
   providers: [MailService],
+  controllers: [MailController],
 })
 export class MailModule {}
