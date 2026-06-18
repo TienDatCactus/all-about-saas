@@ -1,4 +1,4 @@
-            - name: React Compiler Action
+- name: React Compiler Action
   # You may pin to the exact commit or the version.
   # uses: shubh73/react-compiler-action@63efc9bb5c403b48694c12585ffdd7ece87c1320
   uses: shubh73/react-compiler-action@v1.0.4
