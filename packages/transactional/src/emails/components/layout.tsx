@@ -129,63 +129,20 @@ export default function EmailLayout({
                   <Row align="left">
                     <Column className="w-full align-top">
                       <Section align="left" className="mt-8 w-[152px]">
-                        <Row align="left">
-                          <Column className="w-[20px] pr-8">
-                            <Link
-                              href="https://example.com/"
-                              className="inline-block"
-                            >
-                              <Img
-                                src={`${baseURL}/static/shared/social-x-black.png`}
-                                alt="X"
-                                width={20}
-                                height={20}
-                                className="block border-none"
-                              />
-                            </Link>
-                          </Column>
-                          <Column className="w-[20px] pr-8">
-                            <Link
-                              href="https://example.com/"
-                              className="inline-block"
-                            >
-                              <Img
-                                src={`${baseURL}/static/shared/social-in-black.png`}
-                                alt="LinkedIn"
-                                width={20}
-                                height={20}
-                                className="block border-none"
-                              />
-                            </Link>
-                          </Column>
-                          <Column className="w-[20px] pr-8">
-                            <Link
-                              href="https://example.com/"
-                              className="inline-block"
-                            >
-                              <Img
-                                src={`${baseURL}/static/shared/social-yt-black.png`}
-                                alt="YouTube"
-                                width={20}
-                                height={20}
-                                className="block border-none"
-                              />
-                            </Link>
-                          </Column>
-                          <Column className="w-[20px]">
-                            <Link
-                              href="https://example.com/"
-                              className="inline-block"
-                            >
-                              <Img
-                                src={`${baseURL}/static/shared/social-gh-black.png`}
-                                alt="GitHub"
-                                width={20}
-                                height={20}
-                                className="block border-none"
-                              />
-                            </Link>
-                          </Column>
+                        <Row align="left" className="gap-4">
+                          {!!medias &&
+                            medias.map((i) => (
+                              <Column className="w-[20px] ">
+                                <Link href={i.href} className="inline-block ">
+                                  <Img
+                                    src={i.imageSrc}
+                                    width={36}
+                                    height={36}
+                                    className="block border-none"
+                                  />
+                                </Link>
+                              </Column>
+                            ))}
                         </Row>
                       </Section>
                     </Column>

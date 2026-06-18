@@ -1,5 +1,6 @@
 import { AddonInput as Input } from "@/components/custom/addon-input";
 import { FormField } from "@/components/custom/form-field";
+import PasswordStrengthInput from "@/components/custom/password-strength";
 import { Button } from "@/components/custom/stateful-button";
 import { FieldGroup } from "@/components/ui/field";
 import { LoginInSchema, useLoginMutation, type LoginIn } from "@/services/auth";
@@ -14,7 +15,7 @@ const formOpts = formOptions({
     onSubmit: LoginInSchema,
   },
 });
-const LoginForm: React.FC = () => {
+const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
   const { mutate, status } = useLoginMutation();
   const form = useForm({
@@ -48,11 +49,22 @@ const LoginForm: React.FC = () => {
             <Input mutationState={status} placeholder="Email" {...inputProps} />
           )}
         </FormField>
-        <FormField form={form} name="password" label="Re-enter Password">
+        <FormField form={form} name="password" label="Password">
           {({ inputProps }) => (
             <Input
               mutationState={status}
               isPassword
+              placeholder="Password"
+              {...inputProps}
+            />
+          )}
+        </FormField>
+        <FormField form={form} name="re-password" label="Re Enter Password">
+          {({ inputProps }) => (
+            <PasswordStrengthInput
+              mutationState={status}
+              isPassword
+              
               placeholder="Password"
               {...inputProps}
             />
@@ -69,4 +81,4 @@ const LoginForm: React.FC = () => {
   );
 };
 
-export default LoginForm;
+export default SignUpForm;

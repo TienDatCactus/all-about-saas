@@ -4,15 +4,21 @@ import { validationMessages } from "./message";
 export const LoginInSchema = z // all zod types gonna called schema
   .object({
     email: z.email({
-      message: validationMessages.email.invalid,
+      error: validationMessages.email.invalid,
     }),
     password: z
       .string()
       .min(6, {
-        message: validationMessages.password.min,
+        error: validationMessages.password.min,
       })
       .max(50, {
-        message: validationMessages.password.max,
+        error: validationMessages.password.max,
+      })
+      .regex(/[A-Z]/, {
+        error: validationMessages.password.containsUppercase,
+      })
+      .regex(/[!@#$%^&*(),.?":{}|<>]/, {
+        error: validationMessages.password.containsSpecial,
       }),
   })
   .required();
