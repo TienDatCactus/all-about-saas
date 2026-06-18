@@ -1,40 +1,29 @@
 - name: React Compiler Action
-  # You may pin to the exact commit or the version.
-  # uses: shubh73/react-compiler-action@63efc9bb5c403b48694c12585ffdd7ece87c1320
-  uses: shubh73/react-compiler-action@v1.0.4
+    uses: shubh73/react-compiler-action@v1.0.4
   with:
-    # GitHub token for PR comments and API access
-    token: # optional, default is ${{ github.token }}
-    # Only check files changed in the PR; set to 'false' for a full project scan
-    changed-files-only: # optional, default is true
-    # Fail the step when new compiler issues are found
-    fail-on-error: # optional, default is false
-    # Post or update a PR comment with the report
-    post-comment: # optional, default is true
-    # Add inline annotations on the PR diff
-    annotations: # optional, default is true
-    # Severity level for annotations: warning | error | notice
-    annotation-level: # optional, default is warning
-    # Compiler mode: infer, annotation, or all
-    compilation-mode: # optional, default is infer
-    # Root directory for file discovery
-    working-directory: # optional, default is .
-    # Newline-separated glob patterns for files to include
-    include-patterns: # optional, default is **/*.ts
-**/*.tsx
-**/*.js
-**/*.jsx
+    token: ${{ github.token }}
+    changed-files-only: true
+    fail-on-error: false
+    post-comment: true
+    annotations: true
+    annotation-level: warning
+    compilation-mode: infer
+    working-directory: .
 
-    # Newline-separated glob patterns to exclude
-    exclude-patterns: # optional, default is node_modules/**
-dist/**
-build/**
-.next/**
-.expo/**
-android/**
-ios/**
-**/*.d.ts
-**/*.test.*
-**/*.spec.*
+    include-patterns: |
+      apps/**/*.ts
+      apps/**/*.tsx
+      packages/**/*.ts
+      packages/**/*.tsx
 
-          
+    exclude-patterns: |
+        **/node_modules/**
+        **/dist/**
+        **/.turbo/**
+        **/.next/**
+        **/coverage/**
+        **/*.d.ts
+        **/*.test.*
+        **/*.spec.*
+        **/__tests__/**
+        **/generated/**
