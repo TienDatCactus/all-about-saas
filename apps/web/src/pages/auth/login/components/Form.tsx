@@ -21,12 +21,9 @@ const LoginForm: React.FC = () => {
     ...formOpts,
     onSubmit: (form) => {
       mutate(LoginInSchema.parse(form.value), {
-        onSuccess: (data) => {
+        onSuccess: () => {
           navigate({
             to: "/",
-            search: {
-              accessToken: data,
-            },
           });
         },
       });

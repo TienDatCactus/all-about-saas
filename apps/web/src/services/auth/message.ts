@@ -10,4 +10,7 @@ export const validationMessages = {
     containsSpecial: "Password must contains atleast 1 special character",
     invalid: "Password is not valid",
   },
+  rePassword: {
+    notMatch:"The passwords didn't match"
+  }
 };

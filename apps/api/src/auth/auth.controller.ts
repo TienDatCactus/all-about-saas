@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -12,15 +13,24 @@ import type { Response } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { LoginDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import {
+  VerificationToken,
+  VerificationType,
+} from './entities/verification-token.entity';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
+import { UsersCommandService } from '../users/services/users-command.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly ucService: UsersCommandService,
   ) {}
   @Public()
   @Post('login')
@@ -50,10 +60,41 @@ export class AuthController {
   @Public()
   @Post('signup')
   async signup(@Body() body: SignUpDto) {
-    const resp = await this.authService.signup(body.email, body.password);
+    await this.authService.signup(body.email, body.password);
     return {
-      accessToken: resp.accessToken,
       message: 'User registered successfully',
+    };
+  }
+
+  // apps/api/src/auth/auth.controller.ts
+
+  @Public()
+  @Post('verify-email')
+  async verifyEmail(@Body() body: VerifyEmailDto) {
+    const user = await this.authService.verifyVerificationTokenRecord(
+      body.selector,
+      body.token,
+      VerificationType.EMAIL_VERIFY,
+    );
+
+    if (!user) {
+      throw new BadRequestException(
+        'Either invalid or expired verification token.',
+      );
+    }
+
+    await this.ucService.update(
+      {
+        emailVerified: true,
+        isActive: true,
+      },
+      {
+        id: user.id,
+      },
+    );
+
+    return {
+      message: 'Email verified successfully.',
     };
   }
 

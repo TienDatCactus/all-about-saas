@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/context/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import appCss from "../styles.css?url";
+import { MotionConfig } from "motion/react";
+import { MotionProvider, useMotion } from "@/lib/context/animation";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -54,37 +56,48 @@ export const Route = createRootRoute({
 const queryClient = new QueryClient();
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { preference } = useMotion();
+  const reducedMotionMode =
+    preference === "system"
+      ? "user"
+      : preference === "off"
+        ? "always"
+        : "never";
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <HeadContent />
-      </head>
-      <body suppressHydrationWarning>
-        {children}
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
-        <Scripts />
-      </body>
-    </html>
+    <MotionConfig isValidProp={() => true} reducedMotion={reducedMotionMode}>
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <HeadContent />
+        </head>
+        <body suppressHydrationWarning>
+          {children}
+          <TanStackDevtools
+            config={{
+              position: "bottom-right",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+          <Scripts />
+        </body>
+      </html>
+    </MotionConfig>
   );
 }
 
 function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RootDocument>{children}</RootDocument>
-      </AuthProvider>
-      <Toaster />
-    </QueryClientProvider>
+    <MotionProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RootDocument>{children}</RootDocument>
+        </AuthProvider>
+        <Toaster />
+      </QueryClientProvider>
+    </MotionProvider>
   );
 }
