@@ -20,6 +20,9 @@ import { MailController } from './mail.controller';
           lookup: (hostname, options, callback) => {
             require('dns').lookup(hostname, { family: 4 }, callback);
           },
+          tls: {
+            rejectUnauthorized: false,
+          },
         },
         defaults: {
           from: '"No Reply" <' + configService.get('email.user') + '>',

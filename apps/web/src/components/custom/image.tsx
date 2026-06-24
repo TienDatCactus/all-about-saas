@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import useImage from "use-image";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
+import useImage from "use-image";
 
 // ─── Installation ─────────────────────────────────────────────────────────────
 // npm install use-image

@@ -16,6 +16,8 @@ import {
 } from '../entities/verification-token.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
+import { MailService } from '../../mail/mail.service';
+import { SignUpDto } from '../dto/sign-up.dto';
 
 interface SessionInfo {
   ipAddress: string;
@@ -48,6 +50,7 @@ export class AuthService {
     @InjectRepository(VerificationToken)
     private readonly verificationTokenRepo: Repository<VerificationToken>,
     private readonly tokensService: TokensService,
+    private readonly mailService: MailService,
   ) {}
 
   async login(
@@ -84,20 +87,43 @@ export class AuthService {
     };
   }
 
-  async signup(email: string, password?: string): Promise<void> {
-    const existingUser = await this.uqService.findOneBy({ email });
-    if (existingUser) {
-      throw new HttpException('Email already in use', 400);
+  async signup(dto: SignUpDto) {
+    const passwordHash = await this.tokensService.hashPassword(dto.password);
+
+    try {
+      const newUser = await this.ucService.create({
+        email: dto.email,
+        password: passwordHash,
+      });
+
+      const { rawToken, selector } = await this.createVerificationTokenRecord({
+        userId: newUser.id,
+        type: VerificationType.EMAIL_VERIFY,
+      });
+      const url = new URL(this.configService.get('frontendUrl') ?? '');
+      url.pathname = '/verify-email';
+      url.searchParams.set('token', rawToken);
+      url.searchParams.set('selector', selector);
+      await this.mailService.sendEmail(
+        {
+          subject: 'Welcome to All about Saas',
+          to: newUser.email,
+          headers: {
+            'X-Entity-Ref-ID': newUser.id,
+          },
+        },
+        'welcome',
+        {
+          url: url.toString(),
+        },
+      );
+    } catch (e: any) {
+      if (e.code === '23505') {
+        throw new HttpException('Email already in use', 400);
+      }
+
+      throw e;
     }
-    const passwordHash = password
-      ? await this.tokensService.hashPassword(password)
-      : await this.tokensService.hashPassword(
-          this.configService.get<string>('basePassword')!,
-        );
-    const newUser = await this.ucService.create({
-      email,
-      password: passwordHash,
-    });
   }
 
   async oauthAccess(
@@ -186,6 +212,37 @@ export class AuthService {
     };
   }
 
+  async resendVerificationEmail(selector: string): Promise<void> {
+    const user = await this.verificationTokenRepo.findOne({
+      where: { selector },
+      relations: ['user'],
+    });
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+    const { rawToken } = await this.createVerificationTokenRecord({
+      userId: user.user.id,
+      type: VerificationType.EMAIL_VERIFY,
+    });
+    const url = new URL(this.configService.get('frontendUrl') ?? '');
+    url.pathname = '/verify-email';
+    url.searchParams.set('token', rawToken);
+    url.searchParams.set('selector', selector);
+    await this.mailService.sendEmail(
+      {
+        subject: 'Resend Verification Email',
+        to: user.user.email,
+        headers: {
+          'X-Entity-Ref-ID': user.user.id,
+        },
+      },
+      'welcome',
+      {
+        url: url.toString(),
+      },
+    );
+  }
+
   // ==========================================
   // Verification Tokens Record Management
   // ==========================================
@@ -197,7 +254,7 @@ export class AuthService {
   }: {
     userId: string;
     type: VerificationType;
-    expiresInMs: number;
+    expiresInMs?: number;
   }): Promise<CreateVTResp> {
     const user = await this.uqService.findOneBy({ id: userId });
     if (!user) {

@@ -45,7 +45,7 @@ const LoginForm: React.FC = () => {
             <Input mutationState={status} placeholder="Email" {...inputProps} />
           )}
         </FormField>
-        <FormField form={form} name="password" label="Re-enter Password">
+        <FormField form={form} name="password" label="Password">
           {({ inputProps }) => (
             <Input
               mutationState={status}

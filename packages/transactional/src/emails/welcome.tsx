@@ -2,16 +2,14 @@
 // https://github.com/resend/react-email/tree/canary/apps/demo/emails
 
 import { Body } from "react-email";
-import EmailLayout from "./components/layout";
+import EmailLayout from "./_components/layout";
 import { baseURL } from "./utils";
 
 export interface WelcomeEmailProps {
-  companyName?: string;
   url?: string;
 }
-
+const companyName = "All About SaaS";
 export const WelcomeEmail = ({
-  companyName = "All About SaaS",
   url = "https://example.com/",
 }: WelcomeEmailProps) => {
   return (
@@ -23,7 +21,7 @@ export const WelcomeEmail = ({
           "You're all set—explore what's new and get your first project going.",
         brand: companyName,
         cta: {
-          text: "Explore",
+          text: "Activate your account",
           url: url,
         },
       }}
@@ -41,7 +39,6 @@ export const WelcomeEmail = ({
 };
 
 WelcomeEmail.PreviewProps = {
-  companyName: "All About SaaS",
   url: "https://example.com/",
 } satisfies WelcomeEmailProps;
 

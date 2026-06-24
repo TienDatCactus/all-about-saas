@@ -14,6 +14,8 @@ import { ConfigService } from '@nestjs/config';
 import { TokensService } from './services/tokens.service';
 import { Session } from './entities/session.entity';
 import { VerificationToken } from './entities/verification-token.entity';
+import { MailModule } from '../mail/mail.module';
+import { MailService } from '../mail/mail.service';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { VerificationToken } from './entities/verification-token.entity';
     }),
     PassportModule,
     UsersModule,
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -39,6 +42,7 @@ import { VerificationToken } from './entities/verification-token.entity';
     JwtStrategy,
     GoogleStrategy,
     GoogleAuthGuard,
+    MailService,
   ],
   exports: [AuthService, TokensService],
 })

@@ -33,11 +33,11 @@ export class UsersCommandService {
     return this.dataSource.getRepository(OAuthAccount).save(user);
   }
   async update(dto: Partial<User>, user: Pick<User, 'id'>) {
-    await this.usersRepository.update({ id: user.id }, dto);
-
-    return this.usersRepository.findOneBy({
+    const res = await this.usersRepository.findOneByOrFail({
       id: user.id,
     });
+    Object.assign(res, dto);
+    return this.usersRepository.save(res);
   }
   async validateUser(email: string, pass: string): Promise<any> {
     if (!pass) {

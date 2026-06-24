@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import appCss from "../styles.css?url";
 import { MotionConfig } from "motion/react";
 import { MotionProvider, useMotion } from "@/lib/context/animation";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -70,7 +71,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body suppressHydrationWarning>
-          {children}
+          <div className="container mx-auto flex min-h-dvh items-center justify-center">
+            {children}
+          </div>
+
           <TanStackDevtools
             config={{
               position: "bottom-right",
@@ -94,7 +98,9 @@ function Providers({ children }: { children: React.ReactNode }) {
     <MotionProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <RootDocument>{children}</RootDocument>
+          <TooltipProvider>
+            <RootDocument>{children}</RootDocument>
+          </TooltipProvider>
         </AuthProvider>
         <Toaster />
       </QueryClientProvider>

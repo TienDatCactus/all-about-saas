@@ -1,5 +1,5 @@
 import * as React from "react";
-import EmailLayout from "./components/layout";
+import EmailLayout from "./_components/layout";
 import { baseURL } from "./utils";
 export interface PasswordResetEmailProps {
   companyName: string;

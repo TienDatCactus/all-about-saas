@@ -58,4 +58,11 @@ export const SignUpSchema = z
   )
   .required();
 
-export type SignUpIn = z.infer<typeof LoginInSchema>;
+export type SignUpIn = z.infer<typeof SignUpSchema>;
+
+export const VerifyEmailSchema = z.object({
+  token: z.string(),
+  selector: z.string(),
+});
+
+export type VerifyEmailIn = z.infer<typeof VerifyEmailSchema>;

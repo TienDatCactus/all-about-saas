@@ -1,7 +1,7 @@
 import { AppConstants } from "@/lib/utils/constants";
 import { storage } from "@/lib/utils/local-storage";
 import { useMutation } from "@tanstack/react-query";
-import { authApi, type LoginIn, type SignUpIn } from ".";
+import { authApi, type LoginIn, type SignUpIn, type VerifyEmailIn } from ".";
 
 export const useLoginMutation = () => {
   return useMutation({
@@ -14,7 +14,8 @@ export const useLoginMutation = () => {
 
 export const useSignupMutation = () => {
   return useMutation({
-    mutationFn: (data: SignUpIn) => authApi.signUp(data),
+    mutationFn: (data: Pick<SignUpIn, "email" | "password">) =>
+      authApi.signUp(data),
     onSuccess: (res) => {
       storage.set(AppConstants.tokenKey, res);
     },
@@ -33,5 +34,20 @@ export const useLogoutMutation = () => {
     onSuccess: () => {
       storage.remove(AppConstants.tokenKey);
     },
+  });
+};
+
+export const useVerifyEmailMutation = () => {
+  return useMutation({
+    mutationFn: (data: VerifyEmailIn) => authApi.verifyEmail(data),
+    onSuccess: () => {
+      storage.remove(AppConstants.tokenKey);
+    },
+  });
+};
+
+export const useResendVerificationEmailMutation = () => {
+  return useMutation({
+    mutationFn: (selector: string) => authApi.resendVerificationEmail(selector),
   });
 };

@@ -60,13 +60,14 @@ export class AuthController {
   @Public()
   @Post('signup')
   async signup(@Body() body: SignUpDto) {
-    await this.authService.signup(body.email, body.password);
+    await this.authService.signup({
+      email: body.email,
+      password: body.password,
+    });
     return {
       message: 'User registered successfully',
     };
   }
-
-  // apps/api/src/auth/auth.controller.ts
 
   @Public()
   @Post('verify-email')
@@ -95,6 +96,15 @@ export class AuthController {
 
     return {
       message: 'Email verified successfully.',
+    };
+  }
+
+  @Public()
+  @Post('resend-verification-email')
+  async resendVerificationEmail(@Body() body: { selector: string }) {
+    await this.authService.resendVerificationEmail(body.selector);
+    return {
+      message: 'Verification email resent successfully.',
     };
   }
 

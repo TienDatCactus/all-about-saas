@@ -3,10 +3,18 @@ import { FormField } from "@/components/custom/form-field";
 import PasswordStrengthInput from "@/components/custom/password-strength";
 import { Button } from "@/components/custom/stateful-button";
 import { FieldGroup } from "@/components/ui/field";
-import { SignUpSchema, useSignupMutation, type LoginIn } from "@/services/auth";
+import {
+  LoginInSchema,
+  SignUpSchema,
+  useSignupMutation,
+  type LoginIn,
+  type SignUpIn,
+} from "@/services/auth";
 import { formOptions, useForm } from "@tanstack/react-form";
+import { useNavigate } from "@tanstack/react-router";
 import React from "react";
-const defaultValue: LoginIn = { email: "", password: "" };
+import { toast } from "sonner";
+const defaultValue: SignUpIn = { email: "", password: "", rePassword: "" };
 
 const formOpts = formOptions({
   defaultValues: defaultValue,
@@ -16,15 +24,20 @@ const formOpts = formOptions({
 });
 const SignUpForm: React.FC = () => {
   const { mutate, status } = useSignupMutation();
+  const navigate = useNavigate();
   const form = useForm({
     ...formOpts,
     onSubmit: (form) => {
-      mutate(
-        SignUpSchema.pick({
-          email: true,
-          password: true,
-        }).parse(form.value),
-      );
+      mutate(LoginInSchema.parse(form.value), {
+        onSuccess: () => {
+          toast.success("Check your inbox", {
+            description: "We have sent you an activation email",
+          });
+          navigate({
+            to: "/auth/login",
+          });
+        },
+      }); // use login schema as the submission source
     },
   });
 
@@ -69,7 +82,7 @@ const SignUpForm: React.FC = () => {
         onClick={form.handleSubmit}
         className="mt-4 w-full py-2 font-medium"
       >
-        Sign in
+        Sign up
       </Button>
     </form>
   );

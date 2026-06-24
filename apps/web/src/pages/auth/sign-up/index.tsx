@@ -1,22 +1,21 @@
-import { Separator } from "@/components/ui/separator";
-import React from "react";
-import { Image } from "@/components/custom/image";
-import logo from "/logo/logo.svg";
+import Logo from "@/components/custom/logo";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
-import SignUpForm from "./components/Form";
 import { useNavigate } from "@tanstack/react-router";
+import React from "react";
+import SignUpForm from "./components/Form";
 const SignUp: React.FC = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <div className="flex min-h-dvh items-center justify-center">
       <div className="flex flex-1 flex-col justify-center px-4 py-10 lg:px-6">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <div>
-            <Image src={logo} alt="Logo" className="w-52 mx-auto" />
+            <Logo alt="Logo" className="w-52 mx-auto" />
           </div>
           <h2 className="text-center text-xl font-semibold text-balance text-foreground">
-            Log in or create account
+            Sign up for AAS account
           </h2>{" "}
           <p className="mt-4 text-xs text-pretty text-center text-muted-foreground dark:text-muted-foreground">
             By signing up, you agree to our{" "}
@@ -42,6 +41,11 @@ const SignUp: React.FC = () => {
           </div>
           <Button
             variant="outline"
+            onClick={() =>
+              navigate({
+                to: "/auth/login",
+              })
+            }
             className="flex w-full items-center justify-center space-x-2 py-2"
           >
             <ArrowLeftIcon />

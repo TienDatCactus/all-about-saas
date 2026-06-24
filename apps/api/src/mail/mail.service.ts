@@ -1,10 +1,14 @@
-import { renderTemplate, type EmailTemplate } from '@transactional/emails';
 import { ISendMailOptions, MailerService } from '@nestjs-modules/mailer';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { renderTemplate, type EmailTemplate } from '@transactional/emails';
 
 @Injectable()
 export class MailService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(
+    private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async sendEmail(
     options: ISendMailOptions,
@@ -12,9 +16,11 @@ export class MailService {
     props?: any,
   ) {
     const emailHtml = await renderTemplate(template, props);
-    Logger.debug(emailHtml);
     await this.mailerService.sendMail({
       ...options,
+      from:
+        'All about SaaS' + ' ' + `<${this.configService.get('email.user')}>`,
+      replyTo: this.configService.get('email.user'),
       html: emailHtml,
     });
   }

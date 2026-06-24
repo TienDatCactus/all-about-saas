@@ -2,11 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  CaretLeftIcon,
-  CaretRightIcon,
-  DotsThreeIcon,
-} from "@phosphor-icons/react"
+import { IconChevronLeft, IconChevronRight, IconDots } from "@tabler/icons-react"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -27,7 +23,7 @@ function PaginationContent({
   return (
     <ul
       data-slot="pagination-content"
-      className={cn("flex items-center gap-1", className)}
+      className={cn("flex items-center gap-0.5", className)}
       {...props}
     />
   )
@@ -74,10 +70,10 @@ function PaginationPrevious({
     <PaginationLink
       aria-label="Go to previous page"
       size="default"
-      className={cn("pl-2!", className)}
+      className={cn("pl-1.5!", className)}
       {...props}
     >
-      <CaretLeftIcon data-icon="inline-start" />
+      <IconChevronLeft data-icon="inline-start" />
       <span className="hidden sm:block">{text}</span>
     </PaginationLink>
   )
@@ -92,11 +88,11 @@ function PaginationNext({
     <PaginationLink
       aria-label="Go to next page"
       size="default"
-      className={cn("pr-2!", className)}
+      className={cn("pr-1.5!", className)}
       {...props}
     >
       <span className="hidden sm:block">{text}</span>
-      <CaretRightIcon data-icon="inline-end" />
+      <IconChevronRight data-icon="inline-end" />
     </PaginationLink>
   )
 }
@@ -110,12 +106,13 @@ function PaginationEllipsis({
       aria-hidden
       data-slot="pagination-ellipsis"
       className={cn(
-        "flex size-9 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
+        "flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     >
-      <DotsThreeIcon />
+      <IconDots
+      />
       <span className="sr-only">More pages</span>
     </span>
   )

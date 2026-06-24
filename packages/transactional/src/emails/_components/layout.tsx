@@ -15,7 +15,7 @@ import {
   Text,
 } from "react-email";
 import { emailTailwindConfig } from "../../theme";
-import { EmailFonts } from "../styles/fonts";
+import { EmailFonts } from "../_styles/fonts";
 import { baseURL } from "../utils";
 import EmailButton from "./button";
 
