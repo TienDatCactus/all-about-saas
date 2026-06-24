@@ -32,7 +32,11 @@ const statefulButtonMachine = setup({
       | { type: "click" }
       | { type: "updateProgress"; progress: number }
       | { type: "finishLoading" }
-      | { type: "error" },
+      | { type: "error" }
+      | { type: "setLoading" }
+      | { type: "setSuccess" }
+      | { type: "setError" }
+      | { type: "setIdle" },
   },
   actions: {
     callOnComplete: ({ context }) => context.onComplete?.(),
@@ -55,6 +59,12 @@ const statefulButtonMachine = setup({
     buttonType: input.buttonType,
   }),
   initial: "idle",
+  on: {
+    setLoading: { target: ".loading" },
+    setSuccess: { target: ".success" },
+    setError: { target: ".error" },
+    setIdle: { target: ".idle" },
+  },
   states: {
     idle: {
       on: {

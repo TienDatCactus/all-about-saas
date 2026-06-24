@@ -59,6 +59,7 @@ const LoginForm: React.FC = () => {
       <Button
         onClick={form.handleSubmit}
         className="mt-4 w-full py-2 font-medium"
+        mutationState={status}
       >
         Sign in
       </Button>

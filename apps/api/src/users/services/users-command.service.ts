@@ -39,7 +39,10 @@ export class UsersCommandService {
     Object.assign(res, dto);
     return this.usersRepository.save(res);
   }
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(
+    email: string,
+    pass: string,
+  ): Promise<Partial<User> | null> {
     if (!pass) {
       return null;
     }

@@ -30,7 +30,7 @@ interface SessionInfo {
 interface LoginResp {
   accessToken: string;
   refreshToken: string;
-  user?: User;
+  user?: Partial<User>;
 }
 
 interface CreateVTResp {
@@ -59,8 +59,11 @@ export class AuthService {
     sessionInfo: SessionInfo,
   ): Promise<LoginResp> {
     const user = await this.ucService.validateUser(email, password);
-    if (!user) {
+    if (!user || !user.email || !user.id) {
       throw new HttpException('Invalid email or password', 400);
+    }
+    if (!user.isActive) {
+      throw new HttpException('User is not active', 400);
     }
     const payload: PayloadDto = {
       email: user.email,
@@ -213,27 +216,34 @@ export class AuthService {
   }
 
   async resendVerificationEmail(selector: string): Promise<void> {
-    const user = await this.verificationTokenRepo.findOne({
+    const token = await this.verificationTokenRepo.findOne({
       where: { selector },
       relations: ['user'],
     });
+    if (!token) {
+      throw new HttpException('Verification token not found', 404);
+    }
+    const user = token.user;
     if (!user) {
       throw new HttpException('User not found', 404);
     }
-    const { rawToken } = await this.createVerificationTokenRecord({
-      userId: user.user.id,
+    if (user.emailVerified === true) {
+      throw new HttpException('Email already verified', 400);
+    }
+    const { rawToken, selector: newSelector } = await this.createVerificationTokenRecord({
+      userId: user.id,
       type: VerificationType.EMAIL_VERIFY,
     });
     const url = new URL(this.configService.get('frontendUrl') ?? '');
     url.pathname = '/verify-email';
     url.searchParams.set('token', rawToken);
-    url.searchParams.set('selector', selector);
+    url.searchParams.set('selector', newSelector);
     await this.mailService.sendEmail(
       {
         subject: 'Resend Verification Email',
-        to: user.user.email,
+        to: user.email,
         headers: {
-          'X-Entity-Ref-ID': user.user.id,
+          'X-Entity-Ref-ID': user.id,
         },
       },
       'welcome',
@@ -294,8 +304,9 @@ export class AuthService {
     if (!record) {
       return null;
     }
-
-    // Kiểm tra nếu đã dùng hoặc hết hạn
+    if (record.user.emailVerified === true) {
+      throw new HttpException('Email already verified.', 400);
+    }
     if (record.usedAt || record.expiresAt < new Date()) {
       return null;
     }

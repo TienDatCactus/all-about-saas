@@ -81,6 +81,7 @@ const SignUpForm: React.FC = () => {
       <Button
         onClick={form.handleSubmit}
         className="mt-4 w-full py-2 font-medium"
+        disabled={status === "pending"}
       >
         Sign up
       </Button>

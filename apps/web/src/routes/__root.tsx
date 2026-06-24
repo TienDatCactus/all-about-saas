@@ -71,7 +71,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body suppressHydrationWarning>
-          <div className="container mx-auto flex min-h-dvh items-center justify-center">
+          <div className="flex min-h-dvh items-center justify-center">
             {children}
           </div>
 
