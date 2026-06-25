@@ -1,20 +1,16 @@
 import Logo from "@/components/custom/logo";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
-  useResendVerificationEmailMutation,
+  useSendVerificationEmailMutation,
   useVerifyEmailMutation,
   VerifyEmailSchema,
 } from "@/services/auth";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { cn } from "../lib/utils";
-import {
-  CheckCircleIcon,
-  XCircleIcon,
-  EnvelopeOpenIcon,
-  CircleNotchIcon,
-} from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { cn } from "../lib/utils";
 
 export const Route = createFileRoute("/verify-email")({
   component: RouteComponent,
@@ -22,36 +18,62 @@ export const Route = createFileRoute("/verify-email")({
 });
 
 function RouteComponent() {
-  const { selector, token } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const { selector, token, type } = Route.useSearch();
   const { mutate, status } = useVerifyEmailMutation();
   const { mutate: resendEmail, status: resendStatus } =
-    useResendVerificationEmailMutation();
+    useSendVerificationEmailMutation();
 
   useEffect(() => {
     if (selector && token) {
-      mutate({
-        selector,
-        token,
-      });
+      mutate(
+        {
+          selector,
+          token,
+          type,
+        },
+        {
+          onSuccess: (_, variables) => {
+            if (type === "EMAIL_VERIFY") {
+              toast.success("Email verified successfully! You can now log in.");
+            } else if (type === "PASSWORD_RESET") {
+              toast.success(
+                "Password reset email verified successfully! You can now reset your password.",
+              );
+              navigate({
+                to: "/auth/change-password",
+                search: {
+                  selector: variables.selector,
+                  token: variables.token,
+                  type: type,
+                },
+              });
+            }
+          },
+        },
+      );
     }
-  }, [selector, token]);
+  }, [selector, token, type]);
 
   const onResendEmail = () => {
     if (selector) {
-      resendEmail(selector, {
-        onSuccess: () => {
-          toast.success(
-            "Verification email resent successfully! Please check your inbox.",
-          );
+      resendEmail(
+        { selector, type },
+        {
+          onSuccess: () => {
+            toast.success(
+              "Verification email resent successfully! Please check your inbox.",
+            );
+          },
+          onError: (err: any) => {
+            const message =
+              err?.response?.data?.message ||
+              err?.message ||
+              "Failed to resend verification email.";
+            toast.error(message);
+          },
         },
-        onError: (err: any) => {
-          const message =
-            err?.response?.data?.message ||
-            err?.message ||
-            "Failed to resend verification email.";
-          toast.error(message);
-        },
-      });
+      );
     }
   };
 
@@ -90,7 +112,7 @@ function RouteComponent() {
               used. Please request a new verification email below.
             </p>
           </div>
-          <div className="w-full space-y-3 mt-4">
+          <div className="w-full">
             <Button
               className="w-full"
               disabled={isPending}
@@ -98,8 +120,19 @@ function RouteComponent() {
             >
               {isPending ? "Resending..." : "Resend Verification Email"}
             </Button>
-            <Button className="w-full" variant="outline" asChild>
-              <Link to="/auth/login">Back to Login</Link>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  or
+                </span>
+              </div>
+            </div>
+            <Button className="w-full" variant="outline">
+              <ArrowLeftIcon />
+              Back to Login
             </Button>
           </div>
         </div>
@@ -121,6 +154,7 @@ function RouteComponent() {
               mutate({
                 selector,
                 token,
+                type,
               })
             }
           >
@@ -130,7 +164,7 @@ function RouteComponent() {
             Didn't receive the email?{" "}
             <a
               className={cn(
-                "link font-medium cursor-pointer",
+                "link text-primary",
                 isPending && "pointer-events-none opacity-50",
               )}
               onClick={onResendEmail}

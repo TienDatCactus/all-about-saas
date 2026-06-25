@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Logger,
   Post,
   Req,
   Res,
@@ -24,6 +25,7 @@ import {
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { UsersCommandService } from '../users/services/users-command.service';
+import { SendVerificationEmailDto } from './dto/send-verification-email.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -72,12 +74,15 @@ export class AuthController {
   @Public()
   @Post('verify-email')
   async verifyEmail(@Body() body: VerifyEmailDto) {
+    if (!body.selector || !body.token) {
+      throw new BadRequestException('Selector and token are required.');
+    }
     const user = await this.authService.verifyVerificationTokenRecord(
       body.selector,
       body.token,
-      VerificationType.EMAIL_VERIFY,
+      body.type,
     );
-
+    Logger.debug(user, body);
     if (!user) {
       throw new BadRequestException(
         'Either invalid or expired verification token.',
@@ -100,11 +105,21 @@ export class AuthController {
   }
 
   @Public()
-  @Post('resend-verification-email')
-  async resendVerificationEmail(@Body() body: { selector: string }) {
-    await this.authService.resendVerificationEmail(body.selector);
+  @Post('send-verification-email')
+  async sendVerificationEmail(
+    @Body()
+    body: SendVerificationEmailDto,
+  ) {
+    if (!body.selector || !body.type) {
+      throw new BadRequestException('Selector and type are required.');
+    }
+    if (body.type === 'PASSWORD_RESET') {
+      await this.authService.sendResetPasswordEmail(body.selector);
+    } else if (body.type === 'EMAIL_VERIFY') {
+      await this.authService.resendVerificationEmail(body.selector);
+    }
     return {
-      message: 'Verification email resent successfully.',
+      message: 'Verification email sent successfully.',
     };
   }
 

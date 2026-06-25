@@ -63,6 +63,25 @@ export type SignUpIn = z.infer<typeof SignUpSchema>;
 export const VerifyEmailSchema = z.object({
   token: z.string(),
   selector: z.string(),
+  type: z.enum(["EMAIL_VERIFY", "PASSWORD_RESET"]),
 });
 
 export type VerifyEmailIn = z.infer<typeof VerifyEmailSchema>;
+
+export const SendVerificationEmailSchema = z.object({
+  email: z.email().optional(),
+  selector: z.string().optional(),
+  type: z.enum(["EMAIL_VERIFY", "PASSWORD_RESET"]),
+});
+
+export type SendVerificationEmailIn = z.infer<
+  typeof SendVerificationEmailSchema
+>;
+
+export const ChangePasswordSchema = z.object({
+  type: SendVerificationEmailSchema.shape.type,
+  selector: SendVerificationEmailSchema.shape.selector,
+  token: VerifyEmailSchema.shape.token,
+  password: SignUpSchema.shape.password,
+  rePassword: SignUpSchema.shape.rePassword,
+});

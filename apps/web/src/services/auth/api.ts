@@ -1,6 +1,11 @@
 import { http } from "@/lib/utils/http";
 import { AUTH } from "../url";
-import type { LoginIn, SignUpIn, VerifyEmailIn } from "./types";
+import type {
+  LoginIn,
+  SendVerificationEmailIn,
+  SignUpIn,
+  VerifyEmailIn,
+} from "./types";
 
 export const authApi = {
   login: async (data: LoginIn): Promise<string> => {
@@ -21,7 +26,9 @@ export const authApi = {
   verifyEmail: async (data: VerifyEmailIn) => {
     return http.post(AUTH.verifyEmail, data);
   },
-  resendVerificationEmail: async (selector: string): Promise<void> => {
-    return http.post(AUTH.resendVerificationEmail, { selector });
+  sendVerificationEmail: async (
+    data: SendVerificationEmailIn,
+  ): Promise<void> => {
+    return http.post(AUTH.sendVerificationEmail, data);
   },
 };

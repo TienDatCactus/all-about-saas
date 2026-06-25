@@ -140,6 +140,9 @@
   }
 }
 
+.link {
+  @apply font-medium;
+}
 .link:hover {
   text-decoration: underline;
   color: var(--color-primary);

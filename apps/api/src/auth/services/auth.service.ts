@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { UAParser } from 'ua-parser-js';
@@ -18,6 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
 import { MailService } from '../../mail/mail.service';
 import { SignUpDto } from '../dto/sign-up.dto';
+import { EmailTemplate } from '@transactional/emails';
 
 interface SessionInfo {
   ipAddress: string;
@@ -37,6 +38,7 @@ interface CreateVTResp {
   selector: string;
   rawToken: string;
 }
+const VERIFY_PATH = '/verify-email';
 
 @Injectable()
 export class AuthService {
@@ -51,6 +53,8 @@ export class AuthService {
     private readonly verificationTokenRepo: Repository<VerificationToken>,
     private readonly tokensService: TokensService,
     private readonly mailService: MailService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   async login(
@@ -204,17 +208,6 @@ export class AuthService {
     }
   }
 
-  getSessionInfo(req: Request): SessionInfo {
-    const userAgent = req.headers['user-agent'] ?? '';
-    const parser = new UAParser(userAgent);
-
-    return {
-      ipAddress: req.ip || req.headers['forwarded'] || '',
-      userAgent,
-      deviceName: `${parser.getBrowser().name} on ${parser.getOS().name}`,
-    };
-  }
-
   async resendVerificationEmail(selector: string): Promise<void> {
     const token = await this.verificationTokenRepo.findOne({
       where: { selector },
@@ -227,35 +220,77 @@ export class AuthService {
     if (!user) {
       throw new HttpException('User not found', 404);
     }
-    if (user.emailVerified === true) {
-      throw new HttpException('Email already verified', 400);
-    }
-    const { rawToken, selector: newSelector } = await this.createVerificationTokenRecord({
-      userId: user.id,
+
+    await this.sendVerificationEmail({
+      user,
       type: VerificationType.EMAIL_VERIFY,
+      pathname: VERIFY_PATH,
+      subject: 'Resend Verification Email',
+      template: 'welcome',
     });
+  }
+
+  async sendResetPasswordEmail(selector: string): Promise<void> {
+    const user = await this.userRepo.findOne({
+      relations: ['verificationTokens'],
+      where: {
+        verificationTokens: {
+          selector,
+        },
+      },
+    });
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+    await this.sendVerificationEmail({
+      user,
+      type: VerificationType.PASSWORD_RESET,
+      pathname: VERIFY_PATH,
+      subject: 'Reset Your Password',
+      template: 'passwordReset',
+    });
+  }
+
+  async sendVerificationEmail({
+    user,
+    type,
+    pathname,
+    subject = 'Verify Your Email',
+    template = 'welcome',
+    props,
+  }: {
+    user: User;
+    pathname: string;
+    type: VerificationType;
+    subject?: string;
+    template?: EmailTemplate;
+    props?: Record<string, any>;
+  }) {
+    const { rawToken, selector: newSelector } =
+      await this.createVerificationTokenRecord({
+        userId: user.id,
+        type: type,
+      });
     const url = new URL(this.configService.get('frontendUrl') ?? '');
-    url.pathname = '/verify-email';
+    url.pathname = pathname;
     url.searchParams.set('token', rawToken);
     url.searchParams.set('selector', newSelector);
-    await this.mailService.sendEmail(
+    url.searchParams.set('type', type);
+    return await this.mailService.sendEmail(
       {
-        subject: 'Resend Verification Email',
+        subject: subject,
         to: user.email,
         headers: {
           'X-Entity-Ref-ID': user.id,
         },
       },
-      'welcome',
+      template,
       {
         url: url.toString(),
+        ...props,
       },
     );
   }
-
-  // ==========================================
-  // Verification Tokens Record Management
-  // ==========================================
 
   async createVerificationTokenRecord({
     userId,
@@ -297,16 +332,17 @@ export class AuthService {
     type: VerificationType,
   ): Promise<User | null> {
     const record = await this.verificationTokenRepo.findOne({
-      where: { selector, type },
-      relations: ['user'], // lấy kèm thông tin user
+      relations: ['user'],
+      where: {
+        selector,
+        type,
+      },
     });
-
+    Logger.debug('Verification token record:', selector, record, type);
     if (!record) {
       return null;
     }
-    if (record.user.emailVerified === true) {
-      throw new HttpException('Email already verified.', 400);
-    }
+
     if (record.usedAt || record.expiresAt < new Date()) {
       return null;
     }
@@ -318,9 +354,20 @@ export class AuthService {
     if (isValid) {
       record.usedAt = new Date();
       await this.verificationTokenRepo.save(record);
-      return record.user; // Trả về user thay vì true
+      return record.user;
     }
 
     return null;
+  }
+
+  getSessionInfo(req: Request): SessionInfo {
+    const userAgent = req.headers['user-agent'] ?? '';
+    const parser = new UAParser(userAgent);
+
+    return {
+      ipAddress: req.ip || req.headers['forwarded'] || '',
+      userAgent,
+      deviceName: `${parser.getBrowser().name} on ${parser.getOS().name}`,
+    };
   }
 }

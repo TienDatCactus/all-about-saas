@@ -1,25 +1,26 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthController } from './auth.controller';
-import { AuthService } from './services/auth.service';
-import { LocalAuthGuard } from '../common/guard/local-auth.guard';
-import { LocalStrategy } from './strategy/local.strategy';
-import { JwtStrategy } from './strategy/jwt.strategy';
-import { GoogleStrategy } from './strategy/google.strategy';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
-import { UsersModule } from '../users/users.module';
-import { ConfigService } from '@nestjs/config';
-import { TokensService } from './services/tokens.service';
-import { Session } from './entities/session.entity';
-import { VerificationToken } from './entities/verification-token.entity';
+import { LocalAuthGuard } from '../common/guard/local-auth.guard';
 import { MailModule } from '../mail/mail.module';
 import { MailService } from '../mail/mail.service';
+import { UsersModule } from '../users/users.module';
+import { AuthController } from './auth.controller';
+import { Session } from './entities/session.entity';
+import { VerificationToken } from './entities/verification-token.entity';
+import { AuthService } from './services/auth.service';
+import { TokensService } from './services/tokens.service';
+import { GoogleStrategy } from './strategy/google.strategy';
+import { JwtStrategy } from './strategy/jwt.strategy';
+import { LocalStrategy } from './strategy/local.strategy';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Session, VerificationToken]),
+    TypeOrmModule.forFeature([Session, VerificationToken, User]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

@@ -4,8 +4,8 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useNavigate } from "@tanstack/react-router";
 import React from "react";
-import SignUpForm from "./components/Form";
-const SignUp: React.FC = () => {
+import ForgotPasswordForm from "./components/Form";
+const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
   return (
     <div className="flex min-h-dvh items-center justify-center">
@@ -15,20 +15,13 @@ const SignUp: React.FC = () => {
             <Logo alt="Logo" className="w-52 mx-auto" />
           </div>
           <h2 className="text-center text-xl font-semibold text-balance text-foreground">
-            Sign up for AAS account
+            Reset Password
           </h2>{" "}
           <p className="mt-4 text-xs text-pretty text-center text-muted-foreground dark:text-muted-foreground">
-            By signing up, you agree to our{" "}
-            <a href="#" className="underline underline-offset-4">
-              terms of service
-            </a>{" "}
-            and{" "}
-            <a href="#" className="underline underline-offset-4">
-              privacy policy
-            </a>
-            .
+            Enter your email address and we'll send you a link to reset your
+            password.
           </p>
-          <SignUpForm />
+          <ForgotPasswordForm />
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <Separator className="w-full" />
@@ -46,10 +39,10 @@ const SignUp: React.FC = () => {
                 to: "/auth/login",
               })
             }
-            className="w-full "
+            className="flex w-full items-center justify-center space-x-2 py-2"
           >
             <ArrowLeftIcon />
-            Back to Login
+            <span className="text-sm font-medium">Back to Login</span>
           </Button>
         </div>
       </div>
@@ -57,4 +50,4 @@ const SignUp: React.FC = () => {
   );
 };
 
-export default SignUp;
+export default ResetPassword;

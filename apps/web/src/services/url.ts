@@ -5,5 +5,5 @@ export const AUTH = {
   logout: "/auth/logout",
   refresh: "/auth/refresh",
   verifyEmail: "/auth/verify-email",
-  resendVerificationEmail: "/auth/resend-verification-email",
+  sendVerificationEmail: "/auth/send-verification-email",
 };

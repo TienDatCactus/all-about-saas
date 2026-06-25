@@ -40,11 +40,11 @@ const Login: React.FC = () => {
           </div>
         </div>
         <Providers />
-        <p className="mt-4 text-xs text-pretty text-center text-muted-foreground dark:text-muted-foreground">
+        <p className="mt-4 text-sm text-pretty text-center text-muted-foreground dark:text-muted-foreground">
           Forgot your password?{" "}
-          <a href="#" className="text-primary font-semibold text-sm">
+          <Link to="/auth/reset-password" className="link text-primary">
             Reset password
-          </a>
+          </Link>
           .
         </p>
       </div>

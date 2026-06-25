@@ -1,7 +1,13 @@
 import { AppConstants } from "@/lib/utils/constants";
 import { storage } from "@/lib/utils/local-storage";
 import { useMutation } from "@tanstack/react-query";
-import { authApi, type LoginIn, type SignUpIn, type VerifyEmailIn } from ".";
+import {
+  authApi,
+  type LoginIn,
+  type SendVerificationEmailIn,
+  type SignUpIn,
+  type VerifyEmailIn,
+} from ".";
 
 export const useLoginMutation = () => {
   return useMutation({
@@ -46,8 +52,9 @@ export const useVerifyEmailMutation = () => {
   });
 };
 
-export const useResendVerificationEmailMutation = () => {
+export const useSendVerificationEmailMutation = () => {
   return useMutation({
-    mutationFn: (selector: string) => authApi.resendVerificationEmail(selector),
+    mutationFn: (data: SendVerificationEmailIn) =>
+      authApi.sendVerificationEmail(data),
   });
 };
