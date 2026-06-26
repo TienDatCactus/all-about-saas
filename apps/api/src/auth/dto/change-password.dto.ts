@@ -1,15 +1,19 @@
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { VerificationType } from "../entities/verification-token.entity";
 
-export class SendVerificationEmailDto {
+export class ChangePasswordDto {
   @IsString()
   @IsOptional()
   selector?: string;
 
   @IsString()
   @IsOptional()
+  token?: string;
+
+  @IsString()
+  @IsOptional()
   email?: string;
 
+  @IsString()
   @IsNotEmpty()
-  type: VerificationType;
+  password: string;
 }

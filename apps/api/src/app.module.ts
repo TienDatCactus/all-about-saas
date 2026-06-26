@@ -1,23 +1,18 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import helmet from 'helmet';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { CaslModule } from './casl/casl.module';
-import configuration from './common/config/configuration';
-import database from './common/config/database';
-import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
-import { MailModule } from './mail/mail.module';
-import { RolesModule } from './roles/roles.module';
-import { UsersModule } from './users/users.module';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import helmet from "helmet";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { AuthModule } from "./auth/auth.module";
+import { CaslModule } from "./casl/casl.module";
+import configuration from "./common/config/configuration";
+import database from "./common/config/database";
+import { LoggerMiddleware } from "./common/middleware/logger/logger.middleware";
+import { MailModule } from "./mail/mail.module";
+import { RolesModule } from "./roles/roles.module";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
@@ -25,7 +20,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     CaslModule,
     ConfigModule.forRoot({
-      envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}.local`],
+      envFilePath: [`.env.${process.env.NODE_ENV ?? "development"}.local`],
       isGlobal: true,
       load: [configuration, database],
     }),
@@ -49,15 +44,15 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware, helmet()).forRoutes(
       {
-        path: '*',
+        path: "*",
         method: RequestMethod.POST,
       },
       {
-        path: '*',
+        path: "*",
         method: RequestMethod.PATCH,
       },
       {
-        path: '*',
+        path: "*",
         method: RequestMethod.DELETE,
       },
     );

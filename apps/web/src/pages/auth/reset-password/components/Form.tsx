@@ -38,9 +38,6 @@ const ForgotPasswordForm: React.FC = () => {
             toast.success("Check your inbox", {
               description: "We have sent you an activation email",
             });
-            navigate({
-              to: "/auth/login",
-            });
           },
         },
       );
@@ -58,9 +55,7 @@ const ForgotPasswordForm: React.FC = () => {
     >
       <FieldGroup>
         <FormField form={form} name="email" label="Email">
-          {({ inputProps }) => (
-            <Input mutationState={status} placeholder="Email" {...inputProps} />
-          )}
+          {({ inputProps }) => <Input mutationState={status} placeholder="Email" {...inputProps} />}
         </FormField>
       </FieldGroup>
       <Button

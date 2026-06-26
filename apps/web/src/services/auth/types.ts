@@ -74,14 +74,15 @@ export const SendVerificationEmailSchema = z.object({
   type: z.enum(["EMAIL_VERIFY", "PASSWORD_RESET"]),
 });
 
-export type SendVerificationEmailIn = z.infer<
-  typeof SendVerificationEmailSchema
->;
+export type SendVerificationEmailIn = z.infer<typeof SendVerificationEmailSchema>;
 
 export const ChangePasswordSchema = z.object({
   type: SendVerificationEmailSchema.shape.type,
   selector: SendVerificationEmailSchema.shape.selector,
   token: VerifyEmailSchema.shape.token,
+  email: SendVerificationEmailSchema.shape.email,
   password: SignUpSchema.shape.password,
   rePassword: SignUpSchema.shape.rePassword,
 });
+
+export type ChangePasswordIn = z.infer<typeof ChangePasswordSchema>;

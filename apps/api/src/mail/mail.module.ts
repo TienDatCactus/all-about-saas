@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from './mail.service';
 import { MailController } from './mail.controller';
-
+import * as dns from 'dns';
 @Module({
   imports: [
     MailerModule.forRootAsync({
@@ -18,7 +18,7 @@ import { MailController } from './mail.controller';
             pass: configService.get('email.pass'),
           },
           lookup: (hostname, options, callback) => {
-            require('dns').lookup(hostname, { family: 4 }, callback);
+            dns.lookup(hostname, { family: 4 }, callback);
           },
           tls: {
             rejectUnauthorized: false,

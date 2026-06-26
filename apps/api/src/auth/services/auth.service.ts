@@ -1,24 +1,22 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
-import { UAParser } from 'ua-parser-js';
-import { User } from '../../users/entities/user.entity';
-import { UsersCommandService } from '../../users/services/users-command.service';
-import { UsersQueryService } from '../../users/services/users-query.service';
-import { UsersService } from '../../users/services/users.service';
-import { PayloadDto } from '../dto/jwt-payload.dto';
-import { TokensService } from './tokens.service';
-import { Repository } from 'typeorm';
-import { Session } from '../entities/session.entity';
-import {
-  VerificationToken,
-  VerificationType,
-} from '../entities/verification-token.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import * as crypto from 'crypto';
-import { MailService } from '../../mail/mail.service';
-import { SignUpDto } from '../dto/sign-up.dto';
-import { EmailTemplate } from '@transactional/emails';
+import { HttpException, Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Request } from "express";
+import { UAParser } from "ua-parser-js";
+import { User } from "../../users/entities/user.entity";
+import { UsersCommandService } from "../../users/services/users-command.service";
+import { UsersQueryService } from "../../users/services/users-query.service";
+import { UsersService } from "../../users/services/users.service";
+import { PayloadDto } from "../dto/jwt-payload.dto";
+import { TokensService } from "./tokens.service";
+import { Repository } from "typeorm";
+import { Session } from "../entities/session.entity";
+import { VerificationToken, VerificationType } from "../entities/verification-token.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import * as crypto from "crypto";
+import { MailService } from "../../mail/mail.service";
+import { SignUpDto } from "../dto/sign-up.dto";
+import { EmailTemplate } from "@transactional/emails";
+import { ChangePasswordDto } from "../dto/change-password.dto";
 
 interface SessionInfo {
   ipAddress: string;
@@ -38,7 +36,7 @@ interface CreateVTResp {
   selector: string;
   rawToken: string;
 }
-const VERIFY_PATH = '/verify-email';
+const VERIFY_PATH = "/verify-email";
 
 @Injectable()
 export class AuthService {
@@ -53,21 +51,15 @@ export class AuthService {
     private readonly verificationTokenRepo: Repository<VerificationToken>,
     private readonly tokensService: TokensService,
     private readonly mailService: MailService,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
   ) {}
 
-  async login(
-    email: string,
-    password: string,
-    sessionInfo: SessionInfo,
-  ): Promise<LoginResp> {
+  async login(email: string, password: string, sessionInfo: SessionInfo): Promise<LoginResp> {
     const user = await this.ucService.validateUser(email, password);
     if (!user || !user.email || !user.id) {
-      throw new HttpException('Invalid email or password', 400);
+      throw new HttpException("Invalid email or password", 400);
     }
     if (!user.isActive) {
-      throw new HttpException('User is not active', 400);
+      throw new HttpException("User is not active", 400);
     }
     const payload: PayloadDto = {
       email: user.email,
@@ -82,9 +74,7 @@ export class AuthService {
         deviceName: sessionInfo.deviceName,
         ipAddress: sessionInfo.ipAddress,
         userAgent: sessionInfo.userAgent,
-        expiresAt: new Date(
-          Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
-        ),
+        expiresAt: new Date(Date.now() + +this.configService.get("jwt.refreshExpiresIn")),
       }),
     );
     return {
@@ -96,41 +86,25 @@ export class AuthService {
 
   async signup(dto: SignUpDto) {
     const passwordHash = await this.tokensService.hashPassword(dto.password);
+    const exists = await this.uqService.findOneBy({
+      email: dto.email,
+    });
 
-    try {
-      const newUser = await this.ucService.create({
-        email: dto.email,
-        password: passwordHash,
-      });
-
-      const { rawToken, selector } = await this.createVerificationTokenRecord({
-        userId: newUser.id,
-        type: VerificationType.EMAIL_VERIFY,
-      });
-      const url = new URL(this.configService.get('frontendUrl') ?? '');
-      url.pathname = '/verify-email';
-      url.searchParams.set('token', rawToken);
-      url.searchParams.set('selector', selector);
-      await this.mailService.sendEmail(
-        {
-          subject: 'Welcome to All about Saas',
-          to: newUser.email,
-          headers: {
-            'X-Entity-Ref-ID': newUser.id,
-          },
-        },
-        'welcome',
-        {
-          url: url.toString(),
-        },
-      );
-    } catch (e: any) {
-      if (e.code === '23505') {
-        throw new HttpException('Email already in use', 400);
-      }
-
-      throw e;
+    if (exists) {
+      throw new HttpException("Email already in use", 400);
     }
+    const newUser = await this.ucService.create({
+      email: dto.email,
+      password: passwordHash,
+    });
+
+    await this.sendVerificationEmail({
+      pathname: VERIFY_PATH,
+      user: newUser,
+      type: VerificationType.EMAIL_VERIFY,
+      subject: "Welcome to All about Saas",
+      template: "welcome",
+    });
   }
 
   async oauthAccess(
@@ -148,7 +122,7 @@ export class AuthService {
       profile,
     );
     if (!user) {
-      throw new HttpException('Failed to create user from OAuth data', 400);
+      throw new HttpException("Failed to create user from OAuth data", 400);
     }
 
     const payload: PayloadDto = { email: user.email, sub: user.id };
@@ -161,9 +135,7 @@ export class AuthService {
       deviceName: sessionInfo.deviceName,
       ipAddress: sessionInfo.ipAddress,
       userAgent: sessionInfo.userAgent,
-      expiresAt: new Date(
-        Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
-      ),
+      expiresAt: new Date(Date.now() + +this.configService.get("jwt.refreshExpiresIn")),
     });
     await this.sessionRepo.save(session);
 
@@ -186,13 +158,12 @@ export class AuthService {
         },
       });
       if (!session || !!session.revokedAt || session.expiresAt < new Date()) {
-        throw new HttpException('Session expired or revoked', 401);
+        throw new HttpException("Session expired or revoked", 401);
       }
-      const newAccessToken =
-        await this.tokensService.generateAccessToken(payload);
+      const newAccessToken = await this.tokensService.generateAccessToken(payload);
       return newAccessToken;
     } catch (error) {
-      throw new HttpException('Invalid refresh token', 401);
+      throw new HttpException("Invalid refresh token", 401);
     }
   }
 
@@ -208,46 +179,94 @@ export class AuthService {
     }
   }
 
+  async changePassword({
+    selector,
+    token,
+    password,
+  }: Pick<ChangePasswordDto, "selector" | "token" | "password">): Promise<void> {
+    if (!selector && !token && !password) {
+      throw new HttpException("Some credentials are missing", 400);
+    }
+    const user = await this.verifyVerificationTokenRecord(
+      selector!,
+      token!,
+      VerificationType.PASSWORD_RESET,
+    );
+    if (!user) {
+      throw new HttpException("User not found", 404);
+    }
+    const rec = await this.uqService.findOneBy({ id: user.id });
+    if (!rec) {
+      throw new HttpException("User not found", 404);
+    }
+    const comparison = await this.tokensService.comparePassword(password, rec.password);
+    if (comparison) {
+      throw new HttpException("New password cannot be the same as the old password", 400);
+    }
+    await this.ucService.update(
+      {
+        password: await this.tokensService.hashPassword(password),
+      },
+      {
+        id: user.id,
+      },
+    );
+  }
+  async resetPassword({
+    password,
+    email,
+  }: Pick<ChangePasswordDto, "password" | "email">): Promise<void> {
+    const user = await this.uqService.findOneBy({ email });
+    if (!user) {
+      throw new HttpException("User not found", 404);
+    }
+    const comparison = await this.tokensService.comparePassword(password, user.password);
+    if (comparison) {
+      throw new HttpException("New password cannot be the same as the old password", 400);
+    }
+    await this.ucService.update(
+      {
+        password: await this.tokensService.hashPassword(password),
+      },
+      {
+        id: user.id,
+      },
+    );
+  }
+
   async resendVerificationEmail(selector: string): Promise<void> {
     const token = await this.verificationTokenRepo.findOne({
       where: { selector },
-      relations: ['user'],
+      relations: ["user"],
     });
     if (!token) {
-      throw new HttpException('Verification token not found', 404);
+      throw new HttpException("Verification token not found", 404);
     }
     const user = token.user;
     if (!user) {
-      throw new HttpException('User not found', 404);
+      throw new HttpException("User not found", 404);
     }
 
     await this.sendVerificationEmail({
       user,
       type: VerificationType.EMAIL_VERIFY,
       pathname: VERIFY_PATH,
-      subject: 'Resend Verification Email',
-      template: 'welcome',
+      subject: "Resend Verification Email",
+      template: "welcome",
     });
   }
 
-  async sendResetPasswordEmail(selector: string): Promise<void> {
-    const user = await this.userRepo.findOne({
-      relations: ['verificationTokens'],
-      where: {
-        verificationTokens: {
-          selector,
-        },
-      },
-    });
+  async sendResetPasswordEmail(email: string): Promise<void> {
+    const user = await this.uqService.findOneBy({ email });
     if (!user) {
-      throw new HttpException('User not found', 404);
+      throw new HttpException("User not found", 404);
     }
     await this.sendVerificationEmail({
       user,
       type: VerificationType.PASSWORD_RESET,
       pathname: VERIFY_PATH,
-      subject: 'Reset Your Password',
-      template: 'passwordReset',
+      subject: "Reset Your Password",
+      template: "passwordReset",
     });
   }
 
@@ -255,8 +274,8 @@ export class AuthService {
     user,
     type,
     pathname,
-    subject = 'Verify Your Email',
-    template = 'welcome',
+    subject = "Verify Your Email",
+    template = "welcome",
     props,
   }: {
     user: User;
@@ -266,22 +285,21 @@ export class AuthService {
     template?: EmailTemplate;
     props?: Record<string, any>;
   }) {
-    const { rawToken, selector: newSelector } =
-      await this.createVerificationTokenRecord({
-        userId: user.id,
-        type: type,
-      });
-    const url = new URL(this.configService.get('frontendUrl') ?? '');
+    const { rawToken, selector: newSelector } = await this.createVerificationTokenRecord({
+      userId: user.id,
+      type: type,
+    });
+    const url = new URL(this.configService.get("frontendUrl") ?? "");
     url.pathname = pathname;
-    url.searchParams.set('token', rawToken);
-    url.searchParams.set('selector', newSelector);
-    url.searchParams.set('type', type);
+    url.searchParams.set("token", rawToken);
+    url.searchParams.set("selector", newSelector);
+    url.searchParams.set("type", type);
     return await this.mailService.sendEmail(
       {
         subject: subject,
         to: user.email,
         headers: {
-          'X-Entity-Ref-ID': user.id,
+          "X-Entity-Ref-ID": user.id,
         },
       },
       template,
@@ -303,11 +321,10 @@ export class AuthService {
   }): Promise<CreateVTResp> {
     const user = await this.uqService.findOneBy({ id: userId });
     if (!user) {
-      throw new HttpException('User not found', 404);
+      throw new HttpException("User not found", 404);
     }
 
-    const { rawToken, tokenHash } =
-      await this.tokensService.createVerificationToken();
+    const { rawToken, tokenHash } = await this.tokensService.createVerificationToken();
     const selector = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + expiresInMs);
 
@@ -332,13 +349,12 @@ export class AuthService {
     type: VerificationType,
   ): Promise<User | null> {
     const record = await this.verificationTokenRepo.findOne({
-      relations: ['user'],
+      relations: ["user"],
       where: {
         selector,
         type,
       },
     });
-    Logger.debug('Verification token record:', selector, record, type);
     if (!record) {
       return null;
     }
@@ -347,10 +363,7 @@ export class AuthService {
       return null;
     }
 
-    const isValid = await this.tokensService.verifyToken(
-      token,
-      record.tokenHash,
-    );
+    const isValid = await this.tokensService.verifyToken(token, record.tokenHash);
     if (isValid) {
       record.usedAt = new Date();
       await this.verificationTokenRepo.save(record);
@@ -361,11 +374,11 @@ export class AuthService {
   }
 
   getSessionInfo(req: Request): SessionInfo {
-    const userAgent = req.headers['user-agent'] ?? '';
+    const userAgent = req.headers["user-agent"] ?? "";
     const parser = new UAParser(userAgent);
 
     return {
-      ipAddress: req.ip || req.headers['forwarded'] || '',
+      ipAddress: req.ip || req.headers["forwarded"] || "",
       userAgent,
       deviceName: `${parser.getBrowser().name} on ${parser.getOS().name}`,
     };

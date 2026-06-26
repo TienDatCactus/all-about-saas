@@ -13,6 +13,7 @@ export class UsersQueryService {
   async findOneBy(q: FindOptionsWhere<User>) {
     return await this.usersRepository.findOneBy(q);
   }
+  
   async findAll() {
     return await this.usersRepository.find({
       relations: ['role'],

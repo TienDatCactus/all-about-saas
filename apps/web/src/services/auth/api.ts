@@ -1,6 +1,7 @@
 import { http } from "@/lib/utils/http";
 import { AUTH } from "../url";
 import type {
+  ChangePasswordIn,
   LoginIn,
   SendVerificationEmailIn,
   SignUpIn,
@@ -26,9 +27,12 @@ export const authApi = {
   verifyEmail: async (data: VerifyEmailIn) => {
     return http.post(AUTH.verifyEmail, data);
   },
-  sendVerificationEmail: async (
-    data: SendVerificationEmailIn,
-  ): Promise<void> => {
+  sendVerificationEmail: async (data: SendVerificationEmailIn): Promise<void> => {
     return http.post(AUTH.sendVerificationEmail, data);
+  },
+  changePassword: async (
+    data: Pick<ChangePasswordIn, "selector" | "email" | "password">,
+  ): Promise<void> => {
+    return http.post(AUTH.changePassword, data);
   },
 };
