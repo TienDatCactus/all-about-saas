@@ -169,7 +169,7 @@ export class AuthController {
 
   @Public()
   @Post("refresh")
-  async refresh(@Req() req, @Res({ passthrough: true }) res) {
+  async refresh(@Req() req) {
     const refreshToken = req.cookies["refresh_token"];
     if (!refreshToken) {
       throw new Error("Refresh token not found");

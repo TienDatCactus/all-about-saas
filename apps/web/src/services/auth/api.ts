@@ -35,4 +35,9 @@ export const authApi = {
   ): Promise<void> => {
     return http.post(AUTH.changePassword, data);
   },
+  resetPassword: async (
+    data: Pick<ChangePasswordIn, "selector" | "email" | "password">,
+  ): Promise<void> => {
+    return http.post(AUTH.resetPassword, data);
+  },
 };

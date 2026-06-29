@@ -60,7 +60,7 @@ export const useSendVerificationEmailMutation = () => {
 
 export const useChangePasswordMutation = () => {
   return useMutation({
-    mutationFn: (data: Pick<ChangePasswordIn, "selector" | "email" | "password">) =>
+    mutationFn: (data: Pick<ChangePasswordIn, "selector" | "token" | "password">) =>
       authApi.changePassword(data),
   });
 };

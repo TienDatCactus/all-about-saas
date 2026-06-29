@@ -55,7 +55,7 @@ export default function PasswordStrengthInput(props: PasswordStrengthProps) {
   const score = props.value ? (passed / checks.length) * 100 : 0;
   return (
     <div className="flex flex-col gap-2">
-      <Input {...props} isPassword />
+      <Input {...props}  isPassword />
       <Progress
         className="*:rounded-none my-2 h-2"
         appearance="dashed"

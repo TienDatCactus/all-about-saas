@@ -3,13 +3,7 @@ import { FormField } from "@/components/custom/form-field";
 import PasswordStrengthInput from "@/components/custom/password-strength";
 import { Button } from "@/components/custom/stateful-button";
 import { FieldGroup } from "@/components/ui/field";
-import {
-  LoginInSchema,
-  SignUpSchema,
-  useSignupMutation,
-  type LoginIn,
-  type SignUpIn,
-} from "@/services/auth";
+import { LoginInSchema, SignUpSchema, useSignupMutation, type SignUpIn } from "@/services/auth";
 import { formOptions, useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import React from "react";
@@ -52,12 +46,10 @@ const SignUpForm: React.FC = () => {
     >
       <FieldGroup>
         <FormField form={form} name="email" label="Email">
-          {({ inputProps }) => (
-            <Input mutationState={status} placeholder="Email" {...inputProps} />
-          )}
+          {({ inputProps }) => <Input mutationState={status} placeholder="Email" {...inputProps} />}
         </FormField>
 
-        <FormField form={form} name="password" label="Password">
+        <FormField form={form} name="password" label="Password" showError={false}>
           {({ inputProps }) => (
             <PasswordStrengthInput
               mutationState={status}
@@ -69,12 +61,7 @@ const SignUpForm: React.FC = () => {
         </FormField>
         <FormField form={form} name="rePassword" label="Re-Enter Password">
           {({ inputProps }) => (
-            <Input
-              mutationState={status}
-              isPassword
-              placeholder="Password"
-              {...inputProps}
-            />
+            <Input mutationState={status} isPassword placeholder="Password" {...inputProps} />
           )}
         </FormField>
       </FieldGroup>

@@ -7,4 +7,5 @@ export const AUTH = {
   verifyEmail: "/auth/verify-email",
   sendVerificationEmail: "/auth/send-verification-email",
   changePassword: "/auth/change-password",
+  resetPassword: "/auth/reset-password",
 };

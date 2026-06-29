@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-  FieldDescription,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel, FieldDescription } from "@/components/ui/field";
 import type { DeepKeys } from "@tanstack/react-form";
 import type React from "react";
 import type { ReactNode } from "react";
@@ -16,7 +11,7 @@ type FormFieldProps<TFormData> = {
 
   label?: string | React.ReactNode;
   description?: string | React.ReactNode;
-
+  showError?: boolean;
   children: (props: {
     field: any;
     inputProps: {
@@ -36,14 +31,14 @@ export function FormField<TFormData>({
   name,
   label,
   description,
+  showError = true,
   children,
 }: FormFieldProps<TFormData>) {
   return (
     <form.Field
       name={name}
       children={(field: any) => {
-        const isInvalid =
-          field.state.meta.isTouched && !field.state.meta.isValid;
+        const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 
         return (
           <Field data-invalid={isInvalid}>
@@ -53,7 +48,6 @@ export function FormField<TFormData>({
               field,
 
               isInvalid,
-
               inputProps: {
                 name: field.name,
                 value: field.state.value,
@@ -68,7 +62,7 @@ export function FormField<TFormData>({
 
             {description && <FieldDescription>{description}</FieldDescription>}
 
-            {isInvalid && <FieldError errors={field.state.meta.errors} />}
+            {isInvalid && showError && <FieldError errors={field.state.meta.errors} />}
           </Field>
         );
       }}
