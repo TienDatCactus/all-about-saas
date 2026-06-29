@@ -18,6 +18,11 @@ import { SignUpDto } from "../dto/sign-up.dto";
 import { EmailTemplate } from "@transactional/emails";
 import { ChangePasswordDto } from "../dto/change-password.dto";
 
+export enum OAUTH_PROVIDERS {
+  GOOGLE = "google",
+  FACEBOOK = "facebook",
+  GITHUB = "github",
+}
 interface SessionInfo {
   ipAddress: string;
   userAgent: string;

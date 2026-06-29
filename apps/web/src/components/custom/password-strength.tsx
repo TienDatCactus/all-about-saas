@@ -1,11 +1,7 @@
 import { cn } from "@/lib/utils";
 import { LoginInSchema } from "@/services/auth";
 import { validationMessages } from "@/services/auth/message";
-import {
-  CheckCircleIcon,
-  DotsThreeCircleIcon,
-  XCircleIcon,
-} from "@phosphor-icons/react";
+import { CheckCircleIcon, DotsThreeCircleIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { ItemGroup } from "../ui/item";
 import { Progress } from "../ui/progress";
@@ -22,6 +18,25 @@ const checks = [
   validationMessages.password.containsUppercase,
   validationMessages.password.containsSpecial,
 ];
+function getChecksIcon(errors: any, i: string) {
+  if (!errors?.includes(i)) {
+    return <CheckCircleIcon className="text-success" size={32} />;
+  } else {
+    return <XCircleIcon className="text-destructive" size={32} />;
+  }
+}
+function getStrengthVariant(passedChecks: number) {
+  if (passedChecks <= 1) {
+    return "danger";
+  }
+
+  if (passedChecks <= 3) {
+    return "warning";
+  }
+
+  return "success";
+}
+
 export default function PasswordStrengthInput(props: PasswordStrengthProps) {
   const password = typeof props.value === "string" ? props.value : "";
   const result = useMemo(() => {
@@ -29,33 +44,13 @@ export default function PasswordStrengthInput(props: PasswordStrengthProps) {
       password,
     });
   }, [password]);
-  const errors = result.success
-    ? []
-    : result.error.issues.map((issue) => issue.message);
+  const errors = result.success ? [] : result.error.issues.map((issue) => issue.message);
   const passed = checks.length - errors.length;
-  function getStrengthVariant(passedChecks: number) {
-    if (passedChecks <= 1) {
-      return "danger";
-    }
 
-    if (passedChecks <= 3) {
-      return "warning";
-    }
-
-    return "success";
-  }
-
-  function getChecksIcon(errors: any, i: string) {
-    if (!errors?.includes(i)) {
-      return <CheckCircleIcon className="text-success" size={32} />;
-    } else {
-      return <XCircleIcon className="text-destructive" size={32} />;
-    }
-  }
   const score = props.value ? (passed / checks.length) * 100 : 0;
   return (
     <div className="flex flex-col gap-2">
-      <Input {...props}  isPassword />
+      <Input {...props} isPassword />
       <Progress
         className="*:rounded-none my-2 h-2"
         appearance="dashed"
@@ -71,15 +66,12 @@ export default function PasswordStrengthInput(props: PasswordStrengthProps) {
               <DataItem
                 className={cn("p-1", index == 0 && "pt-0")}
                 title={i}
-                key={index}
+                key={i.toString()}
                 media={{
                   icon: props.value ? (
                     getChecksIcon(errors, i)
                   ) : (
-                    <DotsThreeCircleIcon
-                      className="text-accent-foreground"
-                      size={32}
-                    />
+                    <DotsThreeCircleIcon className="text-accent-foreground" size={32} />
                   ),
                   variant: "icon",
                 }}

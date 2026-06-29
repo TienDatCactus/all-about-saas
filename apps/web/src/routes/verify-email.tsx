@@ -47,7 +47,7 @@ function RouteComponent() {
         },
       );
     }
-  }, [selector, token, type]);
+  }, []);
 
   const onResendEmail = () => {
     if (selector) {
@@ -176,12 +176,14 @@ function RouteComponent() {
           </Button>
           <p className="text-sm">
             Didn't receive the email?{" "}
-            <a
+            <Button
+              variant="link"
               className={cn("link text-primary", isPending && "pointer-events-none opacity-50")}
               onClick={onResendEmail}
+              role="button"
             >
               Resend email
-            </a>
+            </Button>
           </p>
         </div>
       )}

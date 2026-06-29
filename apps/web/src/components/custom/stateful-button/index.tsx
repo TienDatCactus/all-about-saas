@@ -5,12 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import {
-  motion,
-  AnimatePresence,
-  useReducedMotion,
-  type Transition,
-} from "motion/react";
+import { motion, AnimatePresence, useReducedMotion, type Transition } from "motion/react";
 import { statefulButtonMachine } from "./state";
 import { CheckIcon, CircleNotchIcon, XIcon } from "@phosphor-icons/react";
 import { useMachine } from "@xstate/react";
@@ -43,8 +38,7 @@ const progressVariants = cva("rounded-[2.5px]", {
     variant: {
       default:
         "bg-neutral-50/20 *:data-[slot=progress-indicator]:bg-neutral-50 dark:bg-neutral-900/20 *:data-[slot=progress-indicator]:dark:bg-neutral-900",
-      destructive:
-        "bg-neutral-50/20 *:data-[slot=progress-indicator]:bg-neutral-50",
+      destructive: "bg-neutral-50/20 *:data-[slot=progress-indicator]:bg-neutral-50",
       outline:
         "bg-neutral-900/20 *:data-[slot=progress-indicator]:bg-neutral-900 dark:bg-neutral-50/20 *:data-[slot=progress-indicator]:dark:bg-neutral-50",
       secondary:
@@ -108,9 +102,7 @@ type BaseProps = {
    * @param event - The click event object.
    * @returns Can return a `Promise` if the click handler is asynchronous.
    */
-  onClick?: (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => void | Promise<unknown>;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void | Promise<unknown>;
   /**
    * Callback triggered when the action completes successfully.
    *
@@ -188,8 +180,7 @@ type ProgressButtonProps = {
  * @see {@link SpinnerButtonProps} for the default spinner mode.
  * @see {@link ProgressButtonProps} for the progress bar mode.
  */
-type StatefulButtonProps = BaseProps &
-  (SpinnerButtonProps | ProgressButtonProps);
+type StatefulButtonProps = BaseProps & (SpinnerButtonProps | ProgressButtonProps);
 
 /**
  * A stateful button that provides visual feedback for different states, such as
@@ -284,7 +275,7 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
     /* eslint-disable-next-line react-hooks/exhaustive-deps --
      * buttonType is a stable string literal, and send is stable from useMachine
      **/
-  }, [progress]);
+  }, [progress, buttonType, send]);
 
   React.useEffect(() => {
     const activeLoading = mutationState === "pending";
@@ -358,20 +349,13 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
 
   const loadingContent = (
     <>
-      <CircleNotchIcon
-        className="animate-spin"
-        aria-hidden="true"
-        data-cy="spinner-icon"
-      />
+      <CircleNotchIcon className="animate-spin" aria-hidden="true" data-cy="spinner-icon" />
       <span className="sr-only">{ariaMsg.loading}</span>
     </>
   );
   const progressContent = (
     <>
-      <Progress
-        value={snapshot.context.progress}
-        className={cn(progressVariants({ variant }))}
-      />
+      <Progress value={snapshot.context.progress} className={cn(progressVariants({ variant }))} />
       <span className="sr-only" data-cy="progress-value-text">
         {ariaMsg.progress(snapshot.context.progress)}
       </span>
@@ -480,8 +464,4 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
   );
 };
 
-export {
-  StatefulButton as Button,
-  type StatefulButtonProps,
-  type AriaMessages,
-};
+export { StatefulButton as Button, type StatefulButtonProps, type AriaMessages };

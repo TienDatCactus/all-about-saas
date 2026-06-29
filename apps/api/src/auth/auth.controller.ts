@@ -21,7 +21,7 @@ import { LoginDto } from "./dto/sign-in.dto";
 import { SignUpDto } from "./dto/sign-up.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { VerificationToken, VerificationType } from "./entities/verification-token.entity";
-import { AuthService } from "./services/auth.service";
+import { AuthService, OAUTH_PROVIDERS } from "./services/auth.service";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Controller("auth")
@@ -184,7 +184,7 @@ export class AuthController {
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
     const sessionInfo = this.authService.getSessionInfo(req);
     const result = await this.authService.oauthAccess(
-      "google",
+      OAUTH_PROVIDERS.GOOGLE,
       req.user.id,
       req.user.email,
       req.user,

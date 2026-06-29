@@ -10,8 +10,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import useImage from "use-image";
+import { imageReducer } from "./reducer";
 
 // ─── Installation ─────────────────────────────────────────────────────────────
 // npm install use-image
@@ -91,7 +92,15 @@ export interface ImageProps {
   crossOrigin?: "anonymous" | "use-credentials";
 
   /** Referrer policy forwarded to use-image. */
-  referrerPolicy?: ReferrerPolicy;
+  referrerPolicy?:
+    | "no-referrer"
+    | "no-referrer-when-downgrade"
+    | "origin"
+    | "origin-when-cross-origin"
+    | "same-origin"
+    | "strict-origin"
+    | "strict-origin-when-cross-origin"
+    | "unsafe-url";
 
   // ── Slots ────────────────────────────────────────────────────────────────
 
@@ -152,7 +161,15 @@ interface LoaderProps {
   blurPlaceholder: boolean;
   blurDataURL?: string;
   crossOrigin?: "anonymous" | "use-credentials";
-  referrerPolicy?: ReferrerPolicy;
+  referrerPolicy?:
+    | "no-referrer"
+    | "no-referrer-when-downgrade"
+    | "origin"
+    | "origin-when-cross-origin"
+    | "same-origin"
+    | "strict-origin"
+    | "strict-origin-when-cross-origin"
+    | "unsafe-url";
   onLoad?: () => void;
   onError?: () => void;
   loadingSlot?: React.ReactNode;
@@ -181,16 +198,22 @@ function ImageLoader({
 }: LoaderProps) {
   // ── Retry logic —————————————————————————————————————————————————————————
   // use-image has no built-in retry, so we manage the active URL ourselves.
-  const [activeSrc, setActiveSrc] = useState(src);
   const retryCount = useRef(0);
   const retryTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const isMounted = useRef(true);
-
+  const [state, dispatch] = useReducer(imageReducer, {
+    activeSrc: src,
+    usedFallback: false,
+    visible: false,
+  });
   // Reset when the prop src changes
   useEffect(() => {
     retryCount.current = 0;
     clearTimeout(retryTimer.current);
-    setActiveSrc(src);
+    dispatch({
+      type: "reset",
+      src,
+    });
   }, [src]);
 
   useEffect(() => {
@@ -202,15 +225,13 @@ function ImageLoader({
   }, []);
 
   // ── use-image ────────────────────────────────────────────────────────────
-  const [image, status] = useImage(activeSrc, crossOrigin, referrerPolicy);
-
-  // ── Fallback chain on failure ────────────────────────────────────────────
-  const [usedFallback, setUsedFallback] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [image, status] = useImage(state.activeSrc, crossOrigin, referrerPolicy);
 
   useEffect(() => {
     if (status === "loaded") {
-      setVisible(true);
+      dispatch({
+        type: "loaded",
+      });
       onLoad?.();
       return;
     }
@@ -218,7 +239,7 @@ function ImageLoader({
     if (status !== "failed") return;
 
     // Still have retries on the original src
-    if (!usedFallback && retryCount.current < retries) {
+    if (!state.usedFallback && retryCount.current < retries) {
       retryCount.current += 1;
       const delay = retryDelay * Math.pow(2, retryCount.current - 1);
       retryTimer.current = setTimeout(() => {
@@ -226,15 +247,20 @@ function ImageLoader({
         // Append timestamp to bust the browser cache
         const busted = new URL(src, window.location.href);
         busted.searchParams.set("_retry", String(retryCount.current));
-        setActiveSrc(busted.toString());
+        dispatch({
+          type: "retry",
+          src: busted.toString(),
+        });
       }, delay);
-      return;
+      return () => clearTimeout(retryTimer.current);
     }
 
     // Try fallbackSrc once
-    if (!usedFallback && fallbackSrc) {
-      setUsedFallback(true);
-      setActiveSrc(fallbackSrc);
+    if (!state.usedFallback && fallbackSrc) {
+      dispatch({
+        type: "fallback",
+        src: fallbackSrc,
+      });
       return;
     }
 
@@ -246,28 +272,24 @@ function ImageLoader({
 
   const isLoading = status === "loading";
   const isFailed =
-    status === "failed" &&
-    (usedFallback || !fallbackSrc) &&
-    retryCount.current >= retries;
+    status === "failed" && (state.usedFallback || !fallbackSrc) && retryCount.current >= retries;
 
   return (
     <>
       {/* Blur placeholder (sits behind the image, fades when loaded) */}
-      {blurPlaceholder && blurDataURL && !visible && (
+      {blurPlaceholder && blurDataURL && !state.visible && (
         <img
           src={blurDataURL}
           alt=""
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover scale-105"
-          style={{ filter: "blur(20px)", transition: "opacity 0.4s" }}
+          style={{ filter: "blur(10px)", transition: "opacity 0.4s" }}
         />
       )}
 
       {/* Loading skeleton */}
       {isLoading &&
-        (loadingSlot ?? (
-          <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
-        ))}
+        (loadingSlot ?? <Skeleton className="absolute inset-0 h-full w-full rounded-none" />)}
 
       {/* Error empty state */}
       {isFailed && (errorSlot ?? <DefaultErrorEmpty />)}
@@ -281,7 +303,7 @@ function ImageLoader({
           decoding="async"
           className={cn(
             "absolute inset-0 h-full w-full transition-opacity duration-300",
-            visible ? "opacity-100" : "opacity-0",
+            state.visible ? "opacity-100" : "opacity-0",
             imgClassName,
           )}
           style={{ objectFit, objectPosition }}

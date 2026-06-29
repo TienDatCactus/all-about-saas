@@ -7,21 +7,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Field, FieldDescription, FieldLabel } from "./field";
 
-const progressVariants = cva(
-  "relative w-full overflow-hidden rounded-full bg-muted",
-  {
-    variants: {
-      size: {
-        sm: "h-2",
-        md: "h-3",
-        lg: "h-4",
-      },
-    },
-    defaultVariants: {
-      size: "md",
+const progressVariants = cva("relative w-full overflow-hidden rounded-full bg-muted", {
+  variants: {
+    size: {
+      sm: "h-2",
+      md: "h-3",
+      lg: "h-4",
     },
   },
-);
+  defaultVariants: {
+    size: "md",
+  },
+});
 
 const indicatorVariants = cva("h-full transition-all duration-300 ease-out", {
   variants: {
@@ -91,18 +88,12 @@ export function Progress({
     ? valueFormatter(normalizedValue, max)
     : `${Math.round(percentage)}%`;
 
-  const renderBar = () => {
+  const Bar = () => {
     if (appearance === "dashed") {
       const activeSegments = Math.round((percentage / 100) * segments);
 
       return (
-        <div
-          className={cn(
-            progressVariants({ size }),
-            "flex gap-1 bg-transparent",
-            className,
-          )}
-        >
+        <div className={cn(progressVariants({ size }), "flex gap-1 bg-transparent", className)}>
           {Array.from({
             length: segments,
           }).map((_, index) => (
@@ -180,14 +171,12 @@ export function Progress({
           {label && <span className="text-sm font-medium">{label}</span>}
 
           {showValue && !indeterminate && (
-            <span className="text-muted-foreground text-sm ml-auto">
-              {displayValue}
-            </span>
+            <span className="text-muted-foreground text-sm ml-auto">{displayValue}</span>
           )}
         </FieldLabel>
       )}
 
-      {renderBar()}
+      <Bar />
 
       {caption && (
         <FieldDescription className="text-muted-foreground text-sm text-end">
