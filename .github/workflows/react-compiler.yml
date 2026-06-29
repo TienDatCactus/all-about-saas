@@ -1,5 +1,5 @@
 - name: React Compiler Action
-    uses: shubh73/react-compiler-action@v1.0.4
+  uses: shubh73/react-compiler-action@v1.0.4
   with:
     token: ${{ github.token }}
     changed-files-only: true
@@ -17,13 +17,13 @@
       packages/**/*.tsx
 
     exclude-patterns: |
-        **/node_modules/**
-        **/dist/**
-        **/.turbo/**
-        **/.next/**
-        **/coverage/**
-        **/*.d.ts
-        **/*.test.*
-        **/*.spec.*
-        **/__tests__/**
-        **/generated/**
+      **/node_modules/**
+      **/dist/**
+      **/.turbo/**
+      **/.next/**
+      **/coverage/**
+      **/*.d.ts
+      **/*.test.*
+      **/*.spec.*
+      **/__tests__/**
+      **/generated/**
