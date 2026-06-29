@@ -31,7 +31,7 @@ export const authApi = {
     return http.post(AUTH.sendVerificationEmail, data);
   },
   changePassword: async (
-    data: Pick<ChangePasswordIn, "selector" | "email" | "password">,
+    data: Pick<ChangePasswordIn, "selector" | "token" | "password">,
   ): Promise<void> => {
     return http.post(AUTH.changePassword, data);
   },

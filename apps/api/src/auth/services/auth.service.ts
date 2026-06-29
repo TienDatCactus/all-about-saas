@@ -184,16 +184,17 @@ export class AuthService {
     token,
     password,
   }: Pick<ChangePasswordDto, "selector" | "token" | "password">): Promise<void> {
-    if (!selector && !token && !password) {
-      throw new HttpException("Some credentials are missing", 400);
+    if (!selector || !token || !password) {
+      throw new HttpException("Selector, token and password are required", 400);
     }
     const user = await this.verifyVerificationTokenRecord(
-      selector!,
-      token!,
+      selector,
+      token,
       VerificationType.PASSWORD_RESET,
+      true, // consume = true
     );
     if (!user) {
-      throw new HttpException("User not found", 404);
+      throw new HttpException("Invalid or expired verification token", 400);
     }
     const rec = await this.uqService.findOneBy({ id: user.id });
     if (!rec) {
@@ -211,6 +212,27 @@ export class AuthService {
         id: user.id,
       },
     );
+  }
+
+  async resendResetPasswordEmail(selector: string): Promise<void> {
+    const token = await this.verificationTokenRepo.findOne({
+      where: { selector, type: VerificationType.PASSWORD_RESET },
+      relations: ["user"],
+    });
+    if (!token) {
+      throw new HttpException("Verification token not found", 404);
+    }
+    const user = token.user;
+    if (!user) {
+      throw new HttpException("User not found", 404);
+    }
+    await this.sendVerificationEmail({
+      user,
+      type: VerificationType.PASSWORD_RESET,
+      pathname: VERIFY_PATH,
+      subject: "Reset Your Password",
+      template: "passwordReset",
+    });
   }
   async resetPassword({
     password,
@@ -347,6 +369,7 @@ export class AuthService {
     selector: string,
     token: string,
     type: VerificationType,
+    consume = true,
   ): Promise<User | null> {
     const record = await this.verificationTokenRepo.findOne({
       relations: ["user"],
@@ -365,8 +388,10 @@ export class AuthService {
 
     const isValid = await this.tokensService.verifyToken(token, record.tokenHash);
     if (isValid) {
-      record.usedAt = new Date();
-      await this.verificationTokenRepo.save(record);
+      if (consume) {
+        record.usedAt = new Date();
+        await this.verificationTokenRepo.save(record);
+      }
       return record.user;
     }
 

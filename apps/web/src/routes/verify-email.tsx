@@ -9,6 +9,7 @@ import {
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { cn } from "../lib/utils";
 
 export const Route = createFileRoute("/verify-email")({
@@ -50,12 +51,58 @@ function RouteComponent() {
 
   const onResendEmail = () => {
     if (selector) {
-      resendEmail({ selector, type });
+      resendEmail(
+        { selector, type },
+        {
+          onSuccess: () => {
+            toast.success(
+              type === "PASSWORD_RESET"
+                ? "Password reset email resent successfully!"
+                : "Verification email resent successfully!",
+            );
+          },
+          onError: (err: any) => {
+            const message =
+              err?.response?.data?.message || err?.message || "Failed to resend email.";
+            toast.error(message);
+          },
+        },
+      );
     }
   };
 
   const isPending = status === "pending" || resendStatus === "pending";
   const isError = status === "error" || resendStatus === "error";
+  const isReset = type === "PASSWORD_RESET";
+
+  const confirmTitle = isPending
+    ? isReset
+      ? "Confirming reset request..."
+      : "Verifying your email..."
+    : isReset
+      ? "Confirm password reset"
+      : "Confirm your email";
+
+  const confirmDescription = isReset
+    ? "We are confirming your password reset request. This will only take a moment."
+    : "We are confirming your email address. This will only take a moment.";
+
+  const verifyButtonText = isPending
+    ? "Verifying..."
+    : isReset
+      ? "Verify Reset Request"
+      : "Verify Email";
+
+  const errorTitle = isReset ? "Reset link invalid" : "Verification failed";
+  const errorDescription = isReset
+    ? "The reset link is invalid, has expired, or has already been used. Please request a new reset email below."
+    : "The verification link is invalid, has expired, or has already been used. Please request a new verification email below.";
+
+  const resendButtonText = isPending
+    ? "Resending..."
+    : isReset
+      ? "Resend Reset Email"
+      : "Resend Verification Email";
 
   return (
     <div className="flex flex-col justify-center items-center text-center max-w-96 space-y-6">
@@ -79,15 +126,12 @@ function RouteComponent() {
       ) : isError ? (
         <div className="space-y-4 flex flex-col items-center">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">Verification failed</h1>
-            <p className="text-secondary-foreground text-sm">
-              The verification link is invalid, has expired, or has already been used. Please
-              request a new verification email below.
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight">{errorTitle}</h1>
+            <p className="text-secondary-foreground text-sm">{errorDescription}</p>
           </div>
           <div className="w-full">
             <Button className="w-full" disabled={isPending} onClick={onResendEmail}>
-              {isPending ? "Resending..." : "Resend Verification Email"}
+              {resendButtonText}
             </Button>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -114,12 +158,8 @@ function RouteComponent() {
       ) : (
         <div className="space-y-4 flex flex-col items-center">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">
-              {isPending ? "Verifying your email..." : "Confirm your email"}
-            </h1>
-            <p className="text-secondary-foreground text-sm">
-              We are confirming your email address. This will only take a moment.
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight">{confirmTitle}</h1>
+            <p className="text-secondary-foreground text-sm">{confirmDescription}</p>
           </div>
           <Button
             className="w-full mt-4"
@@ -132,7 +172,7 @@ function RouteComponent() {
               })
             }
           >
-            {isPending ? "Verifying..." : "Verify Email"}
+            {verifyButtonText}
           </Button>
           <p className="text-sm">
             Didn't receive the email?{" "}

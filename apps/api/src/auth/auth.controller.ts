@@ -72,6 +72,7 @@ export class AuthController {
       body.selector,
       body.token,
       body.type,
+      body.type !== VerificationType.PASSWORD_RESET,
     );
     if (!user) {
       throw new BadRequestException("Either invalid or expired verification token.");
@@ -98,16 +99,9 @@ export class AuthController {
     @Body()
     body: SendVerificationEmailDto,
   ) {
-    if (body.type === "PASSWORD_RESET") {
+    if (body.type === VerificationType.PASSWORD_RESET) {
       if (body.selector) {
-        const token = await this.verificationTokenRepo.findOne({
-          where: { selector: body.selector, type: body.type },
-          relations: ["user"],
-        });
-        if (!token) {
-          throw new BadRequestException("Invalid selector provided.");
-        }
-        await this.authService.sendResetPasswordEmail(token?.user.email);
+        await this.authService.sendResetPasswordEmail(body.selector);
       } else if (body.email) {
         await this.authService.sendResetPasswordEmail(body.email);
       } else {
@@ -156,7 +150,10 @@ export class AuthController {
     if (!req.user || !req.user.id) {
       throw new BadRequestException("User not authenticated");
     }
-    await this.authService.resetPassword(body);
+    await this.authService.resetPassword({
+      password: body.password,
+      email: req.user.email,
+    });
     return { message: "Password reset successfully" };
   }
 
