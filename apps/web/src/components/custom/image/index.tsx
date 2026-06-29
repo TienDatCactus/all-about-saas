@@ -266,7 +266,7 @@ function ImageLoader({
 
     // All options exhausted
     onError?.();
-  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status, state.usedFallback, retries, retryDelay, src, fallbackSrc, onLoad, onError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -301,6 +301,8 @@ function ImageLoader({
           alt={alt}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
+          crossOrigin={crossOrigin}
+          referrerPolicy={referrerPolicy}
           className={cn(
             "absolute inset-0 h-full w-full transition-opacity duration-300",
             state.visible ? "opacity-100" : "opacity-0",

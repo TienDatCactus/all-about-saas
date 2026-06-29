@@ -47,7 +47,7 @@ function RouteComponent() {
         },
       );
     }
-  }, []);
+  }, [selector, token, status, type, mutate, navigate]);
 
   const onResendEmail = () => {
     if (selector) {

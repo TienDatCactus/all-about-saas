@@ -58,6 +58,98 @@ export interface ProgressProps
   valueFormatter?: (value: number, max: number) => React.ReactNode;
 }
 
+const Bar = ({
+  indeterminate,
+  normalizedValue,
+  max,
+  percentage,
+  appearance,
+  segments = 5,
+  variant,
+  size,
+  className,
+  ...props
+}: Pick<ProgressProps, "appearance" | "segments" | "variant" | "size" | "className"> & {
+  normalizedValue: number;
+  max: number;
+  percentage: number;
+  indeterminate: boolean;
+}) => {
+  if (appearance === "dashed") {
+    const activeSegments = Math.round((percentage / 100) * segments);
+
+    return (
+      <div className={cn(progressVariants({ size }), "flex gap-1 bg-transparent", className)}>
+        {Array.from({
+          length: segments,
+        }).map((_, index) => (
+          <div
+            key={index}
+            className={cn(
+              "h-full flex-1 rounded-sm bg-muted",
+              index < activeSegments &&
+                indicatorVariants({
+                  variant,
+                }),
+            )}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (appearance === "steps") {
+    const activeSteps = Math.floor((percentage / 100) * segments);
+
+    return (
+      <div className={cn("flex items-center gap-2", className)}>
+        {Array.from({
+          length: segments,
+        }).map((_, index) => (
+          <div
+            key={index}
+            className={cn(
+              "size-3 rounded-full bg-muted",
+              index < activeSteps &&
+                indicatorVariants({
+                  variant,
+                }),
+            )}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <ProgressPrimitive.Root
+      data-slot="progress"
+      value={normalizedValue}
+      max={max}
+      className={cn(progressVariants({ size }), className)}
+      {...props}
+    >
+      <ProgressPrimitive.Indicator
+        data-slot="progress-indicator"
+        className={cn(
+          "size-full flex-1",
+          indicatorVariants({
+            variant,
+          }),
+          indeterminate && "animate-pulse w-1/3",
+        )}
+        style={
+          indeterminate
+            ? undefined
+            : {
+                transform: `translateX(-${100 - percentage}%)`,
+              }
+        }
+      />
+    </ProgressPrimitive.Root>
+  );
+};
+
 export function Progress({
   className,
 
@@ -88,82 +180,6 @@ export function Progress({
     ? valueFormatter(normalizedValue, max)
     : `${Math.round(percentage)}%`;
 
-  const Bar = () => {
-    if (appearance === "dashed") {
-      const activeSegments = Math.round((percentage / 100) * segments);
-
-      return (
-        <div className={cn(progressVariants({ size }), "flex gap-1 bg-transparent", className)}>
-          {Array.from({
-            length: segments,
-          }).map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                "h-full flex-1 rounded-sm bg-muted",
-                index < activeSegments &&
-                  indicatorVariants({
-                    variant,
-                  }),
-              )}
-            />
-          ))}
-        </div>
-      );
-    }
-
-    if (appearance === "steps") {
-      const activeSteps = Math.floor((percentage / 100) * segments);
-
-      return (
-        <div className={cn("flex items-center gap-2", className)}>
-          {Array.from({
-            length: segments,
-          }).map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                "size-3 rounded-full bg-muted",
-                index < activeSteps &&
-                  indicatorVariants({
-                    variant,
-                  }),
-              )}
-            />
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <ProgressPrimitive.Root
-        data-slot="progress"
-        value={normalizedValue}
-        max={max}
-        className={cn(progressVariants({ size }), className)}
-        {...props}
-      >
-        <ProgressPrimitive.Indicator
-          data-slot="progress-indicator"
-          className={cn(
-            "size-full flex-1",
-            indicatorVariants({
-              variant,
-            }),
-            indeterminate && "animate-pulse w-1/3",
-          )}
-          style={
-            indeterminate
-              ? undefined
-              : {
-                  transform: `translateX(-${100 - percentage}%)`,
-                }
-          }
-        />
-      </ProgressPrimitive.Root>
-    );
-  };
-
   return (
     <Field className="w-full max-w-sm">
       {(label || showValue) && (
@@ -176,7 +192,18 @@ export function Progress({
         </FieldLabel>
       )}
 
-      <Bar />
+      <Bar
+        indeterminate={indeterminate}
+        normalizedValue={normalizedValue}
+        max={max}
+        percentage={percentage}
+        appearance={appearance}
+        segments={segments}
+        variant={variant}
+        size={size}
+        className={className}
+        {...props}
+      />
 
       {caption && (
         <FieldDescription className="text-muted-foreground text-sm text-end">

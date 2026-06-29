@@ -275,7 +275,7 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
     /* eslint-disable-next-line react-hooks/exhaustive-deps --
      * buttonType is a stable string literal, and send is stable from useMachine
      **/
-  }, [progress, buttonType, send]);
+  }, [progress]);
 
   React.useEffect(() => {
     const activeLoading = mutationState === "pending";

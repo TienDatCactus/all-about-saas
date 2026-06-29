@@ -18,7 +18,7 @@ import * as dns from "dns";
             pass: configService.get("email.pass"),
           },
           lookup: (hostname, options, callback) => {
-            dns.lookup(hostname, { family: 4 }, callback);
+            dns.lookup(hostname, options, callback);
           },
           tls: {
             rejectUnauthorized: true,
