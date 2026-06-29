@@ -7,6 +7,7 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import React from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 const ChangePasswordForm: React.FC = () => {
   const navigate = useNavigate();
@@ -19,10 +20,15 @@ const ChangePasswordForm: React.FC = () => {
       rePassword: "",
     },
     validators: {
-      onSubmit: ChangePasswordSchema.pick({
-        password: true,
-        rePassword: true,
-      }),
+      onSubmit: z
+        .object({
+          password: ChangePasswordSchema.shape.password,
+          rePassword: ChangePasswordSchema.shape.rePassword,
+        })
+        .refine((val) => val.password === val.rePassword, {
+          message: "Passwords do not match",
+          path: ["rePassword"],
+        }),
     },
     onSubmit: (form) => {
       mutate(

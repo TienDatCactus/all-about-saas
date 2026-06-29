@@ -101,7 +101,7 @@ export class AuthController {
   ) {
     if (body.type === VerificationType.PASSWORD_RESET) {
       if (body.selector) {
-        await this.authService.sendResetPasswordEmail(body.selector);
+        await this.authService.resendResetPasswordEmail(body.selector);
       } else if (body.email) {
         await this.authService.sendResetPasswordEmail(body.email);
       } else {
