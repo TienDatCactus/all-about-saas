@@ -1,18 +1,14 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import {
-  HeadContent,
-  Scripts,
-  createRootRoute,
-  redirect,
-} from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/context/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import appCss from "../styles.css?url";
-import { storage } from "@/lib/utils/local-storage";
-import { AppConstants } from "@/lib/utils/constants";
+import { MotionConfig } from "motion/react";
+import { MotionProvider, useMotion } from "@/lib/context/animation";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -33,6 +29,20 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/favicon-16x16.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/favicon-32x32.png",
+      },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   notFoundComponent: () => (
@@ -47,37 +57,53 @@ export const Route = createRootRoute({
 const queryClient = new QueryClient();
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { preference } = useMotion();
+  const reducedMotionMode =
+    preference === "system"
+      ? "user"
+      : preference === "off"
+        ? "always"
+        : "never";
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <HeadContent />
-      </head>
-      <body suppressHydrationWarning>
-        {children}
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
-        <Scripts />
-      </body>
-    </html>
+    <MotionConfig isValidProp={() => true} reducedMotion={reducedMotionMode}>
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <HeadContent />
+        </head>
+        <body suppressHydrationWarning>
+          <div className="flex min-h-dvh items-center justify-center">
+            {children}
+          </div>
+
+          <TanStackDevtools
+            config={{
+              position: "bottom-right",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+          <Scripts />
+        </body>
+      </html>
+    </MotionConfig>
   );
 }
 
 function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RootDocument>{children}</RootDocument>
-      </AuthProvider>
-      <Toaster />
-    </QueryClientProvider>
+    <MotionProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <RootDocument>{children}</RootDocument>
+          </TooltipProvider>
+        </AuthProvider>
+        <Toaster />
+      </QueryClientProvider>
+    </MotionProvider>
   );
 }

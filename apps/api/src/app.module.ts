@@ -1,25 +1,18 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-  Post,
-} from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
-import { AuthModule } from './auth/auth.module';
-import helmet from 'helmet';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
-import { CaslModule } from './casl/casl.module';
-import { ConfigModule } from '@nestjs/config';
-import configuration from './common/config/configuration';
-import database from './common/config/database';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { RolesModule } from './roles/roles.module';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import helmet from "helmet";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { AuthModule } from "./auth/auth.module";
+import { CaslModule } from "./casl/casl.module";
+import configuration from "./common/config/configuration";
+import database from "./common/config/database";
+import { LoggerMiddleware } from "./common/middleware/logger/logger.middleware";
+import { MailModule } from "./mail/mail.module";
+import { RolesModule } from "./roles/roles.module";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
@@ -27,7 +20,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     CaslModule,
     ConfigModule.forRoot({
-      envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}.local`],
+      envFilePath: [`.env.${process.env.NODE_ENV ?? "development"}.local`],
       isGlobal: true,
       load: [configuration, database],
     }),
@@ -41,6 +34,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
         },
       ],
     }),
+
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -49,15 +44,15 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware, helmet()).forRoutes(
       {
-        path: '*',
+        path: "*",
         method: RequestMethod.POST,
       },
       {
-        path: '*',
+        path: "*",
         method: RequestMethod.PATCH,
       },
       {
-        path: '*',
+        path: "*",
         method: RequestMethod.DELETE,
       },
     );

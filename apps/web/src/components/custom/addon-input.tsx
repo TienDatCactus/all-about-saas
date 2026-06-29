@@ -1,19 +1,18 @@
 // addon-input.tsx
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import { ExclamationMarkIcon } from "@phosphor-icons/react";
+import type { MutationStatus } from "@tanstack/react-query";
+import * as React from "react";
+import { CheckIcon } from "../ui/check";
+import { EyeIcon } from "../ui/eye";
+import { EyeOffIcon } from "../ui/eye-off";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
 } from "../ui/input-group";
-import { CheckIcon } from "../ui/check";
-import { BadgeAlertIcon } from "../ui/badge-alert";
-import type { MutationStatus } from "@tanstack/react-query";
 import { Spinner } from "../ui/spinner";
-import { EyeIcon } from "../ui/eye";
-import { EyeOffIcon } from "../ui/eye-off";
-import { ExclamationMarkIcon } from "@phosphor-icons/react";
 
 export interface InputProps extends Omit<
   React.ComponentProps<"input">,
@@ -105,7 +104,7 @@ const AddonInput = React.forwardRef<HTMLInputElement, InputProps>(
         case "success":
           return (
             <InputGroupAddon align="inline-end">
-              <CheckIcon size={18} className="text-emerald-500" />
+              <CheckIcon size={18} className="text-success" />
             </InputGroupAddon>
           );
         case "error":

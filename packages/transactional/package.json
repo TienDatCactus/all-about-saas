@@ -1,0 +1,30 @@
+{
+  "name": "@transactional/emails",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "email": "email dev --dir src/emails --port 4000"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-email": "6.6.0",
+    "@react-email/render": "2.0.8"
+  },
+  "devDependencies": {
+    "@react-email/ui": "^6.6.0"
+  }
+}

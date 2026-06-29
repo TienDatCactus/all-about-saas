@@ -6,7 +6,6 @@ import { LoginInSchema, useLoginMutation, type LoginIn } from "@/services/auth";
 import { formOptions, useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import React from "react";
-import { toast } from "sonner";
 const defaultValue: LoginIn = { email: "", password: "" };
 
 const formOpts = formOptions({
@@ -22,12 +21,9 @@ const LoginForm: React.FC = () => {
     ...formOpts,
     onSubmit: (form) => {
       mutate(LoginInSchema.parse(form.value), {
-        onSuccess: (data) => {
+        onSuccess: () => {
           navigate({
             to: "/",
-            search: {
-              accessToken: data,
-            },
           });
         },
       });
@@ -63,6 +59,7 @@ const LoginForm: React.FC = () => {
       <Button
         onClick={form.handleSubmit}
         className="mt-4 w-full py-2 font-medium"
+        mutationState={status}
       >
         Sign in
       </Button>

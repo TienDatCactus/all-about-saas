@@ -4,11 +4,15 @@ export enum VerificationType {
   EMAIL_VERIFY = 'EMAIL_VERIFY',
   PASSWORD_RESET = 'PASSWORD_RESET',
   CHANGE_EMAIL = 'CHANGE_EMAIL',
+  MAGIC_LINK = 'MAGIC_LINK',
 }
 @Entity()
 export class VerificationToken {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ unique: true })
+  selector: string; //uuid
 
   @ManyToOne(() => User)
   user: User;

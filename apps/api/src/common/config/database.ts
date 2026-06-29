@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 

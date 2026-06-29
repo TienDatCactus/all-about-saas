@@ -1,19 +1,15 @@
-"use client"
+"use client";
 
-import React from "react"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
-import {
-  motion,
-  AnimatePresence,
-  useReducedMotion,
-  type Transition,
-} from "motion/react"
-import { statefulButtonMachine } from "./state"
-import { CheckIcon, CircleNotchIcon, XIcon } from "@phosphor-icons/react"
-import { useMachine } from "@xstate/react"
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence, useReducedMotion, type Transition } from "motion/react";
+import { statefulButtonMachine } from "./state";
+import { CheckIcon, CircleNotchIcon, XIcon } from "@phosphor-icons/react";
+import { useMachine } from "@xstate/react";
+import type { MutationStatus } from "@tanstack/react-query";
 
 /**
  * CVA variants for the underlying button element.
@@ -31,8 +27,8 @@ const buttonVariants = cva(
     defaultVariants: {
       size: "default",
     },
-  }
-)
+  },
+);
 
 /**
  * CVA variants for the progress indicator.
@@ -42,8 +38,7 @@ const progressVariants = cva("rounded-[2.5px]", {
     variant: {
       default:
         "bg-neutral-50/20 *:data-[slot=progress-indicator]:bg-neutral-50 dark:bg-neutral-900/20 *:data-[slot=progress-indicator]:dark:bg-neutral-900",
-      destructive:
-        "bg-neutral-50/20 *:data-[slot=progress-indicator]:bg-neutral-50",
+      destructive: "bg-neutral-50/20 *:data-[slot=progress-indicator]:bg-neutral-50",
       outline:
         "bg-neutral-900/20 *:data-[slot=progress-indicator]:bg-neutral-900 dark:bg-neutral-50/20 *:data-[slot=progress-indicator]:dark:bg-neutral-50",
       secondary:
@@ -55,7 +50,7 @@ const progressVariants = cva("rounded-[2.5px]", {
   defaultVariants: {
     variant: "default",
   },
-})
+});
 
 /**
  * Accessible ARIA messages for different states of the stateful button.
@@ -69,7 +64,7 @@ type AriaMessages = {
    *
    * @defaultValue `'Loading, please wait'`
    */
-  loading?: string
+  loading?: string;
   /**
    * Function that generates a progress message.
    *
@@ -78,20 +73,20 @@ type AriaMessages = {
    *
    * @defaultValue Rounds to nearest 25% (e.g., `"50%"`).
    */
-  progress?: (value: number) => string
+  progress?: (value: number) => string;
   /**
    * Message announced when the action completes successfully.
    *
    * @defaultValue `'Completed successfully'`
    */
-  success?: string
+  success?: string;
   /**
    * Message announced when an error occurs.
    *
    * @defaultValue `'An error occurred'`
    */
-  error?: string
-}
+  error?: string;
+};
 
 /**
  * Shared props for the {@link StatefulButton} component.
@@ -107,34 +102,33 @@ type BaseProps = {
    * @param event - The click event object.
    * @returns Can return a `Promise` if the click handler is asynchronous.
    */
-  onClick?: (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => void | Promise<unknown>
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void | Promise<unknown>;
   /**
    * Callback triggered when the action completes successfully.
    *
    * @remarks
    * This callback is invoked by the {@link statefulButtonMachine} `onComplete` action.
    */
-  onComplete?: () => void
+  onComplete?: () => void;
   /**
    * Callback triggered when when `onClick` throws (or a rejection occurs).
    *
    * @param error - The error object.
    */
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void;
   /**
    * Content to render inside the button while in the `idle` state.
    */
-  children?: React.ReactNode
+  children?: React.ReactNode;
   /**
    * Customizable ARIA messages for accessibility.
    * Defaults are provided if not supplied.
    */
-  ariaMessages?: AriaMessages
+  ariaMessages?: AriaMessages;
+  mutationState?: MutationStatus;
 } & React.ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants> &
-  VariantProps<typeof progressVariants>
+  VariantProps<typeof progressVariants>;
 
 /**
  * Props for the spinner-style {@link StatefulButton}.
@@ -150,12 +144,12 @@ type SpinnerButtonProps = {
    *
    * @defaultValue `'spinner'`
    */
-  buttonType?: "spinner"
+  buttonType?: "spinner";
   /**
    * The progress prop is not applicable to the spinner button type.
    */
-  progress?: never
-}
+  progress?: never;
+};
 
 /**
  * Props for the progress-bar-style {@link StatefulButton}.
@@ -170,13 +164,13 @@ type ProgressButtonProps = {
   /**
    * Specifies the progress button type. Must be 'progress'.
    */
-  buttonType: "progress"
+  buttonType: "progress";
   /**
    * The current progress value (0-100). This is a controlled prop used
    * to update the progress bar.
    */
-  progress: number
-}
+  progress: number;
+};
 
 /**
  * Props for the {@link StatefulButton} component.
@@ -186,8 +180,7 @@ type ProgressButtonProps = {
  * @see {@link SpinnerButtonProps} for the default spinner mode.
  * @see {@link ProgressButtonProps} for the progress bar mode.
  */
-type StatefulButtonProps = BaseProps &
-  (SpinnerButtonProps | ProgressButtonProps)
+type StatefulButtonProps = BaseProps & (SpinnerButtonProps | ProgressButtonProps);
 
 /**
  * A stateful button that provides visual feedback for different states, such as
@@ -262,6 +255,8 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
   variant,
   size,
   ariaMessages,
+  disabled,
+  mutationState,
   ...props
 }) => {
   const [snapshot, send] = useMachine(statefulButtonMachine, {
@@ -269,18 +264,45 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
       onComplete,
       buttonType,
     },
-  })
+  });
 
-  const shouldReduceMotion = useReducedMotion()
+  const shouldReduceMotion = useReducedMotion();
 
   React.useEffect(() => {
     if (buttonType === "progress" && typeof progress === "number") {
-      send({ type: "updateProgress", progress })
+      send({ type: "updateProgress", progress });
     }
     /* eslint-disable-next-line react-hooks/exhaustive-deps --
      * buttonType is a stable string literal, and send is stable from useMachine
      **/
-  }, [progress])
+  }, [progress]);
+
+  React.useEffect(() => {
+    const activeLoading = mutationState === "pending";
+    if (activeLoading !== undefined) {
+      if (activeLoading) {
+        send({ type: "setLoading" });
+      } else {
+        if (snapshot.matches("loading")) {
+          send({ type: "setIdle" });
+        }
+      }
+    }
+  }, [mutationState, send, snapshot]);
+
+  React.useEffect(() => {
+    const activeSuccess = mutationState === "success";
+    if (activeSuccess) {
+      send({ type: "setSuccess" });
+    }
+  }, [mutationState, send]);
+
+  React.useEffect(() => {
+    const activeError = mutationState === "error";
+    if (activeError) {
+      send({ type: "setError" });
+    }
+  }, [mutationState, send]);
 
   /**
    * Click handler that:
@@ -297,19 +319,19 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
    * In spinner mode, success is signaled via `finishLoading`.
    * In progress mode, success is driven externally via `progress >= 100`.
    */
-  const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    send({ type: "click" })
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    send({ type: "click" });
     try {
-      await onClick?.(event)
+      onClick?.(event);
       if (buttonType === "spinner") {
-        send({ type: "finishLoading" })
+        send({ type: "finishLoading" });
       }
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error))
-      onError?.(err)
-      send({ type: "error" })
+      const err = error instanceof Error ? error : new Error(String(error));
+      onError?.(err);
+      send({ type: "error" });
     }
-  }
+  };
 
   /**
    * Default ARIA messages used if {@link AriaMessages} are not provided.
@@ -317,64 +339,57 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
   const defaultAriaMessages: Required<AriaMessages> = {
     loading: "Loading, please wait",
     progress: (value: number) => {
-      const roundedValue = Math.round(value / 25) * 25
-      return `${roundedValue}%`
+      const roundedValue = Math.round(value / 25) * 25;
+      return `${roundedValue}%`;
     },
     success: "Completed successfully",
     error: "An error occurred",
-  }
-  const ariaMsg = { ...defaultAriaMessages, ...ariaMessages }
+  };
+  const ariaMsg = { ...defaultAriaMessages, ...ariaMessages };
 
   const loadingContent = (
     <>
-      <CircleNotchIcon
-        className="animate-spin"
-        aria-hidden="true"
-        data-cy="spinner-icon"
-      />
+      <CircleNotchIcon className="animate-spin" aria-hidden="true" data-cy="spinner-icon" />
       <span className="sr-only">{ariaMsg.loading}</span>
     </>
-  )
+  );
   const progressContent = (
     <>
-      <Progress
-        value={snapshot.context.progress}
-        className={cn(progressVariants({ variant }))}
-      />
+      <Progress value={snapshot.context.progress} className={cn(progressVariants({ variant }))} />
       <span className="sr-only" data-cy="progress-value-text">
         {ariaMsg.progress(snapshot.context.progress)}
       </span>
     </>
-  )
+  );
   const successContent = (
     <>
       <CheckIcon aria-hidden="true" data-cy="check-icon" />
       <span className="sr-only">{ariaMsg.success}</span>
     </>
-  )
+  );
   const errorContent = (
     <>
       <XIcon aria-hidden="true" data-cy="x-icon" />
       <span className="sr-only">{ariaMsg.error}</span>
     </>
-  )
+  );
 
   const slideTransition: Transition = {
     duration: shouldReduceMotion ? 0.1 : 0.2,
     ease: "easeOut",
-  }
+  };
   const fadeTransition: Transition = {
     duration: shouldReduceMotion ? 0.05 : 0.15,
     ease: "linear",
-  }
-  const reducedY = shouldReduceMotion ? 20 : 80
+  };
+  const reducedY = shouldReduceMotion ? 20 : 80;
 
   return (
     <Button
       variant={variant}
       className={cn(buttonVariants({ size, className }))}
       onClick={handleClick}
-      disabled={!snapshot.matches("idle")}
+      disabled={disabled || !snapshot.matches("idle")}
       aria-live="polite"
       data-cy="stateful-button"
       {...props}
@@ -446,7 +461,7 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
         )}
       </AnimatePresence>
     </Button>
-  )
-}
+  );
+};
 
-export { StatefulButton as Button, type StatefulButtonProps, type AriaMessages }
+export { StatefulButton as Button, type StatefulButtonProps, type AriaMessages };

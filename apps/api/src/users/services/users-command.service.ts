@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
-import { User } from '../entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { OAuthAccount } from '../entities/oauth-account.entity';
-import { UsersQueryService } from './users-query.service';
-import * as bcrypt from 'bcrypt';
+import { Injectable } from "@nestjs/common";
+import { DataSource, Repository } from "typeorm";
+import { User } from "../entities/user.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { OAuthAccount } from "../entities/oauth-account.entity";
+import { UsersQueryService } from "./users-query.service";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UsersCommandService {
@@ -32,7 +32,14 @@ export class UsersCommandService {
 
     return this.dataSource.getRepository(OAuthAccount).save(user);
   }
-  async validateUser(email: string, pass: string): Promise<any> {
+  async update(dto: Partial<User>, user: Pick<User, "id">) {
+    const res = await this.usersRepository.findOneByOrFail({
+      id: user.id,
+    });
+    Object.assign(res, dto);
+    return this.usersRepository.save(res);
+  }
+  async validateUser(email: string, pass: string): Promise<Partial<User> | null> {
     if (!pass) {
       return null;
     }
