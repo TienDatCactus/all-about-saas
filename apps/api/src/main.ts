@@ -29,10 +29,17 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       exceptionFactory: (validationErrors) => {
-        const validation = {};
-        validationErrors.forEach((err) => {
-          validation[err.property] = Object.values(err.constraints ?? {});
-        });
+        const validation: Record<string, string[]> = {};
+        const extractErrors = (err: any, prefix = '') => {
+          const key = prefix ? `${prefix}.${err.property}` : err.property;
+          if (err.constraints) {
+            validation[key] = Object.values(err.constraints);
+          }
+          if (err.children && err.children.length > 0) {
+            err.children.forEach((child: any) => extractErrors(child, key));
+          }
+        };
+        validationErrors.forEach((err) => extractErrors(err));
         return new BadRequestException({
           statusCode: 400,
           code: 'VALIDATION_FAILED',

@@ -51,6 +51,7 @@ export function normalizeApiError(error: unknown): ToastError {
     };
   }
 
+  // Handle standard JavaScript Error
   if (error instanceof Error) {
     return {
       title: "Application Error",
@@ -59,8 +60,23 @@ export function normalizeApiError(error: unknown): ToastError {
     };
   }
 
+  // Handle custom object error shapes
+  if (typeof error === "object" && error !== null) {
+    const errObj = error as any;
+    if (errObj.message || errObj.title) {
+      return {
+        title: errObj.title || "Error",
+        message: errObj.message || "An unexpected error occurred.",
+        details: errObj.details,
+        status: errObj.status,
+        code: errObj.code,
+      };
+    }
+  }
+
+  // Fallback
   return {
     title: "Error",
-    message: String(error as string),
+    message: String(error),
   };
 }

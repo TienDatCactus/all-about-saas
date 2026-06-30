@@ -133,7 +133,7 @@ export default function Toast(props: ToastProps) {
 
   const percentage = (remainingMs / duration) * 100;
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = () => {
     if (!error) return;
     const text = [
       error.title ? `Title: ${error.title}` : "",
@@ -148,7 +148,23 @@ export default function Toast(props: ToastProps) {
       .filter(Boolean)
       .join("\n");
 
-    await navigator.clipboard.writeText(text).then(() => {
+    if (!navigator.clipboard) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand("copy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy text", err);
+      }
+      document.body.removeChild(textArea);
+      return;
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
