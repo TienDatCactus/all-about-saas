@@ -47,10 +47,7 @@ function toast(
   return id;
 }
 
-toast.success = (
-  title: React.ReactNode,
-  options?: Omit<ToastOptions, "status" | "title">,
-) => {
+toast.success = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
   return toast({
     status: "success",
     title,
@@ -58,10 +55,7 @@ toast.success = (
   });
 };
 
-toast.error = (
-  title: React.ReactNode,
-  options?: Omit<ToastOptions, "status" | "title">,
-) => {
+toast.error = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
   return toast({
     status: "error",
     title,
@@ -69,10 +63,7 @@ toast.error = (
   });
 };
 
-toast.warning = (
-  title: React.ReactNode,
-  options?: Omit<ToastOptions, "status" | "title">,
-) => {
+toast.warning = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
   return toast({
     status: "warning",
     title,
@@ -80,10 +71,7 @@ toast.warning = (
   });
 };
 
-toast.info = (
-  title: React.ReactNode,
-  options?: Omit<ToastOptions, "status" | "title">,
-) => {
+toast.info = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
   return toast({
     status: "info",
     title,
@@ -91,10 +79,7 @@ toast.info = (
   });
 };
 
-toast.loading = (
-  title: React.ReactNode,
-  options?: Omit<ToastOptions, "status" | "title">,
-) => {
+toast.loading = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
   return toast({
     status: "loading",
     title,
@@ -146,49 +131,3 @@ toast.dismiss = (id?: string | number) => {
 };
 
 export { toast };
-
-export default function Headless() {
-  return (
-    <div className="flex gap-2 flex-wrap justify-center mt-4">
-      <button
-        className="relative flex h-10 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-4 text-sm font-medium shadow-sm transition-all hover:bg-[#FAFAFA] dark:bg-[#161615] dark:hover:bg-[#1A1A19] dark:text-white"
-        onClick={() => {
-          toast.success("Success Toast", {
-            description: "The operations completed successfully!",
-          });
-        }}
-      >
-        Render success toast
-      </button>
-
-      <button
-        className="relative flex h-10 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-4 text-sm font-medium shadow-sm transition-all hover:bg-[#FAFAFA] dark:bg-[#161615] dark:hover:bg-[#1A1A19] dark:text-white"
-        onClick={() => {
-          toast.api(
-            {
-              response: {
-                status: 400,
-                data: {
-                  code: "VALIDATION_FAILED",
-                  message: "Invalid registration parameters.",
-                  validation: {
-                    email: ["Email must be a valid address."],
-                    password: [
-                      "Password must contain an uppercase letter.",
-                      "Password must be at least 8 characters long.",
-                    ],
-                  },
-                  path: "/auth/register",
-                  traceId: "err_8f12a9c34b02",
-                },
-              },
-            },
-            "Registration Failed",
-          );
-        }}
-      >
-        Render API validation error
-      </button>
-    </div>
-  );
-}
