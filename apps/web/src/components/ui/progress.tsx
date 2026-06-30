@@ -7,18 +7,21 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Field, FieldDescription, FieldLabel } from "./field";
 
-const progressVariants = cva("relative w-full overflow-hidden rounded-full bg-muted", {
-  variants: {
-    size: {
-      sm: "h-2",
-      md: "h-3",
-      lg: "h-4",
+const progressVariants = cva(
+  "relative w-full overflow-hidden rounded-full bg-muted transition-transform duration-100 ease-linear",
+  {
+    variants: {
+      size: {
+        sm: "h-2",
+        md: "h-3",
+        lg: "h-4",
+      },
+    },
+    defaultVariants: {
+      size: "md",
     },
   },
-  defaultVariants: {
-    size: "md",
-  },
-});
+);
 
 const indicatorVariants = cva("h-full transition-all duration-300 ease-out", {
   variants: {

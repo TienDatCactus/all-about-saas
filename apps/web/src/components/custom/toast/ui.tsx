@@ -10,6 +10,7 @@ import {
   ItemTitle,
   itemVariants,
 } from "@/components/ui/item";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
   ArrowClockwiseIcon,
@@ -24,7 +25,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { toast as sonnerToast } from "sonner";
 import { type ToastError } from "./normalize";
-import { Separator } from "@/components/ui/separator";
 
 export type ToastStatus = "success" | "error" | "warning" | "info" | "loading" | "offline";
 
@@ -80,7 +80,7 @@ function ToastProgress({ status, percentage }: { status: ToastStatus; percentage
   return (
     <div
       className={cn(
-        "absolute inset-x-0 bottom-0 h-0.75 origin-left rounded-xl transition-all duration-100 ease-linear",
+        "absolute inset-x-0 bottom-0 h-1 origin-left transition-transform duration-100 ease-linear rounded-2xl",
         {
           "bg-success": status === "success",
           "bg-destructive": status === "error",
@@ -156,6 +156,9 @@ export default function Toast(props: ToastProps) {
 
   const hasExpandableContent = !!(error || details);
 
+  const toggleTimer = () => {
+    setIsPaused(!isPaused);
+  };
   return (
     <Item
       variant="outline"
@@ -163,8 +166,6 @@ export default function Toast(props: ToastProps) {
       role="alert"
       aria-live={status === "error" || status === "warning" ? "assertive" : "polite"}
       aria-atomic="true"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
     >
       <Collapsible className="w-full">
         <div className={cn(itemVariants({}), "p-4")}>
@@ -224,75 +225,88 @@ export default function Toast(props: ToastProps) {
           </ItemActions>
         </div>
 
-        <CollapsibleContent className="p-4 pt-0">
-          <div>
-            {details && <text className="text-muted-foreground">{details}</text>}
+        <CollapsibleContent className="space-y-3 px-4 pb-4 pt-0 text-xs">
+          {details && <p className="text-muted-foreground">{details}</p>}
 
-            {error && (
-              <div className="space-y-3">
-                {error.validation && (
-                  <div className="space-y-1.5 mt-1">
-                    <span className="font-semibold text-foreground text-xs block text-left">
-                      Validation Issues:
-                    </span>
-                    {Object.entries(error.validation).map(([field, messages]) => (
-                      <div
-                        key={field}
-                        className="text-left text-xs bg-muted/40 p-1.5 rounded border border-muted/50"
-                      >
-                        <span className="font-semibold text-foreground capitalize block text-left">
-                          {field}
-                        </span>
-                        <ul className="list-disc list-inside pl-2 text-muted-foreground mt-0.5 text-left">
-                          {messages.map((msg, i) => (
-                            <li key={i}>{msg}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <Separator />
-                <pre className="pt-2 text-[10px] text-muted-foreground space-y-1 font-mono text-left *:block">
-                  {error.status && (
-                    <code>
-                      <strong>Status:</strong> {error.status}
-                    </code>
-                  )}
-                  {error.code && (
-                    <code>
-                      <strong>Code:</strong> {error.code}
-                    </code>
-                  )}
-                  {error.path && (
-                    <code className="truncate">
-                      <strong>Path:</strong> {error.path}
-                    </code>
-                  )}
-                  {error.traceId && (
-                    <code>
-                      <strong>Trace ID:</strong> {error.traceId}
-                    </code>
-                  )}
-                  {error.details && (
-                    <code className="block overflow-x-auto max-h-24 bg-muted/60 border p-1.5 rounded mt-1.5 whitespace-pre scrollbar-thin text-[9px]">
-                      {error.details}
-                    </code>
-                  )}
-                </pre>
+          {error && (
+            <>
+              {error.validation && (
+                <div className="space-y-1.5">
+                  <p className="font-medium text-foreground">Validation</p>
 
-                <Button variant="outline" size="sm" className="w-full " onClick={copyToClipboard}>
-                  {copied ? "Copied!" : "Copy Details"}
+                  {Object.entries(error.validation).map(([field, messages]) => (
+                    <dl key={field} className="grid grid-cols-[72px_1fr] gap-x-2">
+                      <dt className="truncate text-muted-foreground capitalize">{field}</dt>
+
+                      <dd className="space-y-0.5">
+                        {messages.map((message, index) => (
+                          <p key={index}>{message}</p>
+                        ))}
+                      </dd>
+                    </dl>
+                  ))}
+                </div>
+              )}
+
+              {(error.status || error.code || error.path || error.traceId) && (
+                <>
+                  <Separator />
+
+                  <dl className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1">
+                    {error.status && (
+                      <>
+                        <dt className="text-muted-foreground">Status</dt>
+                        <dd>{error.status}</dd>
+                      </>
+                    )}
+
+                    {error.code && (
+                      <>
+                        <dt className="text-muted-foreground">Code</dt>
+                        <dd className="font-mono">{error.code}</dd>
+                      </>
+                    )}
+
+                    {error.path && (
+                      <>
+                        <dt className="text-muted-foreground">Path</dt>
+                        <dd className="truncate font-mono">{error.path}</dd>
+                      </>
+                    )}
+
+                    {error.traceId && (
+                      <>
+                        <dt className="text-muted-foreground">Trace</dt>
+                        <dd className="truncate font-mono">{error.traceId}</dd>
+                      </>
+                    )}
+                  </dl>
+                </>
+              )}
+
+              {error.details && (
+                <>
+                  <Separator />
+
+                  <p className="max-h-24 overflow-auto rounded border bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap">
+                    {error.details}
+                  </p>
+                </>
+              )}
+
+              <div className="flex justify-end">
+                <Button variant="outline" className="w-full" size="sm" onClick={copyToClipboard}>
+                  {copied ? "Copied" : "Copy details"}
                 </Button>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </CollapsibleContent>
         <ItemFooter className="bg-secondary p-2 border-t">
           <p className="text-xs text-muted-foreground">
             This message will close in <strong>{Math.ceil(remainingMs / 1000)}</strong> seconds.{" "}
-            <a href="#" className="link text-foreground">
-              Click to stop.
+            <a onClick={toggleTimer} className="link text-foreground">
+              Click to {isPaused ? "resume" : "pause"}.
             </a>
           </p>
         </ItemFooter>
