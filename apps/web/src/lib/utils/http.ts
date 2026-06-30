@@ -1,10 +1,6 @@
 import { authApi } from "@/services/auth";
-import axios, {
-  type AxiosInstance,
-  type AxiosRequestConfig,
-  type AxiosResponse,
-} from "axios";
-import { toast } from "sonner";
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from "axios";
+import { toast } from "@/components/custom/toast";
 import { AppConstants } from "./constants";
 import { storage } from "./local-storage";
 
@@ -53,9 +49,7 @@ export class HttpClient {
       (response: AxiosResponse) => {
         const method = response.config.method?.toUpperCase();
         const message =
-          response.data?.message ||
-          response.data.data?.message ||
-          "Request successful";
+          response.data?.message || response.data.data?.message || "Request successful";
 
         if (method && method !== "GET") {
           toast.success(message);
@@ -67,17 +61,10 @@ export class HttpClient {
         return response.data;
       },
       async (error) => {
-        const status =
-          error.response?.status || error.response?.data?.statusCode;
-        const message =
-          error.response?.data?.message || error.message || "An error occurred";
-        const timestamp =
-          error.response?.data?.timestamp || new Date().toISOString();
-
+        const status = error.response?.status || error.response?.data?.statusCode;
         const requestUrl = error.config?.url || "";
         const isAuthRequest =
-          requestUrl.includes("/auth/refresh") ||
-          requestUrl.includes("/auth/logout");
+          requestUrl.includes("/auth/refresh") || requestUrl.includes("/auth/logout");
 
         if (status === 401 && !isAuthRequest) {
           if (!this.isRefreshing) {
@@ -89,7 +76,7 @@ export class HttpClient {
               window.location.href = "/login";
             });
 
-            this.refreshPromise.finally(() => {
+            await this.refreshPromise.finally(() => {
               this.isRefreshing = false;
               this.refreshPromise = null;
             });
@@ -115,9 +102,7 @@ export class HttpClient {
           return Promise.reject(error);
         }
 
-        toast.error(message, {
-          description: `Status: ${status} - ${timestamp}`,
-        });
+        toast.api(error);
         return Promise.reject(error.response?.data || error);
       },
     );
@@ -127,27 +112,15 @@ export class HttpClient {
     return this.axiosInstance.get(url, config) as unknown as Promise<T>;
   }
 
-  public post<T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
+  public post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.post(url, data, config) as unknown as Promise<T>;
   }
 
-  public put<T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
+  public put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.put(url, data, config) as unknown as Promise<T>;
   }
 
-  public patch<T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
+  public patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.patch(url, data, config) as unknown as Promise<T>;
   }
 

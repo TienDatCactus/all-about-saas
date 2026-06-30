@@ -6,7 +6,7 @@ import { ChangePasswordSchema, useChangePasswordMutation } from "@/services/auth
 import { useForm } from "@tanstack/react-form";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import React from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/custom/toast";
 import { z } from "zod";
 
 const ChangePasswordForm: React.FC = () => {
