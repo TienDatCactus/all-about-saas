@@ -7,7 +7,7 @@ import { LoginInSchema, SignUpSchema, useSignupMutation, type SignUpIn } from "@
 import { formOptions, useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import React from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/custom/toast";
 const defaultValue: SignUpIn = { email: "", password: "", rePassword: "" };
 
 const formOpts = formOptions({

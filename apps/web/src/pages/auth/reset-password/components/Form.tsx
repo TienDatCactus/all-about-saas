@@ -5,7 +5,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { LoginInSchema, useSendVerificationEmailMutation } from "@/services/auth";
 import { formOptions, useForm } from "@tanstack/react-form";
 import React from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/custom/toast";
 import { z } from "zod";
 const defaultValue = { email: "" };
 

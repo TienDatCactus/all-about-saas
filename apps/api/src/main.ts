@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ClassSerializerInterceptor,
   ConsoleLogger,
   ValidationPipe,
@@ -27,6 +28,18 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
+      exceptionFactory: (validationErrors) => {
+        const validation = {};
+        validationErrors.forEach((err) => {
+          validation[err.property] = Object.values(err.constraints ?? {});
+        });
+        return new BadRequestException({
+          statusCode: 400,
+          code: 'VALIDATION_FAILED',
+          message: 'Validation failed',
+          validation,
+        });
+      },
     }),
   );
   app.set('trust proxy', 'loopback');

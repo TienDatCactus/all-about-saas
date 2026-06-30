@@ -4,7 +4,7 @@ import axios, {
   type AxiosRequestConfig,
   type AxiosResponse,
 } from "axios";
-import { toast } from "sonner";
+import { toast } from "@/components/custom/toast";
 import { AppConstants } from "./constants";
 import { storage } from "./local-storage";
 
@@ -69,11 +69,6 @@ export class HttpClient {
       async (error) => {
         const status =
           error.response?.status || error.response?.data?.statusCode;
-        const message =
-          error.response?.data?.message || error.message || "An error occurred";
-        const timestamp =
-          error.response?.data?.timestamp || new Date().toISOString();
-
         const requestUrl = error.config?.url || "";
         const isAuthRequest =
           requestUrl.includes("/auth/refresh") ||
@@ -115,9 +110,7 @@ export class HttpClient {
           return Promise.reject(error);
         }
 
-        toast.error(message, {
-          description: `Status: ${status} - ${timestamp}`,
-        });
+        toast.api(error);
         return Promise.reject(error.response?.data || error);
       },
     );

@@ -9,7 +9,7 @@ import {
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/custom/toast";
 import { cn } from "../lib/utils";
 
 export const Route = createFileRoute("/verify-email")({

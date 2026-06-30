@@ -1,3 +1,4 @@
+import Headless, { toast } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -14,6 +15,14 @@ function App() {
           <p>You may now add components and start building.</p>
           <p>We&apos;ve already added the button component for you.</p>
         </div>
+        <Headless />
+        <Button
+          onClick={() => {
+            toast("dat");
+          }}
+        >
+          dat
+        </Button>
       </div>
     </div>
   );

@@ -1,14 +1,12 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { MotionProvider, useMotion } from "@/lib/context/animation";
 import { AuthProvider } from "@/lib/context/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import appCss from "../styles.css?url";
 import { MotionConfig } from "motion/react";
-import { MotionProvider, useMotion } from "@/lib/context/animation";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -59,11 +57,7 @@ const queryClient = new QueryClient();
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { preference } = useMotion();
   const reducedMotionMode =
-    preference === "system"
-      ? "user"
-      : preference === "off"
-        ? "always"
-        : "never";
+    preference === "system" ? "user" : preference === "off" ? "always" : "never";
   return (
     <MotionConfig isValidProp={() => true} reducedMotion={reducedMotionMode}>
       <html lang="en" suppressHydrationWarning>
@@ -71,21 +65,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body suppressHydrationWarning>
-          <div className="flex min-h-dvh items-center justify-center">
-            {children}
-          </div>
-
-          <TanStackDevtools
-            config={{
-              position: "bottom-right",
-            }}
-            plugins={[
-              {
-                name: "Tanstack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-            ]}
-          />
+          <div className="flex min-h-dvh items-center justify-center">{children}</div>
           <Scripts />
         </body>
       </html>
@@ -102,7 +82,7 @@ function Providers({ children }: { children: React.ReactNode }) {
             <RootDocument>{children}</RootDocument>
           </TooltipProvider>
         </AuthProvider>
-        <Toaster />
+        <Toaster position="top-right" />
       </QueryClientProvider>
     </MotionProvider>
   );
