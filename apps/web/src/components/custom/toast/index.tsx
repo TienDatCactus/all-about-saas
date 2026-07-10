@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { toast as sonnerToast } from "sonner";
 import Toast, { type ToastOptions } from "./ui";
@@ -40,14 +38,19 @@ function toast(
     ),
     {
       id,
-      duration: mergedOptions.persistent ? Infinity : mergedOptions.duration || 10000,
+      duration: mergedOptions.persistent
+        ? Infinity
+        : mergedOptions.duration || 10000,
     },
   );
 
   return id;
 }
 
-toast.success = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
+toast.success = (
+  title: React.ReactNode,
+  options?: Omit<ToastOptions, "status" | "title">,
+) => {
   return toast({
     status: "success",
     title,
@@ -55,7 +58,10 @@ toast.success = (title: React.ReactNode, options?: Omit<ToastOptions, "status" |
   });
 };
 
-toast.error = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
+toast.error = (
+  title: React.ReactNode,
+  options?: Omit<ToastOptions, "status" | "title">,
+) => {
   return toast({
     status: "error",
     title,
@@ -63,7 +69,10 @@ toast.error = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "
   });
 };
 
-toast.warning = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
+toast.warning = (
+  title: React.ReactNode,
+  options?: Omit<ToastOptions, "status" | "title">,
+) => {
   return toast({
     status: "warning",
     title,
@@ -71,7 +80,10 @@ toast.warning = (title: React.ReactNode, options?: Omit<ToastOptions, "status" |
   });
 };
 
-toast.info = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
+toast.info = (
+  title: React.ReactNode,
+  options?: Omit<ToastOptions, "status" | "title">,
+) => {
   return toast({
     status: "info",
     title,
@@ -79,11 +91,13 @@ toast.info = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "t
   });
 };
 
-toast.loading = (title: React.ReactNode, options?: Omit<ToastOptions, "status" | "title">) => {
+toast.loading = (
+  title: React.ReactNode,
+  options?: Omit<ToastOptions, "status" | "title">,
+) => {
   return toast({
     status: "loading",
     title,
-    persistent: true,
     dismissible: false,
     ...options,
   });
@@ -100,7 +114,6 @@ toast.api = (
     title: title || normalized.title,
     description: normalized.message,
     error: normalized,
-    persistent: true,
     ...options,
   });
 };
@@ -116,11 +129,17 @@ toast.promise = <T,>(
   const id = toast.loading(options.loading);
   promise
     .then((data) => {
-      const msg = typeof options.success === "function" ? options.success(data) : options.success;
+      const msg =
+        typeof options.success === "function"
+          ? options.success(data)
+          : options.success;
       toast({ id, status: "success", title: msg, duration: 4000 });
     })
     .catch((err) => {
-      const msg = typeof options.error === "function" ? options.error(err) : options.error;
+      const msg =
+        typeof options.error === "function"
+          ? options.error(err)
+          : options.error;
       toast.api(err, msg, { id });
     });
   return promise;

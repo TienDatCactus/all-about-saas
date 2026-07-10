@@ -1,5 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Item,
   ItemActions,
@@ -26,7 +30,13 @@ import React, { useEffect, useState } from "react";
 import { toast as sonnerToast } from "sonner";
 import { type ToastError } from "./normalize";
 
-export type ToastStatus = "success" | "error" | "warning" | "info" | "loading" | "offline";
+export type ToastStatus =
+  | "success"
+  | "error"
+  | "warning"
+  | "info"
+  | "loading"
+  | "offline";
 
 export interface ToastOptions {
   id?: string;
@@ -75,7 +85,13 @@ function ToastIcon({ status }: { status: ToastStatus }) {
   );
 }
 
-function ToastProgress({ status, percentage }: { status: ToastStatus; percentage: number }) {
+function ToastProgress({
+  status,
+  percentage,
+}: {
+  status: ToastStatus;
+  percentage: number;
+}) {
   if (status === "loading") return null;
   return (
     <div
@@ -142,7 +158,9 @@ export default function Toast(props: ToastProps) {
       error.code ? `Code: ${error.code}` : "",
       error.path ? `Path: ${error.path}` : "",
       error.traceId ? `Trace ID: ${error.traceId}` : "",
-      error.validation ? `Validation: ${JSON.stringify(error.validation, null, 2)}` : "",
+      error.validation
+        ? `Validation: ${JSON.stringify(error.validation, null, 2)}`
+        : "",
       error.details ? `Details: ${error.details}` : "",
     ]
       .filter(Boolean)
@@ -180,12 +198,16 @@ export default function Toast(props: ToastProps) {
       variant="outline"
       className="relative overflow-hidden bg-card p-0 gap-0 "
       role="alert"
-      aria-live={status === "error" || status === "warning" ? "assertive" : "polite"}
+      aria-live={
+        status === "error" || status === "warning" ? "assertive" : "polite"
+      }
       aria-atomic="true"
     >
       <Collapsible className="w-full">
         <div className={cn(itemVariants({}), "p-4")}>
-          <ToastProgress status={status} percentage={percentage} />
+          {!persistent && (
+            <ToastProgress status={status} percentage={percentage} />
+          )}
 
           <ItemMedia variant="icon">
             <ToastIcon status={status} />
@@ -234,7 +256,11 @@ export default function Toast(props: ToastProps) {
               </CollapsibleTrigger>
             )}
             {dismissible && (
-              <Button variant="ghost" size="icon-sm" onClick={() => sonnerToast.dismiss(id)}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => sonnerToast.dismiss(id)}
+              >
                 <XIcon />
               </Button>
             )}
@@ -251,8 +277,13 @@ export default function Toast(props: ToastProps) {
                   <p className="font-medium text-foreground">Validation</p>
 
                   {Object.entries(error.validation).map(([field, messages]) => (
-                    <dl key={field} className="grid grid-cols-[72px_1fr] gap-x-2">
-                      <dt className="truncate text-muted-foreground capitalize">{field}</dt>
+                    <dl
+                      key={field}
+                      className="grid grid-cols-[72px_1fr] gap-x-2"
+                    >
+                      <dt className="truncate text-muted-foreground capitalize">
+                        {field}
+                      </dt>
 
                       <dd className="space-y-0.5">
                         {messages.map((message, index) => (
@@ -311,21 +342,29 @@ export default function Toast(props: ToastProps) {
               )}
 
               <div className="flex justify-end">
-                <Button variant="outline" className="w-full" size="sm" onClick={copyToClipboard}>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                  onClick={copyToClipboard}
+                >
                   {copied ? "Copied" : "Copy details"}
                 </Button>
               </div>
             </>
           )}
         </CollapsibleContent>
-        <ItemFooter className="bg-secondary p-2 border-t">
-          <p className="text-xs text-muted-foreground">
-            This message will close in <strong>{Math.ceil(remainingMs / 1000)}</strong> seconds.{" "}
-            <a onClick={toggleTimer} className="link text-foreground">
-              Click to {isPaused ? "resume" : "pause"}.
-            </a>
-          </p>
-        </ItemFooter>
+        {!persistent && (
+          <ItemFooter className="bg-secondary p-2 border-t">
+            <p className="text-xs text-muted-foreground">
+              This message will close in{" "}
+              <strong>{Math.ceil(remainingMs / 1000)}</strong> seconds.{" "}
+              <a onClick={toggleTimer} className="link text-foreground">
+                Click to {isPaused ? "resume" : "pause"}.
+              </a>
+            </p>
+          </ItemFooter>
+        )}
       </Collapsible>
     </Item>
   );
