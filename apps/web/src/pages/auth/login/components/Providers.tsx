@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { loadAsset } from "@/lib/utils";
-import { useGoogleLoginMutation } from "@/services/users";
+import {
+  useGithubLoginMutation,
+  useGoogleLoginMutation,
+} from "@/services/auth";
 import React from "react";
 import { ReactSVG } from "react-svg";
 
@@ -12,11 +15,17 @@ interface Provider {
 
 const Providers: React.FC = () => {
   const { mutate: googleLogin } = useGoogleLoginMutation();
+  const { mutate: githubLogin } = useGithubLoginMutation();
   const providers: Provider[] = [
     {
       name: "Google",
       iconUrl: loadAsset("google.svg", "svg"),
       callback: googleLogin,
+    },
+    {
+      name: "Github",
+      iconUrl: loadAsset("github.svg", "svg"),
+      callback: githubLogin,
     },
   ];
   return (

@@ -14,7 +14,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       callbackURL:
         configService.get<string>('github.callbackURL') ||
         'http://localhost:8000/auth/google/callback',
-      scope: ['email', 'profile'],
+      scope: ['user:email'],
     });
   }
   async validate(accessToken: string, refreshToken: string, profile: any) {
@@ -22,7 +22,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       id: profile.id,
       username: profile.username,
       displayName: profile.displayName,
-      email: profile.emails[0],
+      email: profile.emails[0].value,
       avatar: profile.photos?.[0]?.value,
       accessToken,
     };

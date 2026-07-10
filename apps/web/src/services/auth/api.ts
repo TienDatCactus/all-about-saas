@@ -21,13 +21,18 @@ export const authApi = {
   loginWithGoogle: async (): Promise<void> => {
     window.location.href = AUTH.googleLogin;
   },
+  loginWithGithub: async (): Promise<void> => {
+    window.location.href = AUTH.githubLogin;
+  },
   refresh: async (): Promise<string> => {
     return http.post(AUTH.refresh);
   },
   verifyEmail: async (data: VerifyEmailIn) => {
     return http.post(AUTH.verifyEmail, data);
   },
-  sendVerificationEmail: async (data: SendVerificationEmailIn): Promise<void> => {
+  sendVerificationEmail: async (
+    data: SendVerificationEmailIn,
+  ): Promise<void> => {
     return http.post(AUTH.sendVerificationEmail, data);
   },
   changePassword: async (
