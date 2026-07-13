@@ -14,20 +14,13 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
       callbackURL:
         configService.get<string>('facebook.callbackURL') ||
         'http://localhost:8000/auth/facebook/callback',
-      profileFields: [
-        'id',
-        'emails',
-        'name',
-        'displayName',
-        'picture.type(large)',
-      ],
+      profileFields: ['id', 'displayName', 'emails', 'photos'],
       scope: ['email'],
     });
   }
   async validate(accessToken: string, refreshToken: string, profile: Profile) {
     return {
-      provider: 'facebook',
-      providerId: profile.id,
+      id: profile.id,
       email: profile.emails?.[0]?.value,
       firstName: profile.name?.givenName,
       lastName: profile.name?.familyName,

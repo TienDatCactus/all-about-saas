@@ -21,11 +21,6 @@ import {
 } from '../entities/verification-token.entity';
 import { TokensService } from './tokens.service';
 
-export enum OAUTH_PROVIDERS {
-  GOOGLE = 'google',
-  FACEBOOK = 'facebook',
-  GITHUB = 'github',
-}
 interface SessionInfo {
   ipAddress: string;
   userAgent: string;

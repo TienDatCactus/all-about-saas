@@ -24,6 +24,9 @@ export const authApi = {
   loginWithGithub: async (): Promise<void> => {
     window.location.href = AUTH.githubLogin;
   },
+  loginWithFacebook: async (): Promise<void> => {
+    window.location.href = AUTH.facebookLogin;
+  },
   refresh: async (): Promise<string> => {
     return http.post(AUTH.refresh);
   },

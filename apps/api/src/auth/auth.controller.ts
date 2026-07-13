@@ -24,10 +24,11 @@ import {
   VerificationToken,
   VerificationType,
 } from './entities/verification-token.entity';
-import { AuthService, OAUTH_PROVIDERS } from './services/auth.service';
+import { AuthService } from './services/auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { GithubAuthGuard } from '../common/guard/github-auth.guard';
 import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
+import { OAuthProvider } from '../users/entities/oauth-account.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -175,18 +176,6 @@ export class AuthController {
   }
 
   @Public()
-  @UseGuards(GoogleAuthGuard)
-  @Get('google')
-  googleAuth() {
-    // Triggers the Passport Google authentication flow
-  }
-  @Public()
-  @Get('github')
-  @UseGuards(GithubAuthGuard)
-  githubLogin() {
-    // redirect to GitHub
-  }
-  @Public()
   @Post('refresh')
   async refresh(@Req() req) {
     const refreshToken = req.cookies['refresh_token'];
@@ -199,14 +188,20 @@ export class AuthController {
       message: 'Token refreshed successfully',
     };
   }
-
+  /* =================================  */
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  googleAuth() {
+    // Triggers the Passport Google authentication flow
+  }
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
     const sessionInfo = this.authService.getSessionInfo(req);
     const result = await this.authService.oauthAccess(
-      OAUTH_PROVIDERS.GOOGLE,
+      OAuthProvider.GOOGLE,
       req.user.id,
       req.user.email,
       req.user,
@@ -217,12 +212,18 @@ export class AuthController {
     const frontendUrl = this.configService.get<string>('frontendUrl')!;
     return res.redirect(frontendUrl);
   }
+  @Public()
+  @Get('github')
+  @UseGuards(GithubAuthGuard)
+  githubLogin() {
+    // redirect to GitHub
+  }
   @Get('github/callback')
   @UseGuards(GithubAuthGuard)
   async githubCallback(@Req() req, @Res() res) {
     const sessionInfo = this.authService.getSessionInfo(req);
     const result = await this.authService.oauthAccess(
-      OAUTH_PROVIDERS.GITHUB,
+      OAuthProvider.GITHUB,
       req.user.id,
       req.user.email,
       req.user,
@@ -241,7 +242,7 @@ export class AuthController {
   async facebookCallback(@Req() req, @Res() res) {
     const sessionInfo = this.authService.getSessionInfo(req);
     const result = await this.authService.oauthAccess(
-      OAUTH_PROVIDERS.FACEBOOK,
+      OAuthProvider.FACEBOOK,
       req.user.id,
       req.user.email,
       req.user,

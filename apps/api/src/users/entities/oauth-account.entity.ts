@@ -13,6 +13,7 @@ export enum OAuthProvider {
   GOOGLE = 'google',
   GITHUB = 'github',
   DISCORD = 'discord',
+  FACEBOOK = 'facebook',
 }
 @Entity()
 @Unique(['provider', 'providerUserId'])

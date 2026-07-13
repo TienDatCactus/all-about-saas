@@ -29,18 +29,6 @@ export const useSignupMutation = () => {
   });
 };
 
-export const useGoogleLoginMutation = () => {
-  return useMutation({
-    mutationFn: () => authApi.loginWithGoogle(),
-  });
-};
-
-export const useGithubLoginMutation = () => {
-  return useMutation({
-    mutationFn: () => authApi.loginWithGithub(),
-  });
-};
-
 export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: () => authApi.logout(),
