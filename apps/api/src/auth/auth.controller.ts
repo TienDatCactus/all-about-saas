@@ -27,6 +27,7 @@ import {
 import { AuthService, OAUTH_PROVIDERS } from './services/auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { GithubAuthGuard } from '../common/guard/github-auth.guard';
+import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -45,19 +46,14 @@ export class AuthController {
     @Req() req,
   ) {
     const sessionInfo = this.authService.getSessionInfo(req);
-    const resp = await this.authService.login(
+    const result = await this.authService.login(
       body.email,
       body.password,
       sessionInfo,
     );
-    res.cookie('refresh_token', resp.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: this.configService.get('jwt.refreshExpiresIn'),
-    });
+    this.authService.setCookie(res, result.refreshToken);
     return {
-      accessToken: resp.accessToken,
+      accessToken: result.accessToken,
       message: 'Login successful',
     };
   }
@@ -217,12 +213,7 @@ export class AuthController {
       sessionInfo,
     );
 
-    res.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: this.configService.get('jwt.refreshExpiresIn'),
-    });
+    this.authService.setCookie(res, result.refreshToken);
     const frontendUrl = this.configService.get<string>('frontendUrl')!;
     return res.redirect(frontendUrl);
   }
@@ -237,13 +228,26 @@ export class AuthController {
       req.user,
       sessionInfo,
     );
+    this.authService.setCookie(res, result.refreshToken);
+    const frontendUrl = this.configService.get<string>('frontendUrl')!;
+    return res.redirect(frontendUrl);
+  }
+  @Get('facebook')
+  @UseGuards(FacebookAuthGuard)
+  facebookLogin() {}
 
-    res.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: this.configService.get('jwt.refreshExpiresIn'),
-    });
+  @Get('facebook/callback')
+  @UseGuards(FacebookAuthGuard)
+  async facebookCallback(@Req() req, @Res() res) {
+    const sessionInfo = this.authService.getSessionInfo(req);
+    const result = await this.authService.oauthAccess(
+      OAUTH_PROVIDERS.FACEBOOK,
+      req.user.id,
+      req.user.email,
+      req.user,
+      sessionInfo,
+    );
+    this.authService.setCookie(res, result.refreshToken);
     const frontendUrl = this.configService.get<string>('frontendUrl')!;
     return res.redirect(frontendUrl);
   }
