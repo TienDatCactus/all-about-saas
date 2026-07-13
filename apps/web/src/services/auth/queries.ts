@@ -21,7 +21,8 @@ export const useLoginMutation = () => {
 
 export const useSignupMutation = () => {
   return useMutation({
-    mutationFn: (data: Pick<SignUpIn, "email" | "password">) => authApi.signUp(data),
+    mutationFn: (data: Pick<SignUpIn, "email" | "password">) =>
+      authApi.signUp(data),
     onSuccess: (res) => {
       storage.set(AppConstants.tokenKey, res);
     },
@@ -31,6 +32,12 @@ export const useSignupMutation = () => {
 export const useGoogleLoginMutation = () => {
   return useMutation({
     mutationFn: () => authApi.loginWithGoogle(),
+  });
+};
+
+export const useGithubLoginMutation = () => {
+  return useMutation({
+    mutationFn: () => authApi.loginWithGithub(),
   });
 };
 
@@ -54,13 +61,15 @@ export const useVerifyEmailMutation = () => {
 
 export const useSendVerificationEmailMutation = () => {
   return useMutation({
-    mutationFn: (data: SendVerificationEmailIn) => authApi.sendVerificationEmail(data),
+    mutationFn: (data: SendVerificationEmailIn) =>
+      authApi.sendVerificationEmail(data),
   });
 };
 
 export const useChangePasswordMutation = () => {
   return useMutation({
-    mutationFn: (data: Pick<ChangePasswordIn, "selector" | "token" | "password">) =>
-      authApi.changePassword(data),
+    mutationFn: (
+      data: Pick<ChangePasswordIn, "selector" | "token" | "password">,
+    ) => authApi.changePassword(data),
   });
 };

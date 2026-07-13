@@ -17,6 +17,7 @@ import { GoogleStrategy } from './strategy/google.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { LocalStrategy } from './strategy/local.strategy';
 import { User } from '../users/entities/user.entity';
+import { GithubStrategy } from './strategy/github.strategy';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { User } from '../users/entities/user.entity';
     GoogleStrategy,
     GoogleAuthGuard,
     MailService,
+    GithubStrategy,
   ],
   exports: [AuthService, TokensService],
 })
