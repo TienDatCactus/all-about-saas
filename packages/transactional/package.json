@@ -25,6 +25,6 @@
     "@react-email/render": "2.0.8"
   },
   "devDependencies": {
-    "@react-email/ui": "^6.6.0"
+    "@react-email/ui": "^6.9.0"
   }
 }
