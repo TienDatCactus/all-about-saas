@@ -3,6 +3,7 @@ export const AUTH = {
   signup: "/auth/signup",
   googleLogin: `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth/google`,
   githubLogin: `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth/github`,
+  facebookLogin: `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth/facebook`,
   logout: "/auth/logout",
   refresh: "/auth/refresh",
   verifyEmail: "/auth/verify-email",

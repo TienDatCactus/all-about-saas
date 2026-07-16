@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { loadAsset } from "@/lib/utils";
-import {
-  useGithubLoginMutation,
-  useGoogleLoginMutation,
-} from "@/services/auth";
+import { authApi } from "@/services/auth";
+
 import React from "react";
 import { ReactSVG } from "react-svg";
 
@@ -12,22 +10,24 @@ interface Provider {
   iconUrl: string;
   callback: () => void;
 }
-
+const providers: Provider[] = [
+  {
+    name: "Google",
+    iconUrl: loadAsset("google.svg", "svg"),
+    callback: authApi.loginWithGoogle,
+  },
+  {
+    name: "Github",
+    iconUrl: loadAsset("github.svg", "svg"),
+    callback: authApi.loginWithGithub,
+  },
+  {
+    name: "Facebook",
+    iconUrl: loadAsset("facebook.svg", "svg"),
+    callback: authApi.loginWithFacebook,
+  },
+];
 const Providers: React.FC = () => {
-  const { mutate: googleLogin } = useGoogleLoginMutation();
-  const { mutate: githubLogin } = useGithubLoginMutation();
-  const providers: Provider[] = [
-    {
-      name: "Google",
-      iconUrl: loadAsset("google.svg", "svg"),
-      callback: googleLogin,
-    },
-    {
-      name: "Github",
-      iconUrl: loadAsset("github.svg", "svg"),
-      callback: githubLogin,
-    },
-  ];
   return (
     <ul className="space-y-4">
       {providers.map((provider) => (
