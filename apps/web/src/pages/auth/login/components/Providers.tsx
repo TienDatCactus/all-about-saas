@@ -10,25 +10,24 @@ interface Provider {
   iconUrl: string;
   callback: () => void;
 }
-
+const providers: Provider[] = [
+  {
+    name: "Google",
+    iconUrl: loadAsset("google.svg", "svg"),
+    callback: authApi.loginWithGoogle,
+  },
+  {
+    name: "Github",
+    iconUrl: loadAsset("github.svg", "svg"),
+    callback: authApi.loginWithGithub,
+  },
+  {
+    name: "Facebook",
+    iconUrl: loadAsset("facebook.svg", "svg"),
+    callback: authApi.loginWithFacebook,
+  },
+];
 const Providers: React.FC = () => {
-  const providers: Provider[] = [
-    {
-      name: "Google",
-      iconUrl: loadAsset("google.svg", "svg"),
-      callback: authApi.loginWithGoogle,
-    },
-    {
-      name: "Github",
-      iconUrl: loadAsset("github.svg", "svg"),
-      callback: authApi.loginWithGithub,
-    },
-    {
-      name: "Facebook",
-      iconUrl: loadAsset("facebook.svg", "svg"),
-      callback: authApi.loginWithFacebook,
-    },
-  ];
   return (
     <ul className="space-y-4">
       {providers.map((provider) => (

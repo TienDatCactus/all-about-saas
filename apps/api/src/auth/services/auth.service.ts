@@ -445,7 +445,7 @@ export class AuthService {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      maxAge: this.configService.get('jwt.refreshExpiresIn'),
+      maxAge: +this.configService.get('jwt.refreshExpiresIn'),
     });
   }
 }
