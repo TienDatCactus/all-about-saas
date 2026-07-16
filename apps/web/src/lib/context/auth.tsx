@@ -1,27 +1,27 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react"
 
 export interface AuthContextType {
-  user: any;
+  user: any
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth must be used within an AuthProvider")
   }
-  return context;
-};
+  return context
+}
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     if (!user) {
       //fetch me
     }
-  }, [user]);
+  }, [user])
 
   return (
     <AuthContext.Provider
@@ -31,5 +31,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     >
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}

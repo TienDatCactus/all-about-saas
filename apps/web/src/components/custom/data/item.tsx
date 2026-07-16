@@ -6,26 +6,26 @@ import {
   ItemHeader,
   ItemMedia,
   ItemTitle,
-} from "@/components/ui/item";
-import { cn } from "@/lib/utils";
-import type React from "react";
+} from "@/components/ui/item"
+import { cn } from "@/lib/utils"
+import type React from "react"
 type Media =
   | {
-      variant: "icon";
-      icon: React.ReactNode;
+      variant: "icon"
+      icon: React.ReactNode
     }
   | {
-      variant: "image";
-      image: React.ReactNode;
-    };
+      variant: "image"
+      image: React.ReactNode
+    }
 
 interface DataItemProp {
-  media?: Media;
-  header?: React.ReactNode;
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-  className?: string;
+  media?: Media
+  header?: React.ReactNode
+  title: string
+  description?: string
+  action?: React.ReactNode
+  className?: string
 }
 /*
 For lists, use with:
@@ -58,5 +58,5 @@ export default function DataItem({
       </ItemContent>
       {action && <ItemActions>{action}</ItemActions>}
     </Item>
-  );
+  )
 }

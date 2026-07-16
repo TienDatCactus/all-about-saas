@@ -10,4 +10,4 @@ export const AUTH = {
   sendVerificationEmail: "/auth/send-verification-email",
   changePassword: "/auth/change-password",
   resetPassword: "/auth/reset-password",
-};
+}

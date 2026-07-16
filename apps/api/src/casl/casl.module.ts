@@ -6,8 +6,8 @@ import { CaslService } from './services/casl.service';
 import { CaslAbilityFactory } from './ability.factory';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Permission, ResourceRegistry])],
-  exports: [TypeOrmModule, CaslAbilityFactory],
-  providers: [CaslService, CaslAbilityFactory],
+	imports: [TypeOrmModule.forFeature([Permission, ResourceRegistry])],
+	exports: [TypeOrmModule, CaslAbilityFactory],
+	providers: [CaslService, CaslAbilityFactory],
 })
 export class CaslModule {}

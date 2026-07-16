@@ -11,12 +11,12 @@ import { UsersCommandService } from './services/users-command.service';
 import { UsersQueryService } from './services/users-query.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User, Role, OAuthAccount, UserProfile]),
-    CaslModule,
-  ],
-  controllers: [UsersController],
-  providers: [UsersService, UsersCommandService, UsersQueryService],
-  exports: [UsersService, UsersQueryService, UsersCommandService],
+	imports: [
+		TypeOrmModule.forFeature([User, Role, OAuthAccount, UserProfile]),
+		CaslModule,
+	],
+	controllers: [UsersController],
+	providers: [UsersService, UsersCommandService, UsersQueryService],
+	exports: [UsersService, UsersQueryService, UsersCommandService],
 })
 export class UsersModule {}

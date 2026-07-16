@@ -3,12 +3,12 @@ import { Action } from '../enums/actions.enum';
 
 @Entity()
 export class ResourceRegistry {
-  @PrimaryGeneratedColumn()
-  id: number;
+	@PrimaryGeneratedColumn()
+	id: number;
 
-  @Column({ unique: true })
-  name: string; // e.g. "Article", "Invoice"
+	@Column({ unique: true })
+	name: string; // e.g. "Article", "Invoice"
 
-  @Column({ type: 'jsonb' })
-  actions: Action[]; // e.g. ["create", "read", "update", "delete"]
+	@Column({ type: 'jsonb' })
+	actions: Action[]; // e.g. ["create", "read", "update", "delete"]
 }

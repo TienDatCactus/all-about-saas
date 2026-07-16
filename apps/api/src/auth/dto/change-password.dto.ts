@@ -1,19 +1,19 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ChangePasswordDto {
-  @IsString()
-  @IsOptional()
-  selector?: string;
+	@IsString()
+	@IsOptional()
+	selector?: string;
 
-  @IsString()
-  @IsOptional()
-  token?: string;
+	@IsString()
+	@IsOptional()
+	token?: string;
 
-  @IsString()
-  @IsOptional()
-  email?: string;
+	@IsString()
+	@IsOptional()
+	email?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  password: string;
+	@IsString()
+	@IsNotEmpty()
+	password: string;
 }

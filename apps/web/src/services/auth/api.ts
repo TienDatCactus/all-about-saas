@@ -1,51 +1,51 @@
-import { http } from "@/lib/utils/http";
-import { AUTH } from "../url";
+import { http } from "@/lib/utils/http"
+import { AUTH } from "../url"
 import type {
   ChangePasswordIn,
   LoginIn,
   SendVerificationEmailIn,
   SignUpIn,
   VerifyEmailIn,
-} from "./types";
+} from "./types"
 
 export const authApi = {
   login: async (data: LoginIn): Promise<string> => {
-    return http.post(AUTH.login, data);
+    return http.post(AUTH.login, data)
   },
   logout: async (): Promise<void> => {
-    return http.post(AUTH.logout);
+    return http.post(AUTH.logout)
   },
   signUp: async (data: Pick<SignUpIn, "email" | "password">): Promise<void> => {
-    return http.post(AUTH.signup, data);
+    return http.post(AUTH.signup, data)
   },
   loginWithGoogle: async (): Promise<void> => {
-    window.location.href = AUTH.googleLogin;
+    window.location.href = AUTH.googleLogin
   },
   loginWithGithub: async (): Promise<void> => {
-    window.location.href = AUTH.githubLogin;
+    window.location.href = AUTH.githubLogin
   },
   loginWithFacebook: async (): Promise<void> => {
-    window.location.href = AUTH.facebookLogin;
+    window.location.href = AUTH.facebookLogin
   },
   refresh: async (): Promise<string> => {
-    return http.post(AUTH.refresh);
+    return http.post(AUTH.refresh)
   },
   verifyEmail: async (data: VerifyEmailIn) => {
-    return http.post(AUTH.verifyEmail, data);
+    return http.post(AUTH.verifyEmail, data)
   },
   sendVerificationEmail: async (
-    data: SendVerificationEmailIn,
+    data: SendVerificationEmailIn
   ): Promise<void> => {
-    return http.post(AUTH.sendVerificationEmail, data);
+    return http.post(AUTH.sendVerificationEmail, data)
   },
   changePassword: async (
-    data: Pick<ChangePasswordIn, "selector" | "token" | "password">,
+    data: Pick<ChangePasswordIn, "selector" | "token" | "password">
   ): Promise<void> => {
-    return http.post(AUTH.changePassword, data);
+    return http.post(AUTH.changePassword, data)
   },
   resetPassword: async (
-    data: Pick<ChangePasswordIn, "selector" | "email" | "password">,
+    data: Pick<ChangePasswordIn, "selector" | "email" | "password">
   ): Promise<void> => {
-    return http.post(AUTH.resetPassword, data);
+    return http.post(AUTH.resetPassword, data)
   },
-};
+}

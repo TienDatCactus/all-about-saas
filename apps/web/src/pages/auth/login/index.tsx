@@ -1,7 +1,7 @@
-import React from "react";
-import AuthLayout from "../layouts/auth";
-import LoginForm from "./components/Form";
-import Providers from "./components/Providers";
+import React from "react"
+import AuthLayout from "../layouts/auth"
+import LoginForm from "./components/Form"
+import Providers from "./components/Providers"
 const Login: React.FC = () => {
   return (
     <AuthLayout
@@ -21,7 +21,7 @@ const Login: React.FC = () => {
         text: "or with",
       }}
     />
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

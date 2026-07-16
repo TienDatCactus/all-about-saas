@@ -11,6 +11,6 @@ export const validationMessages = {
     invalid: "Password is not valid",
   },
   rePassword: {
-    notMatch:"The passwords didn't match"
-  }
-};
+    notMatch: "The passwords didn't match",
+  },
+}

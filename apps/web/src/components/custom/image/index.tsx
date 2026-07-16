@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Empty,
@@ -6,13 +6,13 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react";
-import { useEffect, useReducer, useRef, useState } from "react";
-import useImage from "use-image";
-import { imageReducer } from "./reducer";
+} from "@/components/ui/empty"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
+import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react"
+import { useEffect, useReducer, useRef, useState } from "react"
+import useImage from "use-image"
+import { imageReducer } from "./reducer"
 
 // ─── Installation ─────────────────────────────────────────────────────────────
 // npm install use-image
@@ -21,75 +21,75 @@ import { imageReducer } from "./reducer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type AspectRatio = "square" | "4/3" | "16/9" | "3/4" | "2/1" | (string & {});
-type ObjectFit = "cover" | "contain" | "fill" | "none" | "scale-down";
+type AspectRatio = "square" | "4/3" | "16/9" | "3/4" | "2/1" | (string & {})
+type ObjectFit = "cover" | "contain" | "fill" | "none" | "scale-down"
 
 export interface ImageProps {
   /** Source URL. Undefined/empty shows the empty state. */
-  src?: string;
+  src?: string
 
   /**
    * Shown when src fails to load.
    * Falls back to the error empty state if also absent.
    */
-  fallbackSrc?: string;
+  fallbackSrc?: string
 
   /** Required for accessibility. Pass "" for decorative images. */
-  alt: string;
+  alt: string
 
   /**
    * Locks the container aspect ratio to prevent layout shift.
    * Accepts preset names or any valid CSS aspect-ratio string e.g. "3/1".
    * @default "square"
    */
-  aspectRatio?: AspectRatio;
+  aspectRatio?: AspectRatio
 
   /** @default "cover" */
-  objectFit?: ObjectFit;
+  objectFit?: ObjectFit
 
   /** CSS object-position. @default "center" */
-  objectPosition?: string;
+  objectPosition?: string
 
   /**
    * Disables lazy loading — use for hero / LCP images.
    * @default false
    */
-  priority?: boolean;
+  priority?: boolean
 
   /**
    * Retry the original src N times (exp. backoff) before falling
    * through to fallbackSrc and then the error empty state.
    * @default 0
    */
-  retries?: number;
+  retries?: number
 
   /** Base delay (ms) between retries. Doubles each attempt. @default 1000 */
-  retryDelay?: number;
+  retryDelay?: number
 
   /**
    * Show a blurred CSS placeholder while loading.
    * Combine with blurDataURL for a dominant-color / tiny-thumbnail effect.
    * @default false
    */
-  blurPlaceholder?: boolean;
+  blurPlaceholder?: boolean
 
   /** Tiny base64 image rendered blurred behind the main image during load. */
-  blurDataURL?: string;
+  blurDataURL?: string
 
   /** Fills the container before the image loads (e.g. dominant color). */
-  placeholderColor?: string;
+  placeholderColor?: string
 
   /** Fires once the image loads successfully. */
-  onLoad?: () => void;
+  onLoad?: () => void
 
   /** Fires after all retries + fallback are exhausted. */
-  onError?: () => void;
+  onError?: () => void
 
   /**
    * CORS attribute passthrough — needed when using the image on a canvas
    * (WebGL, color extraction, etc.).
    */
-  crossOrigin?: "anonymous" | "use-credentials";
+  crossOrigin?: "anonymous" | "use-credentials"
 
   /** Referrer policy forwarded to use-image. */
   referrerPolicy?:
@@ -100,7 +100,7 @@ export interface ImageProps {
     | "same-origin"
     | "strict-origin"
     | "strict-origin-when-cross-origin"
-    | "unsafe-url";
+    | "unsafe-url"
 
   // ── Slots ────────────────────────────────────────────────────────────────
 
@@ -108,26 +108,26 @@ export interface ImageProps {
    * Replaces the default shadcn <Skeleton> shown while loading.
    * Receives the same size as the image container.
    */
-  loadingSlot?: React.ReactNode;
+  loadingSlot?: React.ReactNode
 
   /**
    * Replaces the default shadcn <Empty> shown when src is undefined/empty.
    * Use to provide a branded "no image yet" state.
    */
-  emptySlot?: React.ReactNode;
+  emptySlot?: React.ReactNode
 
   /**
    * Replaces the default shadcn <Empty> shown after all load attempts fail.
    */
-  errorSlot?: React.ReactNode;
+  errorSlot?: React.ReactNode
 
   /** Applied to the outer container div. */
-  className?: string;
+  className?: string
 
   /** Applied to the <img> element. */
-  imgClassName?: string;
+  imgClassName?: string
 
-  style?: React.CSSProperties;
+  style?: React.CSSProperties
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -138,10 +138,10 @@ const ASPECT_MAP: Record<string, string> = {
   "16/9": "16 / 9",
   "3/4": "3 / 4",
   "2/1": "2 / 1",
-};
+}
 
 function toAspect(value: AspectRatio = "square") {
-  return ASPECT_MAP[value] ?? value;
+  return ASPECT_MAP[value] ?? value
 }
 
 // ─── Inner loader (uses use-image, conditionally rendered) ────────────────────
@@ -150,17 +150,17 @@ function toAspect(value: AspectRatio = "square") {
 // that is only mounted when we actually have a src to load.
 
 interface LoaderProps {
-  src: string;
-  fallbackSrc?: string;
-  alt: string;
-  objectFit: ObjectFit;
-  objectPosition: string;
-  priority: boolean;
-  retries: number;
-  retryDelay: number;
-  blurPlaceholder: boolean;
-  blurDataURL?: string;
-  crossOrigin?: "anonymous" | "use-credentials";
+  src: string
+  fallbackSrc?: string
+  alt: string
+  objectFit: ObjectFit
+  objectPosition: string
+  priority: boolean
+  retries: number
+  retryDelay: number
+  blurPlaceholder: boolean
+  blurDataURL?: string
+  crossOrigin?: "anonymous" | "use-credentials"
   referrerPolicy?:
     | "no-referrer"
     | "no-referrer-when-downgrade"
@@ -169,12 +169,12 @@ interface LoaderProps {
     | "same-origin"
     | "strict-origin"
     | "strict-origin-when-cross-origin"
-    | "unsafe-url";
-  onLoad?: () => void;
-  onError?: () => void;
-  loadingSlot?: React.ReactNode;
-  errorSlot?: React.ReactNode;
-  imgClassName?: string;
+    | "unsafe-url"
+  onLoad?: () => void
+  onError?: () => void
+  loadingSlot?: React.ReactNode
+  errorSlot?: React.ReactNode
+  imgClassName?: string
 }
 
 function ImageLoader({
@@ -198,61 +198,61 @@ function ImageLoader({
 }: LoaderProps) {
   // ── Retry logic —————————————————————————————————————————————————————————
   // use-image has no built-in retry, so we manage the active URL ourselves.
-  const retryCount = useRef(0);
-  const retryTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const isMounted = useRef(true);
+  const retryCount = useRef(0)
+  const retryTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const isMounted = useRef(true)
   const [state, dispatch] = useReducer(imageReducer, {
     activeSrc: src,
     usedFallback: false,
     visible: false,
-  });
+  })
   // Reset when the prop src changes
   useEffect(() => {
-    retryCount.current = 0;
-    clearTimeout(retryTimer.current);
+    retryCount.current = 0
+    clearTimeout(retryTimer.current)
     dispatch({
       type: "reset",
       src,
-    });
-  }, [src]);
+    })
+  }, [src])
 
   useEffect(() => {
-    isMounted.current = true;
+    isMounted.current = true
     return () => {
-      isMounted.current = false;
-      clearTimeout(retryTimer.current);
-    };
-  }, []);
+      isMounted.current = false
+      clearTimeout(retryTimer.current)
+    }
+  }, [])
 
   // ── use-image ────────────────────────────────────────────────────────────
-  const [image, status] = useImage(state.activeSrc, crossOrigin, referrerPolicy);
+  const [image, status] = useImage(state.activeSrc, crossOrigin, referrerPolicy)
 
   useEffect(() => {
     if (status === "loaded") {
       dispatch({
         type: "loaded",
-      });
-      onLoad?.();
-      return;
+      })
+      onLoad?.()
+      return
     }
 
-    if (status !== "failed") return;
+    if (status !== "failed") return
 
     // Still have retries on the original src
     if (!state.usedFallback && retryCount.current < retries) {
-      retryCount.current += 1;
-      const delay = retryDelay * Math.pow(2, retryCount.current - 1);
+      retryCount.current += 1
+      const delay = retryDelay * Math.pow(2, retryCount.current - 1)
       retryTimer.current = setTimeout(() => {
-        if (!isMounted.current) return;
+        if (!isMounted.current) return
         // Append timestamp to bust the browser cache
-        const busted = new URL(src, window.location.href);
-        busted.searchParams.set("_retry", String(retryCount.current));
+        const busted = new URL(src, window.location.href)
+        busted.searchParams.set("_retry", String(retryCount.current))
         dispatch({
           type: "retry",
           src: busted.toString(),
-        });
-      }, delay);
-      return () => clearTimeout(retryTimer.current);
+        })
+      }, delay)
+      return () => clearTimeout(retryTimer.current)
     }
 
     // Try fallbackSrc once
@@ -260,19 +260,30 @@ function ImageLoader({
       dispatch({
         type: "fallback",
         src: fallbackSrc,
-      });
-      return;
+      })
+      return
     }
 
     // All options exhausted
-    onError?.();
-  }, [status, state.usedFallback, retries, retryDelay, src, fallbackSrc, onLoad, onError]); // eslint-disable-line react-hooks/exhaustive-deps
+    onError?.()
+  }, [
+    status,
+    state.usedFallback,
+    retries,
+    retryDelay,
+    src,
+    fallbackSrc,
+    onLoad,
+    onError,
+  ]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Render ───────────────────────────────────────────────────────────────
 
-  const isLoading = status === "loading";
+  const isLoading = status === "loading"
   const isFailed =
-    status === "failed" && (state.usedFallback || !fallbackSrc) && retryCount.current >= retries;
+    status === "failed" &&
+    (state.usedFallback || !fallbackSrc) &&
+    retryCount.current >= retries
 
   return (
     <>
@@ -282,14 +293,16 @@ function ImageLoader({
           src={blurDataURL}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover scale-105"
+          className="absolute inset-0 h-full w-full scale-105 object-cover"
           style={{ filter: "blur(10px)", transition: "opacity 0.4s" }}
         />
       )}
 
       {/* Loading skeleton */}
       {isLoading &&
-        (loadingSlot ?? <Skeleton className="absolute inset-0 h-full w-full rounded-none" />)}
+        (loadingSlot ?? (
+          <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+        ))}
 
       {/* Error empty state */}
       {isFailed && (errorSlot ?? <DefaultErrorEmpty />)}
@@ -306,13 +319,13 @@ function ImageLoader({
           className={cn(
             "absolute inset-0 h-full w-full transition-opacity duration-300",
             state.visible ? "opacity-100" : "opacity-0",
-            imgClassName,
+            imgClassName
           )}
           style={{ objectFit, objectPosition }}
         />
       )}
     </>
-  );
+  )
 }
 
 // ─── Default empty-state slots ────────────────────────────────────────────────
@@ -328,7 +341,7 @@ function DefaultNoSrcEmpty() {
         <EmptyDescription>No image source provided.</EmptyDescription>
       </EmptyHeader>
     </Empty>
-  );
+  )
 }
 
 function DefaultErrorEmpty() {
@@ -342,7 +355,7 @@ function DefaultErrorEmpty() {
         <EmptyDescription>This image could not be loaded.</EmptyDescription>
       </EmptyHeader>
     </Empty>
-  );
+  )
 }
 
 // ─── SmartImage ───────────────────────────────────────────────────────────────
@@ -371,7 +384,7 @@ export function Image({
   imgClassName,
   style,
 }: ImageProps) {
-  const hasSrc = Boolean(src);
+  const hasSrc = Boolean(src)
 
   return (
     <div
@@ -410,10 +423,10 @@ export function Image({
         />
       )}
     </div>
-  );
+  )
 }
 
-export default Image;
+export default Image
 
 // ─── Usage examples ───────────────────────────────────────────────────────────
 //

@@ -1,21 +1,24 @@
-import { useReducedMotionConfig } from "motion/react";
-import React from "react";
-type MotionPreference = "on" | "off" | "system";
+import { useReducedMotionConfig } from "motion/react"
+import React from "react"
+type MotionPreference = "on" | "off" | "system"
 interface MotionContextValue {
-  preference: MotionPreference;
+  preference: MotionPreference
 
-  reducedMotion: boolean;
+  reducedMotion: boolean
 
-  setPreference: (value: MotionPreference) => void;
+  setPreference: (value: MotionPreference) => void
 }
 
-const MotionContext = React.createContext<MotionContextValue | undefined>(undefined);
+const MotionContext = React.createContext<MotionContextValue | undefined>(
+  undefined
+)
 export function MotionProvider({ children }: React.PropsWithChildren) {
-  const systemReducedMotion = useReducedMotionConfig();
+  const systemReducedMotion = useReducedMotionConfig()
 
-  const [preference, setPreference] = React.useState<MotionPreference>("system");
+  const [preference, setPreference] = React.useState<MotionPreference>("system")
 
-  const reducedMotion = preference === "system" ? !!systemReducedMotion : preference === "off";
+  const reducedMotion =
+    preference === "system" ? !!systemReducedMotion : preference === "off"
 
   return (
     <MotionContext.Provider
@@ -27,15 +30,15 @@ export function MotionProvider({ children }: React.PropsWithChildren) {
     >
       {children}
     </MotionContext.Provider>
-  );
+  )
 }
 
 export function useMotion() {
-  const context = React.use(MotionContext);
+  const context = React.use(MotionContext)
 
   if (!context) {
-    throw new Error("useMotion must be used within MotionProvider");
+    throw new Error("useMotion must be used within MotionProvider")
   }
 
-  return context;
+  return context
 }

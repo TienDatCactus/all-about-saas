@@ -1,12 +1,12 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class GoogleAuthGuard extends AuthGuard('google') {
-  constructor() {
-    super({
-      accessType: 'offline',
-      prompt: 'select_account',
-    });
-  }
+	constructor() {
+		super({
+			accessType: 'offline',
+			prompt: 'select_account',
+		});
+	}
 }

@@ -1,6 +1,6 @@
-import ChangePassword from "@/pages/auth/change-password";
-import { ChangePasswordSchema } from "@/services/auth";
-import { createFileRoute } from "@tanstack/react-router";
+import ChangePassword from "@/pages/auth/change-password"
+import { ChangePasswordSchema } from "@/services/auth"
+import { createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/auth/change-password")({
   component: RouteComponent,
@@ -9,8 +9,8 @@ export const Route = createFileRoute("/auth/change-password")({
     token: true,
     type: true,
   }),
-});
+})
 
 function RouteComponent() {
-  return <ChangePassword />;
+  return <ChangePassword />
 }

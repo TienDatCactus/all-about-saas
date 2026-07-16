@@ -1,13 +1,13 @@
 import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
+	Column,
+	CreateDateColumn,
+	DeleteDateColumn,
+	Entity,
+	ManyToOne,
+	OneToMany,
+	OneToOne,
+	PrimaryGeneratedColumn,
+	UpdateDateColumn,
 } from 'typeorm';
 import { OAuthAccount } from './oauth-account.entity';
 import { Session } from '../../auth/entities/session.entity';
@@ -17,44 +17,44 @@ import { Role } from '../../roles/entities/role.entity';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+	@PrimaryGeneratedColumn('uuid')
+	id: string;
 
-  @Column({ unique: true })
-  email: string;
+	@Column({ unique: true })
+	email: string;
 
-  @Column({ nullable: true })
-  password: string;
+	@Column({ nullable: true })
+	password: string;
 
-  @Column({ default: false })
-  isActive: boolean;
+	@Column({ default: false })
+	isActive: boolean;
 
-  @Column({ default: false })
-  emailVerified: boolean;
+	@Column({ default: false })
+	emailVerified: boolean;
 
-  @DeleteDateColumn()
-  deletedAt?: Date;
+	@DeleteDateColumn()
+	deletedAt?: Date;
 
-  @CreateDateColumn()
-  createdAt: Date;
+	@CreateDateColumn()
+	createdAt: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+	@UpdateDateColumn()
+	updatedAt: Date;
 
-  @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
-  oauthAccounts: OAuthAccount[];
+	@OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
+	oauthAccounts: OAuthAccount[];
 
-  @OneToMany(() => Session, (session) => session.user)
-  sessions: Session[];
+	@OneToMany(() => Session, (session) => session.user)
+	sessions: Session[];
 
-  @OneToMany(() => VerificationToken, (token) => token.user)
-  verificationTokens: VerificationToken[];
+	@OneToMany(() => VerificationToken, (token) => token.user)
+	verificationTokens: VerificationToken[];
 
-  @ManyToOne(() => Role, (role) => role.users, { nullable: true })
-  role: Role;
+	@ManyToOne(() => Role, (role) => role.users, { nullable: true })
+	role: Role;
 
-  @OneToOne(() => UserProfile, (profile) => profile.user, {
-    cascade: true,
-  })
-  profile: UserProfile;
+	@OneToOne(() => UserProfile, (profile) => profile.user, {
+		cascade: true,
+	})
+	profile: UserProfile;
 }

@@ -5,24 +5,24 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class UsersQueryService {
-  constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-  ) {}
+	constructor(
+		@InjectRepository(User)
+		private readonly usersRepository: Repository<User>,
+	) {}
 
-  async findOneBy(q: FindOptionsWhere<User>) {
-    return await this.usersRepository.findOneBy(q);
-  }
-  
-  async findAll() {
-    return await this.usersRepository.find({
-      relations: ['role'],
-      select: {
-        id: true,
-        email: true,
-        isActive: true,
-        createdAt: true,
-      },
-    });
-  }
+	async findOneBy(q: FindOptionsWhere<User>) {
+		return await this.usersRepository.findOneBy(q);
+	}
+
+	async findAll() {
+		return await this.usersRepository.find({
+			relations: ['role'],
+			select: {
+				id: true,
+				email: true,
+				isActive: true,
+				createdAt: true,
+			},
+		});
+	}
 }

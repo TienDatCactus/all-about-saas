@@ -7,7 +7,7 @@
     "vite.config.js",
     "../new-repo/apps/web/vite.config.ts",
     "src/pages/auth/reset-password"
-  ],
+,     "../../commitlint.config.ts"  ],
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",

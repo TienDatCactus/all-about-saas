@@ -8,22 +8,22 @@ import { UsersCommandService } from './services/users-command.service';
 import { UsersQueryService } from './services/users-query.service';
 
 @RegisterResource({
-  name: 'User',
-  actions: ['create', 'read', 'update', 'delete'],
+	name: 'User',
+	actions: ['create', 'read', 'update', 'delete'],
 })
 @Controller('users')
 @ApiTags('Users')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PoliciesGuard)
 export class UsersController {
-  constructor(
-    private readonly ucService: UsersCommandService,
-    private readonly uqService: UsersQueryService,
-  ) {}
+	constructor(
+		private readonly ucService: UsersCommandService,
+		private readonly uqService: UsersQueryService,
+	) {}
 
-  @Get()
-  @CheckPolicies({ action: 'read', resource: 'User' })
-  async findAll() {
-    return await this.uqService.findAll();
-  }
+	@Get()
+	@CheckPolicies({ action: 'read', resource: 'User' })
+	async findAll() {
+		return await this.uqService.findAll();
+	}
 }
