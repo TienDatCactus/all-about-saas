@@ -1,5 +1,6 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 export enum VerificationType {
 	EMAIL_VERIFY = 'EMAIL_VERIFY',
 	PASSWORD_RESET = 'PASSWORD_RESET',
@@ -7,9 +8,7 @@ export enum VerificationType {
 	MAGIC_LINK = 'MAGIC_LINK',
 }
 @Entity()
-export class VerificationToken {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
+export class VerificationToken extends BaseEntity {
 
 	@Column({ unique: true })
 	selector: string; //uuid

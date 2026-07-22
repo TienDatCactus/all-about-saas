@@ -5,6 +5,7 @@ import {
 	RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import helmet from 'helmet';
@@ -14,10 +15,11 @@ import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
 import configuration from './common/config/configuration';
 import database from './common/config/database';
-import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
+import { CustomeThrottlerGuard } from './common/guard/throttler.guard';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { MailModule } from './mail/mail.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
-import { MailModule } from './mail/mail.module';
 
 @Module({
 	imports: [
@@ -45,7 +47,13 @@ import { MailModule } from './mail/mail.module';
 		MailModule,
 	],
 	controllers: [AppController],
-	providers: [AppService],
+	providers: [
+		AppService,
+		{
+			provide: APP_GUARD,
+			useClass: CustomeThrottlerGuard,
+		},
+	],
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
@@ -63,5 +71,6 @@ export class AppModule implements NestModule {
 				method: RequestMethod.DELETE,
 			},
 		);
+		// consumer.apply(VersionMiddleware).forRoutes()
 	}
 }

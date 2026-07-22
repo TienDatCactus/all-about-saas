@@ -3,14 +3,12 @@ import {
 	Entity,
 	JoinColumn,
 	OneToOne,
-	PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
-export class UserProfile {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
+export class UserProfile extends BaseEntity {
 
 	@OneToOne(() => User, (user) => user.profile)
 	@JoinColumn()
