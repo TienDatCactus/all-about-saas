@@ -6,9 +6,7 @@ import { CaslModule } from '../casl/casl.module';
 import { Role } from '../roles/entities/role.entity';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { UserProfile } from './entities/user-profile.entity';
-import { UsersService } from './services/users.service';
-import { UsersCommandService } from './services/users-command.service';
-import { UsersQueryService } from './services/users-query.service';
+import { UsersService } from './users.service';
 
 @Module({
 	imports: [
@@ -16,7 +14,7 @@ import { UsersQueryService } from './services/users-query.service';
 		CaslModule,
 	],
 	controllers: [UsersController],
-	providers: [UsersService, UsersCommandService, UsersQueryService],
-	exports: [UsersService, UsersQueryService, UsersCommandService],
+	providers: [UsersService],
+	exports: [UsersService],
 })
 export class UsersModule {}

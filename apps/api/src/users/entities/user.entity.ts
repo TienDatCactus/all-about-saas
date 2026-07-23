@@ -1,29 +1,25 @@
 import {
+	BeforeInsert,
+	BeforeUpdate,
 	Column,
-	CreateDateColumn,
-	DeleteDateColumn,
 	Entity,
 	ManyToOne,
 	OneToMany,
 	OneToOne,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
 } from 'typeorm';
 import { OAuthAccount } from './oauth-account.entity';
 import { Session } from '../../auth/entities/session.entity';
 import { VerificationToken } from '../../auth/entities/verification-token.entity';
 import { UserProfile } from './user-profile.entity';
 import { Role } from '../../roles/entities/role.entity';
-
+import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
+import * as bcrypt from "bcrypt"
 @Entity()
-export class User {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
-
+export class User extends SoftDeleteBaseEntity {
 	@Column({ unique: true })
 	email: string;
 
-	@Column({ nullable: true })
+	@Column({ nullable: true, select: false })
 	password: string;
 
 	@Column({ default: false })
@@ -31,15 +27,6 @@ export class User {
 
 	@Column({ default: false })
 	emailVerified: boolean;
-
-	@DeleteDateColumn()
-	deletedAt?: Date;
-
-	@CreateDateColumn()
-	createdAt: Date;
-
-	@UpdateDateColumn()
-	updatedAt: Date;
 
 	@OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
 	oauthAccounts: OAuthAccount[];
@@ -57,4 +44,13 @@ export class User {
 		cascade: true,
 	})
 	profile: UserProfile;
+
+	@BeforeInsert()
+	@BeforeUpdate()
+	async hashPassword() {
+		if (this.password) {
+			const saltOrRounds = 10;
+			this.password = await bcrypt.hash(this.password, saltOrRounds);
+		}
+	}
 }

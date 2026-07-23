@@ -8,9 +8,7 @@ import { Repository } from 'typeorm';
 import { UAParser } from 'ua-parser-js';
 import { MailService } from '../../mail/mail.service';
 import { User } from '../../users/entities/user.entity';
-import { UsersCommandService } from '../../users/services/users-command.service';
-import { UsersQueryService } from '../../users/services/users-query.service';
-import { UsersService } from '../../users/services/users.service';
+import { UsersService } from '../../users/users.service';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { PayloadDto } from '../dto/jwt-payload.dto';
 import { SignUpDto } from '../dto/sign-up.dto';
@@ -45,8 +43,6 @@ const VERIFY_PATH = '/verify-email';
 export class AuthService {
 	constructor(
 		private readonly usersService: UsersService,
-		private readonly uqService: UsersQueryService,
-		private readonly ucService: UsersCommandService,
 		private readonly configService: ConfigService,
 		@InjectRepository(Session)
 		private readonly sessionRepo: Repository<Session>,
@@ -61,7 +57,7 @@ export class AuthService {
 		password: string,
 		sessionInfo: SessionInfo,
 	): Promise<LoginResp> {
-		const user = await this.ucService.validateUser(email, password);
+		const user = await this.usersService.validateUser(email, password);
 		if (!user || !user.email || !user.id) {
 			throw new HttpException('Invalid email or password', 400);
 		}
@@ -94,17 +90,16 @@ export class AuthService {
 	}
 
 	async signup(dto: SignUpDto) {
-		const passwordHash = await this.tokensService.hashPassword(dto.password);
-		const exists = await this.uqService.findOneBy({
+		const exists = await this.usersService.findOne({
 			email: dto.email,
 		});
 
 		if (exists) {
 			throw new HttpException('Email already in use', 400);
 		}
-		const newUser = await this.ucService.create({
+		const newUser = await this.usersService.create({
 			email: dto.email,
-			password: passwordHash,
+			password: dto.password,
 		});
 
 		await this.sendVerificationEmail({
@@ -211,7 +206,7 @@ export class AuthService {
 		if (!user) {
 			throw new HttpException('Invalid or expired verification token', 400);
 		}
-		const rec = await this.uqService.findOneBy({ id: user.id });
+		const rec = await this.usersService.findOneWithPassword({ id: user.id });
 		if (!rec) {
 			throw new HttpException('User not found', 404);
 		}
@@ -225,14 +220,9 @@ export class AuthService {
 				400,
 			);
 		}
-		await this.ucService.update(
-			{
-				password: await this.tokensService.hashPassword(password),
-			},
-			{
-				id: user.id,
-			},
-		);
+		await this.usersService.update(user.id, {
+			password: password,
+		});
 	}
 
 	async resendResetPasswordEmail(selector: string): Promise<void> {
@@ -259,7 +249,7 @@ export class AuthService {
 		password,
 		email,
 	}: Pick<ChangePasswordDto, 'password' | 'email'>): Promise<void> {
-		const user = await this.uqService.findOneBy({ email });
+		const user = await this.usersService.findOne({ email });
 		if (!user) {
 			throw new HttpException('User not found', 404);
 		}
@@ -273,14 +263,9 @@ export class AuthService {
 				400,
 			);
 		}
-		await this.ucService.update(
-			{
-				password: await this.tokensService.hashPassword(password),
-			},
-			{
-				id: user.id,
-			},
-		);
+		await this.usersService.update(user.id, {
+			password,
+		});
 	}
 
 	async resendVerificationEmail(selector: string): Promise<void> {
@@ -306,7 +291,7 @@ export class AuthService {
 	}
 
 	async sendResetPasswordEmail(email: string): Promise<void> {
-		const user = await this.uqService.findOneBy({ email });
+		const user = await this.usersService.findOne({ email });
 		if (!user) {
 			throw new HttpException('User not found', 404);
 		}
@@ -369,7 +354,7 @@ export class AuthService {
 		type: VerificationType;
 		expiresInMs?: number;
 	}): Promise<CreateVTResp> {
-		const user = await this.uqService.findOneBy({ id: userId });
+		const user = await this.usersService.findOne({ id: userId });
 		if (!user) {
 			throw new HttpException('User not found', 404);
 		}

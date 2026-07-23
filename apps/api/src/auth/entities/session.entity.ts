@@ -9,7 +9,7 @@ export class Session extends BaseEntity {
 	})
 	user: User;
 
-	@Column()
+	@Column({ select: false })
 	refreshToken: string;
 
 	@Column()

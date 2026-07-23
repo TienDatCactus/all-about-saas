@@ -1,9 +1,4 @@
-import {
-	Column,
-	Entity,
-	ManyToOne,
-	Unique,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, Unique } from 'typeorm';
 import { User } from './user.entity';
 import { BaseEntity } from '../../common/entities/base.entity';
 
@@ -16,7 +11,6 @@ export enum OAuthProvider {
 @Entity()
 @Unique(['provider', 'providerUserId'])
 export class OAuthAccount extends BaseEntity {
-
 	@ManyToOne(() => User, (user) => user.oauthAccounts, {
 		onDelete: 'CASCADE',
 	})

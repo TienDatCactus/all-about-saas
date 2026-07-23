@@ -9,7 +9,6 @@ export enum VerificationType {
 }
 @Entity()
 export class VerificationToken extends BaseEntity {
-
 	@Column({ unique: true })
 	selector: string; //uuid
 

@@ -15,7 +15,7 @@ import { Repository } from 'typeorm';
 import { Public } from '../common/decorator/is-public.decorator';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
-import { UsersCommandService } from '../users/services/users-command.service';
+import { UsersService } from '../users/users.service';
 import { SendVerificationEmailDto } from './dto/send-verification-email.dto';
 import { LoginDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -35,7 +35,7 @@ export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
 		private readonly configService: ConfigService,
-		private readonly ucService: UsersCommandService,
+		private readonly usersService: UsersService,
 		@InjectRepository(VerificationToken)
 		private readonly verificationTokenRepo: Repository<VerificationToken>,
 	) {}
@@ -89,15 +89,10 @@ export class AuthController {
 			);
 		}
 		if (body.type === VerificationType.EMAIL_VERIFY) {
-			await this.ucService.update(
-				{
-					emailVerified: true,
-					isActive: true,
-				},
-				{
-					id: user.id,
-				},
-			);
+			await this.usersService.update(user.id, {
+				emailVerified: true,
+				isActive: true,
+			});
 		}
 		return {
 			message: 'Email verified successfully.',

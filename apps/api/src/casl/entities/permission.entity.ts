@@ -1,11 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne } from 'typeorm';
 import { Role } from '../../roles/entities/role.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
-export class Permission {
-	@PrimaryGeneratedColumn()
-	id: number;
-
+export class Permission extends BaseEntity {
 	@Column()
 	action: string; // e.g. "read", "update"
 

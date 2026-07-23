@@ -1,15 +1,9 @@
-import {
-	Column,
-	Entity,
-	JoinColumn,
-	OneToOne,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { User } from './user.entity';
 import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
 export class UserProfile extends BaseEntity {
-
 	@OneToOne(() => User, (user) => user.profile)
 	@JoinColumn()
 	user: User;
