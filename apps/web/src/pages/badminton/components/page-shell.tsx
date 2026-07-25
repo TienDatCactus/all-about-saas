@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-dvh w-full">
+    <main className="min-h-dvh w-full self-start">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 py-8 md:p-8">
         {children}
       </div>
