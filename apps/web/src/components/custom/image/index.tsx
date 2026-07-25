@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Empty,
   EmptyDescription,
@@ -225,7 +223,11 @@ function ImageLoader({
   }, []);
 
   // ── use-image ────────────────────────────────────────────────────────────
-  const [image, status] = useImage(state.activeSrc, crossOrigin, referrerPolicy);
+  const [image, status] = useImage(
+    state.activeSrc,
+    crossOrigin,
+    referrerPolicy,
+  );
 
   useEffect(() => {
     if (status === "loaded") {
@@ -266,13 +268,24 @@ function ImageLoader({
 
     // All options exhausted
     onError?.();
-  }, [status, state.usedFallback, retries, retryDelay, src, fallbackSrc, onLoad, onError]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    status,
+    state.usedFallback,
+    retries,
+    retryDelay,
+    src,
+    fallbackSrc,
+    onLoad,
+    onError,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Render ───────────────────────────────────────────────────────────────
 
   const isLoading = status === "loading";
   const isFailed =
-    status === "failed" && (state.usedFallback || !fallbackSrc) && retryCount.current >= retries;
+    status === "failed" &&
+    (state.usedFallback || !fallbackSrc) &&
+    retryCount.current >= retries;
 
   return (
     <>
@@ -289,7 +302,9 @@ function ImageLoader({
 
       {/* Loading skeleton */}
       {isLoading &&
-        (loadingSlot ?? <Skeleton className="absolute inset-0 h-full w-full rounded-none" />)}
+        (loadingSlot ?? (
+          <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+        ))}
 
       {/* Error empty state */}
       {isFailed && (errorSlot ?? <DefaultErrorEmpty />)}

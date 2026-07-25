@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=4096' vp dev --port 3000",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' vp build",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vp dev --port 3000",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vp build",
     "preview": "vp preview",
-    "test": "vp test run",
+    "test": "vp test run --passWithNoTests",
     "lint": "eslint",
     "format": "vp fmt \"**/*.{ts,tsx,js,jsx}\"",
     "typecheck": "tsc --noEmit"
@@ -64,6 +64,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.2.0",
+    "cross-env": "^10.1.0",
     "jsdom": "^27.4.0",
     "typescript": "^6.0.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",

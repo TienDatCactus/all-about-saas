@@ -1,9 +1,10 @@
+const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 export const AUTH = {
   login: "/auth/login",
   signup: "/auth/signup",
-  googleLogin: `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth/google`,
-  githubLogin: `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth/github`,
-  facebookLogin: `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth/facebook`,
+  googleLogin: `${URL}/auth/google`,
+  githubLogin: `${URL}/auth/github`,
+  facebookLogin: `${URL}/auth/facebook`,
   logout: "/auth/logout",
   refresh: "/auth/refresh",
   verifyEmail: "/auth/verify-email",

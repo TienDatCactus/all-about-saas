@@ -13,6 +13,7 @@ import { LoggerMiddleware } from "./common/middleware/logger/logger.middleware";
 import { RolesModule } from "./roles/roles.module";
 import { UsersModule } from "./users/users.module";
 import { MailModule } from "./mail/mail.module";
+import { BadmintonModule } from "./badminton/badminton.module";
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { MailModule } from "./mail/mail.module";
     }),
 
     MailModule,
+    BadmintonModule,
   ],
   controllers: [AppController],
   providers: [AppService],

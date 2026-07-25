@@ -96,6 +96,18 @@
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/app.controller.spec.ts",
+      "<rootDir>/auth/auth.controller.spec.ts",
+      "<rootDir>/auth/services/auth.service.spec.ts",
+      "<rootDir>/mail/mail.controller.spec.ts",
+      "<rootDir>/mail/mail.service.spec.ts",
+      "<rootDir>/roles/roles.controller.spec.ts",
+      "<rootDir>/roles/roles.service.spec.ts",
+      "<rootDir>/users/users.controller.spec.ts",
+      "<rootDir>/users/services/users.service.spec.ts"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },

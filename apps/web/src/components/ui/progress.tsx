@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { Progress as ProgressPrimitive } from "radix-ui";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -72,7 +70,10 @@ const Bar = ({
   size,
   className,
   ...props
-}: Pick<ProgressProps, "appearance" | "segments" | "variant" | "size" | "className"> & {
+}: Pick<
+  ProgressProps,
+  "appearance" | "segments" | "variant" | "size" | "className"
+> & {
   normalizedValue: number;
   max: number;
   percentage: number;
@@ -82,7 +83,13 @@ const Bar = ({
     const activeSegments = Math.round((percentage / 100) * segments);
 
     return (
-      <div className={cn(progressVariants({ size }), "flex gap-1 bg-transparent", className)}>
+      <div
+        className={cn(
+          progressVariants({ size }),
+          "flex gap-1 bg-transparent",
+          className,
+        )}
+      >
         {Array.from({
           length: segments,
         }).map((_, index) => (
@@ -190,7 +197,9 @@ export function Progress({
           {label && <span className="text-sm font-medium">{label}</span>}
 
           {showValue && !indeterminate && (
-            <span className="text-muted-foreground text-sm ml-auto">{displayValue}</span>
+            <span className="text-muted-foreground text-sm ml-auto">
+              {displayValue}
+            </span>
           )}
         </FieldLabel>
       )}
