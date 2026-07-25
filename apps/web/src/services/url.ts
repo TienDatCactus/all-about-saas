@@ -12,3 +12,11 @@ export const AUTH = {
   changePassword: "/auth/change-password",
   resetPassword: "/auth/reset-password",
 };
+
+export const BADMINTON = {
+  sessions: "/badminton/sessions",
+  session: (id: string) => `/badminton/sessions/${id}`,
+  suggest: "/badminton/sessions/suggest",
+  publicSession: (shareToken: string) =>
+    `/public/badminton/sessions/${shareToken}`,
+};

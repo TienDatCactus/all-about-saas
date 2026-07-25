@@ -15,6 +15,10 @@ import { Route as AuthChangePasswordRouteImport } from './routes/auth/change-pas
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
+import { Route as BadmintonIndexRouteImport } from './routes/badminton/index'
+import { Route as BadmintonSessionIdRouteImport } from './routes/badminton/$sessionId'
+import { Route as BadmintonNewRouteImport } from './routes/badminton/new'
+import { Route as SShareTokenRouteImport } from './routes/s/$shareToken'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +50,26 @@ const AuthSignUpRoute = AuthSignUpRouteImport.update({
   path: '/auth/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BadmintonIndexRoute = BadmintonIndexRouteImport.update({
+  id: '/badminton/',
+  path: '/badminton/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BadmintonSessionIdRoute = BadmintonSessionIdRouteImport.update({
+  id: '/badminton/$sessionId',
+  path: '/badminton/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BadmintonNewRoute = BadmintonNewRouteImport.update({
+  id: '/badminton/new',
+  path: '/badminton/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SShareTokenRoute = SShareTokenRouteImport.update({
+  id: '/s/$shareToken',
+  path: '/s/$shareToken',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +78,10 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/badminton/$sessionId': typeof BadmintonSessionIdRoute
+  '/badminton/new': typeof BadmintonNewRoute
+  '/s/$shareToken': typeof SShareTokenRoute
+  '/badminton/': typeof BadmintonIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +90,10 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/badminton/$sessionId': typeof BadmintonSessionIdRoute
+  '/badminton/new': typeof BadmintonNewRoute
+  '/s/$shareToken': typeof SShareTokenRoute
+  '/badminton': typeof BadmintonIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +103,10 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/badminton/$sessionId': typeof BadmintonSessionIdRoute
+  '/badminton/new': typeof BadmintonNewRoute
+  '/s/$shareToken': typeof SShareTokenRoute
+  '/badminton/': typeof BadmintonIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +117,10 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/sign-up'
+    | '/badminton/$sessionId'
+    | '/badminton/new'
+    | '/s/$shareToken'
+    | '/badminton/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +129,10 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/sign-up'
+    | '/badminton/$sessionId'
+    | '/badminton/new'
+    | '/s/$shareToken'
+    | '/badminton'
   id:
     | '__root__'
     | '/'
@@ -97,6 +141,10 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/sign-up'
+    | '/badminton/$sessionId'
+    | '/badminton/new'
+    | '/s/$shareToken'
+    | '/badminton/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +154,10 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
+  BadmintonSessionIdRoute: typeof BadmintonSessionIdRoute
+  BadmintonNewRoute: typeof BadmintonNewRoute
+  SShareTokenRoute: typeof SShareTokenRoute
+  BadmintonIndexRoute: typeof BadmintonIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -152,6 +204,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/badminton/': {
+      id: '/badminton/'
+      path: '/badminton'
+      fullPath: '/badminton/'
+      preLoaderRoute: typeof BadmintonIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/badminton/$sessionId': {
+      id: '/badminton/$sessionId'
+      path: '/badminton/$sessionId'
+      fullPath: '/badminton/$sessionId'
+      preLoaderRoute: typeof BadmintonSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/badminton/new': {
+      id: '/badminton/new'
+      path: '/badminton/new'
+      fullPath: '/badminton/new'
+      preLoaderRoute: typeof BadmintonNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$shareToken': {
+      id: '/s/$shareToken'
+      path: '/s/$shareToken'
+      fullPath: '/s/$shareToken'
+      preLoaderRoute: typeof SShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -162,6 +242,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignUpRoute: AuthSignUpRoute,
+  BadmintonSessionIdRoute: BadmintonSessionIdRoute,
+  BadmintonNewRoute: BadmintonNewRoute,
+  SShareTokenRoute: SShareTokenRoute,
+  BadmintonIndexRoute: BadmintonIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
