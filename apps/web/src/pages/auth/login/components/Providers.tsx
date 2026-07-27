@@ -1,14 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { loadAsset } from "@/lib/utils";
-import { authApi } from "@/services/auth";
+import { Button } from "@/components/ui/button"
+import { loadAsset } from "@/lib/utils"
+import { authApi } from "@/services/auth"
 
-import React from "react";
-import { ReactSVG } from "react-svg";
+import React from "react"
+import { ReactSVG } from "react-svg"
 
 interface Provider {
-  name: string;
-  iconUrl: string;
-  callback: () => void;
+  name: string
+  iconUrl: string
+  callback: () => void
 }
 const providers: Provider[] = [
   {
@@ -26,7 +26,7 @@ const providers: Provider[] = [
     iconUrl: loadAsset("facebook.svg", "svg"),
     callback: authApi.loginWithFacebook,
   },
-];
+]
 const Providers: React.FC = () => {
   return (
     <ul className="space-y-4">
@@ -36,7 +36,7 @@ const Providers: React.FC = () => {
           variant="outline"
           className="flex w-full items-center justify-center space-x-2 py-2"
           onClick={() => {
-            provider.callback();
+            provider.callback()
           }}
         >
           <ReactSVG src={provider.iconUrl} aria-hidden={true} />
@@ -46,7 +46,7 @@ const Providers: React.FC = () => {
         </Button>
       ))}
     </ul>
-  );
-};
+  )
+}
 
-export default Providers;
+export default Providers

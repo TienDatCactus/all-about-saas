@@ -1,4 +1,4 @@
-import "./index.css";
+import "./index.css"
 export default function WashingMachineLoader() {
-  return <div className="loader"></div>;
+  return <div className="loader"></div>
 }

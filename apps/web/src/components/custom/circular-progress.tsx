@@ -1,23 +1,23 @@
-import * as React from "react";
+import * as React from "react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 interface CircularProgressProps extends React.HTMLAttributes<HTMLDivElement> {
-  value: number;
-  renderLabel?: (progress: number) => React.ReactNode;
-  size?: number;
-  strokeWidth?: number;
-  circleStrokeWidth?: number;
-  progressStrokeWidth?: number;
-  shape?: "square" | "round";
-  progressClassName?: string;
-  progressBgClassName?: string;
-  labelClassName?: string;
-  showLabel?: boolean;
-  variant?: "default" | "animated";
-  gaugePrimaryColor?: string;
-  gaugeSecondaryColor?: string;
-  trackDashArray?: string | number;
+  value: number
+  renderLabel?: (progress: number) => React.ReactNode
+  size?: number
+  strokeWidth?: number
+  circleStrokeWidth?: number
+  progressStrokeWidth?: number
+  shape?: "square" | "round"
+  progressClassName?: string
+  progressBgClassName?: string
+  labelClassName?: string
+  showLabel?: boolean
+  variant?: "default" | "animated"
+  gaugePrimaryColor?: string
+  gaugeSecondaryColor?: string
+  trackDashArray?: string | number
 }
 
 const CircularProgress = ({
@@ -39,32 +39,32 @@ const CircularProgress = ({
   trackDashArray,
   ...props
 }: CircularProgressProps) => {
-  const effectiveCircleWidth = strokeWidth ?? circleStrokeWidth;
-  const effectiveProgressWidth = strokeWidth ?? progressStrokeWidth;
-  const maxStroke = Math.max(effectiveCircleWidth, effectiveProgressWidth);
+  const effectiveCircleWidth = strokeWidth ?? circleStrokeWidth
+  const effectiveProgressWidth = strokeWidth ?? progressStrokeWidth
+  const maxStroke = Math.max(effectiveCircleWidth, effectiveProgressWidth)
 
-  const radius = variant === "animated" ? 45 : (size - maxStroke) / 2;
-  const currentPercent = Math.min(Math.max(value, 0), 100);
+  const radius = variant === "animated" ? 45 : (size - maxStroke) / 2
+  const currentPercent = Math.min(Math.max(value, 0), 100)
 
   if (variant === "animated") {
-    const gapPercent = 5;
-    const dashFactor = (2 * Math.PI * 45) / 100;
-    const circumference = 2 * Math.PI * 45;
+    const gapPercent = 5
+    const dashFactor = (2 * Math.PI * 45) / 100
+    const circumference = 2 * Math.PI * 45
 
-    const primaryDash = `${currentPercent * dashFactor} ${circumference}`;
-    const primaryRotate = -90 + gapPercent * 0 * 3.6;
+    const primaryDash = `${currentPercent * dashFactor} ${circumference}`
+    const primaryRotate = -90 + gapPercent * 0 * 3.6
 
     const secondaryDash = trackDashArray
       ? trackDashArray
-      : `${Math.max(0, 90 - currentPercent) * dashFactor} ${circumference}`;
+      : `${Math.max(0, 90 - currentPercent) * dashFactor} ${circumference}`
 
-    const secondaryRotate = 360 - 90 - gapPercent * 3.6;
+    const secondaryRotate = 360 - 90 - gapPercent * 3.6
 
     return (
       <div
         className={cn(
           "relative flex shrink-0 items-center justify-center",
-          className,
+          className
         )}
         style={{ width: size, height: size }}
         {...props}
@@ -82,7 +82,7 @@ const CircularProgress = ({
             strokeLinecap={trackDashArray ? "butt" : shape}
             className={cn(
               "text-primary/10 transition-all duration-1000 ease-in-out",
-              progressBgClassName,
+              progressBgClassName
             )}
             style={{
               transform: `rotate(${secondaryRotate}deg) scaleY(-1)`,
@@ -101,7 +101,7 @@ const CircularProgress = ({
             strokeLinecap={shape}
             className={cn(
               "transition-all duration-1000 ease-in-out",
-              progressClassName,
+              progressClassName
             )}
             style={{
               transform: `rotate(${primaryRotate}deg)`,
@@ -113,24 +113,24 @@ const CircularProgress = ({
           <div
             className={cn(
               "absolute inset-0 flex items-center justify-center text-lg font-medium",
-              labelClassName,
+              labelClassName
             )}
           >
             {renderLabel ? renderLabel(value) : `${value}%`}
           </div>
         )}
       </div>
-    );
+    )
   }
 
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (currentPercent / 100) * circumference;
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (currentPercent / 100) * circumference
 
   return (
     <div
       className={cn(
         "relative flex shrink-0 items-center justify-center",
-        className,
+        className
       )}
       style={{ width: size, height: size }}
       {...props}
@@ -170,7 +170,7 @@ const CircularProgress = ({
           strokeLinecap={shape}
           className={cn(
             "transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
-            progressClassName,
+            progressClassName
           )}
         />
       </svg>
@@ -178,14 +178,14 @@ const CircularProgress = ({
         <div
           className={cn(
             "absolute inset-0 flex items-center justify-center text-base font-medium",
-            labelClassName,
+            labelClassName
           )}
         >
           {renderLabel ? renderLabel(value) : `${value}%`}
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export { CircularProgress };
+export { CircularProgress }

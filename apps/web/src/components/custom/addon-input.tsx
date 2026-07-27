@@ -1,28 +1,28 @@
 // addon-input.tsx
-import { cn } from "@/lib/utils";
-import { ExclamationMarkIcon } from "@phosphor-icons/react";
-import type { MutationStatus } from "@tanstack/react-query";
-import * as React from "react";
-import { CheckIcon } from "../ui/check";
-import { EyeIcon } from "../ui/eye";
-import { EyeOffIcon } from "../ui/eye-off";
+import { cn } from "@/lib/utils"
+import { ExclamationMarkIcon } from "@phosphor-icons/react"
+import type { MutationStatus } from "@tanstack/react-query"
+import * as React from "react"
+import { CheckIcon } from "../ui/check"
+import { EyeIcon } from "../ui/eye"
+import { EyeOffIcon } from "../ui/eye-off"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "../ui/input-group";
-import { Spinner } from "../ui/spinner";
+} from "../ui/input-group"
+import { Spinner } from "../ui/spinner"
 
 export interface InputProps extends Omit<
   React.ComponentProps<"input">,
   "state"
 > {
-  mutationState?: MutationStatus;
-  startAddon?: React.ReactNode;
-  endAddon?: React.ReactNode;
-  containerClassName?: string;
-  isPassword?: boolean;
+  mutationState?: MutationStatus
+  startAddon?: React.ReactNode
+  endAddon?: React.ReactNode
+  containerClassName?: string
+  isPassword?: boolean
 }
 
 const AddonInput = React.forwardRef<HTMLInputElement, InputProps>(
@@ -37,11 +37,11 @@ const AddonInput = React.forwardRef<HTMLInputElement, InputProps>(
       isPassword,
       ...props
     },
-    ref,
+    ref
   ) => {
-    const [showPassword, setShowPassword] = React.useState(false);
+    const [showPassword, setShowPassword] = React.useState(false)
     const disabled =
-      props.value === "" || props.value === undefined || props.disabled;
+      props.value === "" || props.value === undefined || props.disabled
 
     const stateClasses: Record<MutationStatus, string> = {
       idle: "",
@@ -51,7 +51,7 @@ const AddonInput = React.forwardRef<HTMLInputElement, InputProps>(
         "border-emerald-500 focus-within:border-emerald-500 focus-within:ring-3 focus-within:ring-emerald-500/20 dark:focus-within:ring-emerald-500/40",
       error:
         "border-destructive focus-within:border-destructive focus-within:ring-3 focus-within:ring-destructive/20 dark:focus-within:ring-destructive/40",
-    };
+    }
 
     const renderEndAddon = () => {
       if (isPassword) {
@@ -87,11 +87,11 @@ const AddonInput = React.forwardRef<HTMLInputElement, InputProps>(
               {showPassword ? "Hide password" : "Show password"}
             </span>
           </>
-        );
+        )
       }
 
       if (endAddon) {
-        return <InputGroupAddon align="inline-end">{endAddon}</InputGroupAddon>;
+        return <InputGroupAddon align="inline-end">{endAddon}</InputGroupAddon>
       }
 
       switch (mutationState) {
@@ -100,30 +100,30 @@ const AddonInput = React.forwardRef<HTMLInputElement, InputProps>(
             <InputGroupAddon align="inline-end">
               <Spinner className="text-muted-foreground" />
             </InputGroupAddon>
-          );
+          )
         case "success":
           return (
             <InputGroupAddon align="inline-end">
               <CheckIcon size={18} className="text-success" />
             </InputGroupAddon>
-          );
+          )
         case "error":
           return (
             <InputGroupAddon align="inline-end">
               <ExclamationMarkIcon size={18} className="text-destructive" />
             </InputGroupAddon>
-          );
+          )
         default:
-          return null;
+          return null
       }
-    };
+    }
 
     return (
       <>
         <InputGroup
           className={cn(
             mutationState && stateClasses[mutationState],
-            containerClassName,
+            containerClassName
           )}
           data-state={mutationState}
           data-disabled={props.disabled}
@@ -156,9 +156,9 @@ const AddonInput = React.forwardRef<HTMLInputElement, InputProps>(
           `}</style>
         )}
       </>
-    );
-  },
-);
-AddonInput.displayName = "AddonInput";
+    )
+  }
+)
+AddonInput.displayName = "AddonInput"
 
-export { AddonInput };
+export { AddonInput }

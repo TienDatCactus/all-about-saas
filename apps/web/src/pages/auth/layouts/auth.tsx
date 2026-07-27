@@ -1,30 +1,35 @@
-import Logo from "@/components/custom/logo";
-import { Separator } from "@/components/ui/separator";
-import { Link } from "@tanstack/react-router";
+import Logo from "@/components/custom/logo"
+import { Separator } from "@/components/ui/separator"
+import { Link } from "@tanstack/react-router"
 
 interface AuthLayoutProps {
   title: {
-    text: string;
-    link?: string;
-    anchor?: string;
-  };
-  form: React.ReactNode;
+    text: string
+    link?: string
+    anchor?: string
+  }
+  form: React.ReactNode
   action?: {
-    text?: string;
-    component: React.ReactNode;
-  };
+    text?: string
+    component: React.ReactNode
+  }
   legend?: {
-    text?: string;
-    link?: string;
-    anchor?: string;
-  };
+    text?: string
+    link?: string
+    anchor?: string
+  }
 }
-export default function AuthLayout({ title, form, legend, action }: AuthLayoutProps) {
+export default function AuthLayout({
+  title,
+  form,
+  legend,
+  action,
+}: AuthLayoutProps) {
   return (
     <div className="flex flex-1 flex-col justify-center px-4 py-10 lg:px-6">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <div>
-          <Logo alt="Logo" className="w-52 mx-auto" />
+          <Logo alt="Logo" className="mx-auto w-52" />
         </div>
         <h2 className="text-center text-xl font-semibold text-balance text-foreground">
           {title.text}{" "}
@@ -34,7 +39,7 @@ export default function AuthLayout({ title, form, legend, action }: AuthLayoutPr
             </Link>
           )}
         </h2>{" "}
-        <p className="mt-4 text-xs text-pretty text-center text-muted-foreground dark:text-muted-foreground">
+        <p className="mt-4 text-center text-xs text-pretty text-muted-foreground dark:text-muted-foreground">
           By continuing to use our services, you agree to our{" "}
           <a href="#" className="underline underline-offset-4">
             terms of service
@@ -53,14 +58,16 @@ export default function AuthLayout({ title, form, legend, action }: AuthLayoutPr
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">{action?.text}</span>
+                <span className="bg-background px-2 text-muted-foreground">
+                  {action?.text}
+                </span>
               </div>
             </div>
             {action?.component}
           </>
         )}
         {legend && (
-          <p className="mt-4 text-sm text-pretty text-center text-muted-foreground dark:text-muted-foreground">
+          <p className="mt-4 text-center text-sm text-pretty text-muted-foreground dark:text-muted-foreground">
             {legend?.text}{" "}
             {legend?.link && (
               <Link to={legend?.link} className="link text-primary">
@@ -72,5 +79,5 @@ export default function AuthLayout({ title, form, legend, action }: AuthLayoutPr
         )}
       </div>
     </div>
-  );
+  )
 }

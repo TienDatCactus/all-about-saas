@@ -21,34 +21,34 @@ import { GithubStrategy } from './strategy/github.strategy';
 import { FacebookStrategy } from './strategy/facebook.strategy';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Session, VerificationToken, User]),
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('jwt.secret')!,
-        signOptions: {
-          expiresIn: Number(configService.get<string>('jwt.expiresIn')!),
-        },
-      }),
-    }),
-    PassportModule,
-    UsersModule,
-    MailModule,
-  ],
-  controllers: [AuthController],
-  providers: [
-    AuthService,
-    TokensService,
-    LocalAuthGuard,
-    LocalStrategy,
-    JwtStrategy,
-    GoogleStrategy,
-    GoogleAuthGuard,
-    MailService,
-    GithubStrategy,
-    FacebookStrategy,
-  ],
-  exports: [AuthService, TokensService],
+	imports: [
+		TypeOrmModule.forFeature([Session, VerificationToken, User]),
+		JwtModule.registerAsync({
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService) => ({
+				secret: configService.get<string>('jwt.secret')!,
+				signOptions: {
+					expiresIn: Number(configService.get<string>('jwt.expiresIn')!),
+				},
+			}),
+		}),
+		PassportModule,
+		UsersModule,
+		MailModule,
+	],
+	controllers: [AuthController],
+	providers: [
+		AuthService,
+		TokensService,
+		LocalAuthGuard,
+		LocalStrategy,
+		JwtStrategy,
+		GoogleStrategy,
+		GoogleAuthGuard,
+		MailService,
+		GithubStrategy,
+		FacebookStrategy,
+	],
+	exports: [AuthService, TokensService],
 })
 export class AuthModule {}

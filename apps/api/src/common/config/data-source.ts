@@ -1,21 +1,21 @@
 import { DataSource } from 'typeorm';
 
 export default new DataSource({
-  type: 'postgres',
+	type: 'postgres',
 
-  host: process.env.DATABASE_HOST,
+	host: process.env.DATABASE_HOST,
 
-  port: parseInt(process.env.DATABASE_PORT ?? '5432', 10),
+	port: parseInt(process.env.DATABASE_PORT ?? '5432', 10),
 
-  username: process.env.DATABASE_USER,
+	username: process.env.DATABASE_USER,
 
-  password: process.env.DATABASE_PASSWORD,
+	password: process.env.DATABASE_PASSWORD,
 
-  database: process.env.DATABASE_NAME,
+	database: process.env.DATABASE_NAME,
 
-  entities: ['src/**/*.entity.ts'],
+	entities: ['src/**/*.entity.ts'],
 
-  migrations: ['src/database/migrations/*.ts'],
+	migrations: ['src/database/migrations/*.ts'],
 
-  synchronize: false,
+	synchronize: false,
 });

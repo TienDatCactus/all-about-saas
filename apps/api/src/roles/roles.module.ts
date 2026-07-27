@@ -8,9 +8,9 @@ import { CaslModule } from '../casl/casl.module';
 import { Role } from './entities/role.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Role, Permission, User]), CaslModule],
-  controllers: [RolesController],
-  providers: [RolesService],
-  exports: [RolesService],
+	imports: [TypeOrmModule.forFeature([Role, Permission, User]), CaslModule],
+	controllers: [RolesController],
+	providers: [RolesService],
+	exports: [RolesService],
 })
 export class RolesModule {}
