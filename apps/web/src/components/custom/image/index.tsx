@@ -295,7 +295,7 @@ function ImageLoader({
           src={blurDataURL}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover scale-105"
+          className="absolute inset-0 h-full w-full scale-105 object-cover"
           style={{ filter: "blur(10px)", transition: "opacity 0.4s" }}
         />
       )}

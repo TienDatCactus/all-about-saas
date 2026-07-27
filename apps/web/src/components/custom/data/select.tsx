@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
 interface DataSelect {}
 
@@ -23,5 +23,5 @@ export function DataSelect({}: DataSelect) {
         </SelectGroup>
       </SelectContent>
     </Select>
-  );
+  )
 }

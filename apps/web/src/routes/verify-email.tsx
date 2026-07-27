@@ -1,27 +1,28 @@
-import Logo from "@/components/custom/logo";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import Logo from "@/components/custom/logo"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import {
   useSendVerificationEmailMutation,
   useVerifyEmailMutation,
   VerifyEmailSchema,
-} from "@/services/auth";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { toast } from "@/components/custom/toast";
-import { cn } from "../lib/utils";
+} from "@/services/auth"
+import { ArrowLeftIcon } from "@phosphor-icons/react"
+import { createFileRoute, Link } from "@tanstack/react-router"
+import { useEffect } from "react"
+import { toast } from "@/components/custom/toast"
+import { cn } from "../lib/utils"
 
 export const Route = createFileRoute("/verify-email")({
   component: RouteComponent,
   validateSearch: VerifyEmailSchema,
-});
+})
 
 function RouteComponent() {
-  const navigate = Route.useNavigate();
-  const { selector, token, type } = Route.useSearch();
-  const { mutate, status } = useVerifyEmailMutation();
-  const { mutate: resendEmail, status: resendStatus } = useSendVerificationEmailMutation();
+  const navigate = Route.useNavigate()
+  const { selector, token, type } = Route.useSearch()
+  const { mutate, status } = useVerifyEmailMutation()
+  const { mutate: resendEmail, status: resendStatus } =
+    useSendVerificationEmailMutation()
 
   useEffect(() => {
     if (selector && token && status === "idle") {
@@ -41,13 +42,13 @@ function RouteComponent() {
                   token: variables.token,
                   type: type,
                 },
-              });
+              })
             }
           },
-        },
-      );
+        }
+      )
     }
-  }, [selector, token, status, type, mutate, navigate]);
+  }, [selector, token, status, type, mutate, navigate])
 
   const onResendEmail = () => {
     if (selector) {
@@ -58,22 +59,24 @@ function RouteComponent() {
             toast.success(
               type === "PASSWORD_RESET"
                 ? "Password reset email resent successfully!"
-                : "Verification email resent successfully!",
-            );
+                : "Verification email resent successfully!"
+            )
           },
           onError: (err: any) => {
             const message =
-              err?.response?.data?.message || err?.message || "Failed to resend email.";
-            toast.error(message);
+              err?.response?.data?.message ||
+              err?.message ||
+              "Failed to resend email."
+            toast.error(message)
           },
-        },
-      );
+        }
+      )
     }
-  };
+  }
 
-  const isPending = status === "pending" || resendStatus === "pending";
-  const isError = status === "error" || resendStatus === "error";
-  const isReset = type === "PASSWORD_RESET";
+  const isPending = status === "pending" || resendStatus === "pending"
+  const isError = status === "error" || resendStatus === "error"
+  const isReset = type === "PASSWORD_RESET"
 
   const confirmTitle = isPending
     ? isReset
@@ -81,56 +84,64 @@ function RouteComponent() {
       : "Verifying your email..."
     : isReset
       ? "Confirm password reset"
-      : "Confirm your email";
+      : "Confirm your email"
 
   const confirmDescription = isReset
     ? "We are confirming your password reset request. This will only take a moment."
-    : "We are confirming your email address. This will only take a moment.";
+    : "We are confirming your email address. This will only take a moment."
 
   const verifyButtonText = isPending
     ? "Verifying..."
     : isReset
       ? "Verify Reset Request"
-      : "Verify Email";
+      : "Verify Email"
 
-  const errorTitle = isReset ? "Reset link invalid" : "Verification failed";
+  const errorTitle = isReset ? "Reset link invalid" : "Verification failed"
   const errorDescription = isReset
     ? "The reset link is invalid, has expired, or has already been used. Please request a new reset email below."
-    : "The verification link is invalid, has expired, or has already been used. Please request a new verification email below.";
+    : "The verification link is invalid, has expired, or has already been used. Please request a new verification email below."
 
   const resendButtonText = isPending
     ? "Resending..."
     : isReset
       ? "Resend Reset Email"
-      : "Resend Verification Email";
+      : "Resend Verification Email"
 
   return (
-    <div className="flex flex-col justify-center items-center text-center max-w-96 space-y-6">
+    <div className="flex max-w-96 flex-col items-center justify-center space-y-6 text-center">
       <div className="mb-2">
-        <Logo alt="Logo" className="w-32 mx-auto" />
+        <Logo alt="Logo" className="mx-auto w-32" />
       </div>
 
       {status === "success" ? (
-        <div className="space-y-4 flex flex-col items-center">
+        <div className="flex flex-col items-center space-y-4">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">Email verified!</h1>
-            <p className="text-secondary-foreground text-sm">
-              Thank you for verifying your email. Your account is active and you are ready to get
-              started.
+            <h1 className="text-2xl font-bold tracking-tight">
+              Email verified!
+            </h1>
+            <p className="text-sm text-secondary-foreground">
+              Thank you for verifying your email. Your account is active and you
+              are ready to get started.
             </p>
           </div>
-          <Button className="w-full mt-4" asChild>
+          <Button className="mt-4 w-full" asChild>
             <Link to="/auth/login">Continue to Login</Link>
           </Button>
         </div>
       ) : isError ? (
-        <div className="space-y-4 flex flex-col items-center">
+        <div className="flex flex-col items-center space-y-4">
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">{errorTitle}</h1>
-            <p className="text-secondary-foreground text-sm">{errorDescription}</p>
+            <p className="text-sm text-secondary-foreground">
+              {errorDescription}
+            </p>
           </div>
           <div className="w-full">
-            <Button className="w-full" disabled={isPending} onClick={onResendEmail}>
+            <Button
+              className="w-full"
+              disabled={isPending}
+              onClick={onResendEmail}
+            >
               {resendButtonText}
             </Button>
             <div className="relative my-4">
@@ -138,7 +149,9 @@ function RouteComponent() {
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">or</span>
+                <span className="bg-background px-2 text-muted-foreground">
+                  or
+                </span>
               </div>
             </div>
             <Button
@@ -156,13 +169,17 @@ function RouteComponent() {
           </div>
         </div>
       ) : (
-        <div className="space-y-4 flex flex-col items-center">
+        <div className="flex flex-col items-center space-y-4">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">{confirmTitle}</h1>
-            <p className="text-secondary-foreground text-sm">{confirmDescription}</p>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {confirmTitle}
+            </h1>
+            <p className="text-sm text-secondary-foreground">
+              {confirmDescription}
+            </p>
           </div>
           <Button
-            className="w-full mt-4"
+            className="mt-4 w-full"
             disabled={isPending}
             onClick={() =>
               mutate({
@@ -178,7 +195,10 @@ function RouteComponent() {
             Didn't receive the email?{" "}
             <Button
               variant="link"
-              className={cn("link text-primary", isPending && "pointer-events-none opacity-50")}
+              className={cn(
+                "link text-primary",
+                isPending && "pointer-events-none opacity-50"
+              )}
               onClick={onResendEmail}
               role="button"
             >
@@ -188,5 +208,5 @@ function RouteComponent() {
         </div>
       )}
     </div>
-  );
+  )
 }

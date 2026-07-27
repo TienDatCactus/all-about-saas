@@ -1,6 +1,6 @@
-import { AppConstants } from "@/lib/utils/constants";
-import { storage } from "@/lib/utils/local-storage";
-import { useMutation } from "@tanstack/react-query";
+import { AppConstants } from "@/lib/utils/constants"
+import { storage } from "@/lib/utils/local-storage"
+import { useMutation } from "@tanstack/react-query"
 import {
   authApi,
   type ChangePasswordIn,
@@ -8,56 +8,56 @@ import {
   type SendVerificationEmailIn,
   type SignUpIn,
   type VerifyEmailIn,
-} from ".";
+} from "."
 
 export const useLoginMutation = () => {
   return useMutation({
     mutationFn: (data: LoginIn) => authApi.login(data),
     onSuccess: (res) => {
-      storage.set(AppConstants.tokenKey, res);
+      storage.set(AppConstants.tokenKey, res)
     },
-  });
-};
+  })
+}
 
 export const useSignupMutation = () => {
   return useMutation({
     mutationFn: (data: Pick<SignUpIn, "email" | "password">) =>
       authApi.signUp(data),
     onSuccess: (res) => {
-      storage.set(AppConstants.tokenKey, res);
+      storage.set(AppConstants.tokenKey, res)
     },
-  });
-};
+  })
+}
 
 export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSuccess: () => {
-      storage.remove(AppConstants.tokenKey);
+      storage.remove(AppConstants.tokenKey)
     },
-  });
-};
+  })
+}
 
 export const useVerifyEmailMutation = () => {
   return useMutation({
     mutationFn: (data: VerifyEmailIn) => authApi.verifyEmail(data),
     onSuccess: () => {
-      storage.remove(AppConstants.tokenKey);
+      storage.remove(AppConstants.tokenKey)
     },
-  });
-};
+  })
+}
 
 export const useSendVerificationEmailMutation = () => {
   return useMutation({
     mutationFn: (data: SendVerificationEmailIn) =>
       authApi.sendVerificationEmail(data),
-  });
-};
+  })
+}
 
 export const useChangePasswordMutation = () => {
   return useMutation({
     mutationFn: (
-      data: Pick<ChangePasswordIn, "selector" | "token" | "password">,
+      data: Pick<ChangePasswordIn, "selector" | "token" | "password">
     ) => authApi.changePassword(data),
-  });
-};
+  })
+}

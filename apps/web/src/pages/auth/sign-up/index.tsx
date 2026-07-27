@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { useNavigate } from "@tanstack/react-router";
-import React from "react";
-import AuthLayout from "../layouts/auth";
-import SignUpForm from "./components/Form";
+import { Button } from "@/components/ui/button"
+import { ArrowLeftIcon } from "@phosphor-icons/react"
+import { useNavigate } from "@tanstack/react-router"
+import React from "react"
+import AuthLayout from "../layouts/auth"
+import SignUpForm from "./components/Form"
 const SignUp: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   return (
     <AuthLayout
       form={<SignUpForm />}
@@ -30,7 +30,7 @@ const SignUp: React.FC = () => {
         text: "or ",
       }}
     />
-  );
-};
+  )
+}
 
-export default SignUp;
+export default SignUp

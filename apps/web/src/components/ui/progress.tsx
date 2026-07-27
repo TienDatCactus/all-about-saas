@@ -146,7 +146,7 @@ const Bar = ({
           indicatorVariants({
             variant,
           }),
-          indeterminate && "animate-pulse w-1/3",
+          indeterminate && "w-1/3 animate-pulse",
         )}
         style={
           indeterminate
@@ -218,7 +218,7 @@ export function Progress({
       />
 
       {caption && (
-        <FieldDescription className="text-muted-foreground text-sm text-end">
+        <FieldDescription className="text-end text-sm text-muted-foreground">
           {caption}
         </FieldDescription>
       )}

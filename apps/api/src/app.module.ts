@@ -1,62 +1,78 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import { ThrottlerModule } from "@nestjs/throttler";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import helmet from "helmet";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
-import { AuthModule } from "./auth/auth.module";
-import { CaslModule } from "./casl/casl.module";
-import configuration from "./common/config/configuration";
-import database from "./common/config/database";
-import { LoggerMiddleware } from "./common/middleware/logger/logger.middleware";
-import { RolesModule } from "./roles/roles.module";
-import { UsersModule } from "./users/users.module";
-import { MailModule } from "./mail/mail.module";
-import { BadmintonModule } from "./badminton/badminton.module";
+import {
+	MiddlewareConsumer,
+	Module,
+	NestModule,
+	RequestMethod,
+} from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import helmet from 'helmet';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { BadmintonModule } from './badminton/badminton.module';
+import { CaslModule } from './casl/casl.module';
+import configuration from './common/config/configuration';
+import database from './common/config/database';
+import { CustomeThrottlerGuard } from './common/guard/throttler.guard';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { MailModule } from './mail/mail.module';
+import { RolesModule } from './roles/roles.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [
-    UsersModule,
-    AuthModule,
-    CaslModule,
-    ConfigModule.forRoot({
-      envFilePath: [`.env.${process.env.NODE_ENV ?? "development"}.local`],
-      isGlobal: true,
-      load: [configuration, database],
-    }),
-    TypeOrmModule.forRootAsync(database.asProvider()),
-    RolesModule,
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 10,
-        },
-      ],
-    }),
+	imports: [
+		UsersModule,
+		AuthModule,
+		CaslModule,
+		ConfigModule.forRoot({
+			envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}.local`],
+			isGlobal: true,
+			load: [configuration, database],
+			cache: true,
+			expandVariables: true,
+		}),
+		TypeOrmModule.forRootAsync(database.asProvider()),
+		RolesModule,
+		ThrottlerModule.forRoot({
+			throttlers: [
+				{
+					ttl: 60000,
+					limit: 10,
+				},
+			],
+		}),
 
-    MailModule,
-    BadmintonModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+		MailModule,
+		BadmintonModule,
+	],
+	controllers: [AppController],
+	providers: [
+		AppService,
+		{
+			provide: APP_GUARD,
+			useClass: CustomeThrottlerGuard,
+		},
+	],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware, helmet()).forRoutes(
-      {
-        path: "*",
-        method: RequestMethod.POST,
-      },
-      {
-        path: "*",
-        method: RequestMethod.PATCH,
-      },
-      {
-        path: "*",
-        method: RequestMethod.DELETE,
-      },
-    );
-  }
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(LoggerMiddleware, helmet()).forRoutes(
+			{
+				path: '*',
+				method: RequestMethod.POST,
+			},
+			{
+				path: '*',
+				method: RequestMethod.PATCH,
+			},
+			{
+				path: '*',
+				method: RequestMethod.DELETE,
+			},
+		);
+		// consumer.apply(VersionMiddleware).forRoutes()
+	}
 }

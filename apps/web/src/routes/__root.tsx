@@ -1,12 +1,12 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { MotionProvider, useMotion } from "@/lib/context/animation";
-import { AuthProvider } from "@/lib/context/auth";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MotionConfig } from "motion/react";
-import appCss from "../styles.css?url";
+import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { MotionProvider, useMotion } from "@/lib/context/animation"
+import { AuthProvider } from "@/lib/context/auth"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { MotionConfig } from "motion/react"
+import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -50,14 +50,14 @@ export const Route = createRootRoute({
     </main>
   ),
   shellComponent: Providers,
-});
+})
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { preference } = useMotion();
+  const { preference } = useMotion()
   const reducedMotionMode =
-    preference === "system" ? "user" : preference === "off" ? "always" : "never";
+    preference === "system" ? "user" : preference === "off" ? "always" : "never"
   return (
     <MotionConfig isValidProp={() => true} reducedMotion={reducedMotionMode}>
       <html lang="en" suppressHydrationWarning>
@@ -65,12 +65,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body suppressHydrationWarning>
-          <div className="flex min-h-dvh items-center justify-center">{children}</div>
+          <div className="flex min-h-dvh items-center justify-center">
+            {children}
+          </div>
           <Scripts />
         </body>
       </html>
     </MotionConfig>
-  );
+  )
 }
 
 function Providers({ children }: { children: React.ReactNode }) {
@@ -85,5 +87,5 @@ function Providers({ children }: { children: React.ReactNode }) {
         <Toaster position="top-right" />
       </QueryClientProvider>
     </MotionProvider>
-  );
+  )
 }

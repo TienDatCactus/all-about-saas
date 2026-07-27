@@ -1,25 +1,25 @@
 type Action =
   | {
-      type: "reset";
-      src: string;
+      type: "reset"
+      src: string
     }
   | {
-      type: "retry";
-      src: string;
+      type: "retry"
+      src: string
     }
   | {
-      type: "fallback";
-      src: string;
+      type: "fallback"
+      src: string
     }
   | {
-      type: "loaded";
-    };
+      type: "loaded"
+    }
 
 type LoaderState = {
-  activeSrc: string;
-  usedFallback: boolean;
-  visible: boolean;
-};
+  activeSrc: string
+  usedFallback: boolean
+  visible: boolean
+}
 
 export function imageReducer(state: LoaderState, action: Action): LoaderState {
   switch (action.type) {
@@ -28,25 +28,25 @@ export function imageReducer(state: LoaderState, action: Action): LoaderState {
         activeSrc: action.src,
         usedFallback: false,
         visible: false,
-      };
+      }
 
     case "retry":
       return {
         ...state,
         activeSrc: action.src,
-      };
+      }
 
     case "loaded":
       return {
         ...state,
         visible: true,
-      };
+      }
 
     case "fallback":
       return {
         ...state,
         usedFallback: true,
         activeSrc: action.src,
-      };
+      }
   }
 }
