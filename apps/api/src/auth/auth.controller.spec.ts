@@ -5,7 +5,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OAuthProvider } from '../users/entities/oauth-account.entity';
 import { UsersService } from '../users/users.service';
 import { AuthController } from './auth.controller';
-import { VerificationToken, VerificationType } from './entities/verification-token.entity';
+import {
+	VerificationToken,
+	VerificationType,
+} from './entities/verification-token.entity';
 import { AuthService } from './services/auth.service';
 
 const mockAuthService = {
@@ -86,7 +89,10 @@ describe('AuthController', () => {
 				'pw',
 				sessionInfo,
 			);
-			expect(mockAuthService.setCookie).toHaveBeenCalledWith(res, 'refresh-tok');
+			expect(mockAuthService.setCookie).toHaveBeenCalledWith(
+				res,
+				'refresh-tok',
+			);
 			expect(result).toEqual({
 				accessToken: 'access-tok',
 				message: 'Login successful',
@@ -97,7 +103,10 @@ describe('AuthController', () => {
 	describe('verifyEmail', () => {
 		it('throws when selector or token is missing', async () => {
 			await expect(
-				controller.verifyEmail({ token: 't', type: VerificationType.EMAIL_VERIFY } as any),
+				controller.verifyEmail({
+					token: 't',
+					type: VerificationType.EMAIL_VERIFY,
+				} as any),
 			).rejects.toThrow(BadRequestException);
 			expect(
 				mockAuthService.verifyVerificationTokenRecord,
@@ -105,7 +114,9 @@ describe('AuthController', () => {
 		});
 
 		it('passes consume=false for PASSWORD_RESET, consume=true otherwise', async () => {
-			mockAuthService.verifyVerificationTokenRecord.mockResolvedValue({ id: 'u1' });
+			mockAuthService.verifyVerificationTokenRecord.mockResolvedValue({
+				id: 'u1',
+			});
 
 			await controller.verifyEmail({
 				selector: 's',
@@ -113,12 +124,9 @@ describe('AuthController', () => {
 				type: VerificationType.PASSWORD_RESET,
 			} as any);
 
-			expect(mockAuthService.verifyVerificationTokenRecord).toHaveBeenCalledWith(
-				's',
-				't',
-				VerificationType.PASSWORD_RESET,
-				false,
-			);
+			expect(
+				mockAuthService.verifyVerificationTokenRecord,
+			).toHaveBeenCalledWith('s', 't', VerificationType.PASSWORD_RESET, false);
 		});
 
 		it('throws when the token record resolves to no user', async () => {
@@ -134,7 +142,9 @@ describe('AuthController', () => {
 		});
 
 		it('activates the user and marks email verified for EMAIL_VERIFY', async () => {
-			mockAuthService.verifyVerificationTokenRecord.mockResolvedValue({ id: 'u1' });
+			mockAuthService.verifyVerificationTokenRecord.mockResolvedValue({
+				id: 'u1',
+			});
 
 			const result = await controller.verifyEmail({
 				selector: 's',
@@ -142,12 +152,9 @@ describe('AuthController', () => {
 				type: VerificationType.EMAIL_VERIFY,
 			} as any);
 
-			expect(mockAuthService.verifyVerificationTokenRecord).toHaveBeenCalledWith(
-				's',
-				't',
-				VerificationType.EMAIL_VERIFY,
-				true,
-			);
+			expect(
+				mockAuthService.verifyVerificationTokenRecord,
+			).toHaveBeenCalledWith('s', 't', VerificationType.EMAIL_VERIFY, true);
 			expect(mockUsersService.update).toHaveBeenCalledWith('u1', {
 				emailVerified: true,
 				isActive: true,
@@ -156,7 +163,9 @@ describe('AuthController', () => {
 		});
 
 		it('does not update the user for non-EMAIL_VERIFY types', async () => {
-			mockAuthService.verifyVerificationTokenRecord.mockResolvedValue({ id: 'u1' });
+			mockAuthService.verifyVerificationTokenRecord.mockResolvedValue({
+				id: 'u1',
+			});
 
 			await controller.verifyEmail({
 				selector: 's',
@@ -274,7 +283,9 @@ describe('AuthController', () => {
 				selector: 's',
 			} as any);
 
-			expect(mockAuthService.resendResetPasswordEmail).toHaveBeenCalledWith('s');
+			expect(mockAuthService.resendResetPasswordEmail).toHaveBeenCalledWith(
+				's',
+			);
 			expect(mockAuthService.sendResetPasswordEmail).not.toHaveBeenCalled();
 		});
 
