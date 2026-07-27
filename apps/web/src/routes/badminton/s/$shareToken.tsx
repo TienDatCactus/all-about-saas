@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import PublicSessionPage from "@/pages/badminton/share";
 
-export const Route = createFileRoute("/s/$shareToken")({
+export const Route = createFileRoute("/badminton/s/$shareToken")({
   component: RouteComponent,
 });
 

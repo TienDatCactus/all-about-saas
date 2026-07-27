@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSessionQuery } from "@/services/badminton/queries";
-import { PageHeader, PageShell } from "../components/page-shell";
+import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 import { ShareLink } from "../components/share-link";
 import { SessionEditor } from "../components/session-editor";
 import { sessionToValues } from "../components/form";

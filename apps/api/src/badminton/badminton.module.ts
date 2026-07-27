@@ -6,7 +6,6 @@ import { BadmintonSession } from './entities/badminton-session.entity';
 import { BadmintonParticipant } from './entities/badminton-participant.entity';
 import { BadmintonService } from './badminton.service';
 import { BadmintonController } from './badminton.controller';
-import { BadmintonPublicController } from './badminton-public.controller';
 
 /**
  * Badminton money-splitter module.
@@ -16,11 +15,11 @@ import { BadmintonPublicController } from './badminton-public.controller';
  * by PoliciesGuard (@InjectRepository(User)); CaslModule provides CaslAbilityFactory.
  */
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([BadmintonSession, BadmintonParticipant, User]),
-    CaslModule,
-  ],
-  providers: [BadmintonService],
-  controllers: [BadmintonController, BadmintonPublicController],
+	imports: [
+		TypeOrmModule.forFeature([BadmintonSession, BadmintonParticipant, User]),
+		CaslModule,
+	],
+	providers: [BadmintonService],
+	controllers: [BadmintonController],
 })
 export class BadmintonModule {}

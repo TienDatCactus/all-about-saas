@@ -3,9 +3,9 @@
 Two goals:
 
 1. **Understand Docker well enough** to reason about builds, not just copy commands.
-2. **Zero-friction device switches** — one command brings up infra, one command syncs secrets.
+2. **Low-friction device switches** — one command brings up infra.
 
-Our chosen workflow: **infra runs in Docker, the apps run on your host** (`npm run dev`). You get fast hot-reload while Postgres and the mail server are disposable containers. Secrets live in **1Password** and are rendered on demand.
+Our chosen workflow: **infra runs in Docker, the apps run on your host** (`npm run dev`). You get fast hot-reload while Postgres and the mail server are disposable containers. Secrets live in gitignored `.env` files that you manage yourself (no external secret manager wired up).
 
 ---
 
@@ -110,51 +110,42 @@ npm run docker:reset   # stop + wipe DB volume
 
 Then run the apps on the host as usual (`npm run dev`, or per-app). Mail sent by the API lands in Mailpit's inbox at **http://localhost:8025**.
 
-### New device, from scratch — one command
+### New device, from scratch
 
 ```bash
-npm run bootstrap      # npm install → env:pull (1Password) → docker:up
+npm run bootstrap      # npm install → docker:up
 ```
 
-That's the whole "I switched laptops" flow. No hand-copying anything.
+You still need to provide the `.env` files first — see Part 4.
 
 > Note: `apps/api/.Dockerfile` is a leftover production image recipe (currently for local dev we don't use it). It has bugs to fix *before* any prod use — see the end of this doc.
 
 ---
 
-## Part 4 — Env syncing with 1Password (no more manual copying)
+## Part 4 — Env files (managed manually)
 
-### How it works
+There's no external secret manager wired up. Real secrets live in gitignored files; only `.env.example` files are committed as documentation.
 
-- We commit **templates** (`apps/api/.env.tpl`, `apps/web/.env.tpl`, `packages/transactional/.env.tpl`). They contain non-secret config inline and **`op://Vault/Item/field` references** for secrets — no real secrets in git.
-- [`scripts/env.mjs`](../scripts/env.mjs) runs `op inject` to replace those references with real values, writing the gitignored `.env.development.local` / `.env` files.
-- Your secrets live once in 1Password; any signed-in device can render them.
+| Where | Real file (gitignored) | Committed example |
+|---|---|---|
+| `apps/api` | `.env.development.local`, `.env.production.local` | `.env.example` |
+| `apps/web` | `.env` | `.env.example` |
+| `packages/transactional` | `.env` | `.env.example` |
 
-### One-time setup (do this once, on the device that currently has the real secrets)
+### On a new device
 
-1. **Install the 1Password CLI** (`op`): https://developer.1password.com/docs/cli/get-started/
-   Enable *Settings → Developer → Integrate with 1Password CLI* so `op` uses the desktop app for auth.
-2. **Create a vault** named `AAS` (or rename in the `.tpl` files + `scripts/env.mjs` mapping).
-3. **Add items/fields** matching the references in the templates. For the current `apps/api/.env.tpl` that means an item `api` with fields `DATABASE_PASSWORD`, `JWT_SECRET`, `BASE_PASSWORD`; items `google-oauth`, `github-oauth`, `facebook-oauth` each with `CLIENT_ID` + `CLIENT_SECRET`; and an `email` item with `USER` + `PASS`. Paste the real values (from your existing `.env.development.local`) into those fields.
-   - Tip: `op item create --category=login --title=api --vault=AAS 'DATABASE_PASSWORD[password]=...'`
-
-### Every device after that
+Copy each `.env.example` to its real filename and fill in the values (from your password manager, a note, or your other machine):
 
 ```bash
-op signin        # once per session (or rely on desktop integration)
-npm run env:pull # renders every .env from 1Password
+cp apps/api/.env.example apps/api/.env.development.local
+cp apps/web/.env.example apps/web/.env
+cp packages/transactional/.env.example packages/transactional/.env
+# then edit in the real secret values
 ```
 
-### Daily use — two good options
+Keep `.env.example` up to date whenever you add a new variable, so future-you knows what's needed.
 
-- **Render to files** (what `env:pull` does): simplest, works with everything (Nest's `@nestjs/config`, Vite, docker compose `--env-file`). Files stay gitignored.
-- **Never touch disk**: `op run --env-file apps/api/.env.tpl -- npm run dev` injects secrets straight into the process. Nothing secret is written down. Use this when you want maximum hygiene; use `env:pull` when a tool needs a real file on disk.
-
-### Rules of thumb
-
-- Real `.env*` files stay **gitignored** (they already are). Only `.env.example` and `.env.tpl` are committed.
-- Rotating a secret = update it in 1Password once, then `npm run env:pull` on each device. No file surgery.
-- Keep non-secret config (ports, URLs) inline in the template so the vault only holds true secrets.
+> If manual copying gets painful later, ask and we can wire up an encrypted-in-repo approach (dotenvx / SOPS) or a secret manager. For now it's plain files.
 
 ---
 

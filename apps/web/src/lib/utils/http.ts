@@ -3,6 +3,7 @@ import axios, {
   type AxiosInstance,
   type AxiosRequestConfig,
   type AxiosResponse,
+  type InternalAxiosRequestConfig,
 } from "axios";
 import { toast } from "@/components/custom/toast";
 import { AppConstants } from "./constants";
@@ -28,9 +29,9 @@ export class HttpClient {
     this.axiosInstance = axios.create({
       baseURL: AppConstants.apiBaseUrl,
       timeout: 10000,
+      withCredentials: true,
     });
   }
-  private isRefreshing = false;
   private refreshPromise: Promise<string> | null = null;
 
   private setupInterceptors(): void {
@@ -74,18 +75,17 @@ export class HttpClient {
           requestUrl.includes("/auth/refresh") ||
           requestUrl.includes("/auth/logout");
 
-        if (status === 401 && !isAuthRequest) {
-          if (!this.isRefreshing) {
-            this.isRefreshing = true;
-            this.refreshPromise = authApi.refresh();
-
-            this.refreshPromise.catch(() => {
-              storage.clear();
-              window.location.href = "/auth/login";
-            });
-
-            await this.refreshPromise.finally(() => {
-              this.isRefreshing = false;
+        const originalRequest = error.config as
+          (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+        if (
+          status === 401 &&
+          !isAuthRequest &&
+          originalRequest &&
+          !originalRequest._retry
+        ) {
+          // Share a single in-flight refresh across all concurrent 401s.
+          if (!this.refreshPromise) {
+            this.refreshPromise = authApi.refresh().finally(() => {
               this.refreshPromise = null;
             });
           }
@@ -94,10 +94,12 @@ export class HttpClient {
             const token = await this.refreshPromise;
             storage.set(AppConstants.tokenKey, token);
 
-            const originalRequest = error.config;
+            originalRequest._retry = true;
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return this.axiosInstance(originalRequest);
           } catch (refreshError) {
+            storage.clear();
+            // window.location.href = "/auth/login";
             return Promise.reject(refreshError);
           }
         }
@@ -105,7 +107,7 @@ export class HttpClient {
         if (status === 401 && isAuthRequest) {
           storage.clear();
           if (requestUrl.includes("/auth/refresh")) {
-            window.location.href = "/auth/login";
+            // window.location.href = "/auth/login";
           }
           return Promise.reject(error);
         }

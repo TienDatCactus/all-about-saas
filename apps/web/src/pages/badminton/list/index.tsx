@@ -19,7 +19,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatVnd } from "@/lib/badminton/format";
 import { useSessionsQuery } from "@/services/badminton/queries";
-import { PageHeader, PageShell } from "../components/page-shell";
+import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 
 export default function SessionListPage() {
   const { data, isLoading } = useSessionsQuery();

@@ -19,6 +19,7 @@
       "rxjs/*": ["../../node_modules/rxjs/*"]
     },
     "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,

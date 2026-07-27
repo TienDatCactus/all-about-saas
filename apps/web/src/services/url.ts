@@ -16,7 +16,6 @@ export const AUTH = {
 export const BADMINTON = {
   sessions: "/badminton/sessions",
   session: (id: string) => `/badminton/sessions/${id}`,
-  suggest: "/badminton/sessions/suggest",
-  publicSession: (shareToken: string) =>
-    `/public/badminton/sessions/${shareToken}`,
+  suggest: "/badminton/participants/suggest",
+  publicSession: (shareToken: string) => `/badminton/public/${shareToken}`,
 };

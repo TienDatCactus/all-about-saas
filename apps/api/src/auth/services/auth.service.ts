@@ -78,7 +78,8 @@ export class AuthService {
 				ipAddress: sessionInfo.ipAddress,
 				userAgent: sessionInfo.userAgent,
 				expiresAt: new Date(
-					Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
+					// refreshExpiresIn is in seconds; Date math is in ms.
+					Date.now() + +this.configService.get('jwt.refreshExpiresIn') * 1000,
 				),
 			}),
 		);
@@ -140,7 +141,8 @@ export class AuthService {
 			ipAddress: sessionInfo.ipAddress,
 			userAgent: sessionInfo.userAgent,
 			expiresAt: new Date(
-				Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
+				// refreshExpiresIn is in seconds; Date math is in ms.
+				Date.now() + +this.configService.get('jwt.refreshExpiresIn') * 1000,
 			),
 		});
 		await this.sessionRepo.save(session);
@@ -169,8 +171,8 @@ export class AuthService {
 			const newAccessToken =
 				await this.tokensService.generateAccessToken(payload);
 			return newAccessToken;
-		} catch {
-			throw new HttpException('Invalid refresh token', 401);
+		} catch (error) {
+			throw new HttpException('Invalid refresh token : ' + error, 401);
 		}
 	}
 
@@ -428,9 +430,11 @@ export class AuthService {
 	setCookie(res: Response, token: string) {
 		return res.cookie('refresh_token', token, {
 			httpOnly: true,
-			secure: true,
-			sameSite: 'lax',
-			maxAge: +this.configService.get('jwt.refreshExpiresIn'),
+			secure: this.configService.get<boolean>('cookie.secure') ?? true,
+			sameSite:
+				this.configService.get<'lax' | 'strict' | 'none'>('cookie.sameSite') ??
+				'lax',
+			maxAge: +this.configService.get('jwt.refreshExpiresIn') * 1000,
 		});
 	}
 }

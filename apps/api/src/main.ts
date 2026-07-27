@@ -22,7 +22,13 @@ async function bootstrap() {
 			prefix: 'all-about-saas',
 		}),
 	});
-	app.enableCors();
+	const frontendUrl = configuration().frontendUrl;
+	app.enableCors({
+		origin: frontendUrl ? frontendUrl.split(',').map((o) => o.trim()) : true,
+		credentials: true,
+	});
+	app.use(cookieParser());
+	app.use(helmet());
 	app.useGlobalPipes(
 		new ValidationPipe({
 			transform: true,
@@ -64,8 +70,6 @@ async function bootstrap() {
 		.build();
 	const document = SwaggerModule.createDocument(app, config);
 	SwaggerModule.setup('api', app, document);
-	app.use(cookieParser());
-	app.use(helmet());
 	await app.listen(configuration().port ?? 8000);
 }
-bootstrap().catch((err) => Logger.debug(err));
+bootstrap().catch((err) => Logger.error(err));

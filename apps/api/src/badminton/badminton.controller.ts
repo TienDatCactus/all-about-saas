@@ -1,18 +1,19 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Patch,
-  Post,
-  Query,
-  Req,
-  UseGuards,
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Logger,
+	Param,
+	ParseUUIDPipe,
+	Patch,
+	Post,
+	Query,
+	Req,
+	UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CheckPolicies } from '../common/decorator/check-policies.decorator';
+import { Public } from '../common/decorator/is-public.decorator';
 import { RegisterResource } from '../common/decorator/resource.decorator';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
 import { PoliciesGuard } from '../common/guard/policies.guard';
@@ -20,57 +21,64 @@ import { BadmintonService } from './badminton.service';
 import { CreateBadmintonSessionDto } from './dto/create-badminton-session.dto';
 import { UpdateBadmintonSessionDto } from './dto/update-badminton-session.dto';
 
-type AuthedRequest = { user: { id: string; email: string } };
-
 @RegisterResource({
-  name: 'BadmintonSession',
-  actions: ['create', 'read', 'update', 'delete'],
+	name: 'BadmintonSession',
+	actions: ['create', 'read', 'update', 'delete'],
 })
-@Controller('badminton/sessions')
+@Controller('badminton')
 @ApiTags('Badminton')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PoliciesGuard)
 export class BadmintonController {
-  constructor(private readonly service: BadmintonService) {}
+	constructor(private readonly service: BadmintonService) {}
 
-  @Post()
-  @CheckPolicies({ action: 'create', resource: 'BadmintonSession' })
-  create(@Req() req: AuthedRequest, @Body() dto: CreateBadmintonSessionDto) {
-    return this.service.create(req.user.id, dto);
-  }
+	@Post('/sessions')
+	@UseGuards(JwtAuthGuard)
+	// @CheckPolicies({ action: 'create', resource: 'BadmintonSession' })
+	create(@Req() req, @Body() dto: CreateBadmintonSessionDto) {
+		Logger.debug(req.user);
+		return this.service.create(req.user.id, dto);
+	}
 
-  @Get()
-  @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
-  findAll(@Req() req: AuthedRequest) {
-    return this.service.findAllByOwner(req.user.id);
-  }
+	@Get('/sessions')
+	@UseGuards(JwtAuthGuard)
+	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
+	findAll(@Req() req) {
+		Logger.debug(req.user);
+		return this.service.findAllByOwner(req.user.id);
+	}
 
-  // Declared before ':id' so the static path wins the route match.
-  @Get('suggest')
-  @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
-  suggest(@Req() req: AuthedRequest, @Query('q') q = '') {
-    return this.service.suggestParticipants(req.user.id, q);
-  }
+	// Declared before ':id' so the static path wins the route match.
+	@Get('/participants/suggest')
+	@UseGuards(JwtAuthGuard)
+	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
+	suggest(@Req() req, @Query('q') q = '') {
+		return this.service.suggestParticipants(req.user.id, q);
+	}
 
-  @Get(':id')
-  @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
-  findOne(@Req() req: AuthedRequest, @Param('id', ParseUUIDPipe) id: string) {
-    return this.service.findOneOwned(req.user.id, id);
-  }
+	@Get('/sessions/:id')
+	@UseGuards(JwtAuthGuard, PoliciesGuard)
+	findOne(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
+		return this.service.findOneOwned(req.user.id, id);
+	}
 
-  @Patch(':id')
-  @CheckPolicies({ action: 'update', resource: 'BadmintonSession' })
-  update(
-    @Req() req: AuthedRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateBadmintonSessionDto,
-  ) {
-    return this.service.update(req.user.id, id, dto);
-  }
+	@Patch('/sessions/:id')
+	@UseGuards(JwtAuthGuard, PoliciesGuard)
+	update(
+		@Req() req,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body() dto: UpdateBadmintonSessionDto,
+	) {
+		return this.service.update(req.user.id, id, dto);
+	}
 
-  @Delete(':id')
-  @CheckPolicies({ action: 'delete', resource: 'BadmintonSession' })
-  remove(@Req() req: AuthedRequest, @Param('id', ParseUUIDPipe) id: string) {
-    return this.service.remove(req.user.id, id);
-  }
+	@Delete('/sessions/:id')
+	@UseGuards(JwtAuthGuard, PoliciesGuard)
+	remove(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
+		return this.service.remove(req.user.id, id);
+	}
+	@Public()
+	@Get('/public/:shareToken')
+	findByShareToken(@Param('shareToken') shareToken: string) {
+		return this.service.findByShareToken(shareToken);
+	}
 }

@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { computeSplit } from "@/lib/badminton/calc";
 import { usePublicSessionQuery } from "@/services/badminton/queries";
 import type { PublicSession } from "@/services/badminton/types";
-import { PageHeader, PageShell } from "../components/page-shell";
+import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 import { BadmintonSummary } from "../components/summary";
 
 function toComputed(session: PublicSession) {
