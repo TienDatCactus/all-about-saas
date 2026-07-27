@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   Item,
   ItemActions,
@@ -13,9 +13,9 @@ import {
   ItemMedia,
   ItemTitle,
   itemVariants,
-} from "@/components/ui/item"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/item";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import {
   ArrowClockwiseIcon,
   CaretDownIcon,
@@ -25,40 +25,35 @@ import {
   WarningIcon,
   XCircleIcon,
   XIcon,
-} from "@phosphor-icons/react"
-import React, { useEffect, useState } from "react"
-import { toast as sonnerToast } from "sonner"
-import { type ToastError } from "./normalize"
+} from "@phosphor-icons/react";
+import React, { useEffect, useState } from "react";
+import { toast as sonnerToast } from "sonner";
+import { type ToastError } from "./normalize";
 
 export type ToastStatus =
-  | "success"
-  | "error"
-  | "warning"
-  | "info"
-  | "loading"
-  | "offline"
+  "success" | "error" | "warning" | "info" | "loading" | "offline";
 
 export interface ToastOptions {
-  id?: string
-  status: ToastStatus
-  title?: React.ReactNode
-  description?: React.ReactNode
-  details?: React.ReactNode
+  id?: string;
+  status: ToastStatus;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  details?: React.ReactNode;
   action?: {
-    label: string
-    onClick(): void
-  }
-  dismissible?: boolean
-  duration?: number
-  persistent?: boolean
-  retry?: () => void
-  error?: ToastError
-  source?: string
+    label: string;
+    onClick(): void;
+  };
+  dismissible?: boolean;
+  duration?: number;
+  persistent?: boolean;
+  retry?: () => void;
+  error?: ToastError;
+  source?: string;
 }
 
 export interface ToastProps {
-  id: string | number
-  options: ToastOptions
+  id: string | number;
+  options: ToastOptions;
 }
 
 const ICONS = {
@@ -68,10 +63,10 @@ const ICONS = {
   info: InfoIcon,
   loading: SpinnerIcon,
   offline: InfoIcon,
-}
+};
 
 function ToastIcon({ status }: { status: ToastStatus }) {
-  const IconComponent = ICONS[status] || InfoIcon
+  const IconComponent = ICONS[status] || InfoIcon;
   return (
     <IconComponent
       className={cn("size-5", {
@@ -82,17 +77,17 @@ function ToastIcon({ status }: { status: ToastStatus }) {
         "animate-spin text-muted-foreground": status === "loading",
       })}
     />
-  )
+  );
 }
 
 function ToastProgress({
   status,
   percentage,
 }: {
-  status: ToastStatus
-  percentage: number
+  status: ToastStatus;
+  percentage: number;
 }) {
-  if (status === "loading") return null
+  if (status === "loading") return null;
   return (
     <div
       className={cn(
@@ -102,17 +97,17 @@ function ToastProgress({
           "bg-destructive": status === "error",
           "bg-warning": status === "warning",
           "bg-primary": status === "info" || status === "offline",
-        }
+        },
       )}
       style={{
         transform: `scaleX(${percentage / 100})`,
       }}
     />
-  )
+  );
 }
 
 export default function Toast(props: ToastProps) {
-  const { id, options } = props
+  const { id, options } = props;
   const {
     status,
     title,
@@ -124,31 +119,32 @@ export default function Toast(props: ToastProps) {
     duration = 10000,
     retry,
     error,
-  } = options
+  } = options;
 
-  const [remainingMs, setRemainingMs] = useState<number>(duration)
-  const [isPaused, setIsPaused] = useState(false)
-  const [copied, setCopied] = useState(false)
-  if (isPaused || persistent || status === "loading") return
+  const [remainingMs, setRemainingMs] = useState<number>(duration);
+  const [isPaused, setIsPaused] = useState(false);
+  const [copied, setCopied] = useState(false);
   useEffect(() => {
+    if (isPaused || persistent || status === "loading") return;
+
     const interval = setInterval(() => {
       setRemainingMs((prev) => {
         if (prev <= 100) {
-          clearInterval(interval)
-          sonnerToast.dismiss(id)
-          return 0
+          clearInterval(interval);
+          sonnerToast.dismiss(id);
+          return 0;
         }
-        return prev - 100
-      })
-    }, 100)
+        return prev - 100;
+      });
+    }, 100);
 
-    return () => clearInterval(interval)
-  }, [id, isPaused, persistent, status])
+    return () => clearInterval(interval);
+  }, [id, isPaused, persistent, status]);
 
-  const percentage = (remainingMs / duration) * 100
+  const percentage = (remainingMs / duration) * 100;
 
   const copyToClipboard = () => {
-    if (!error) return
+    if (!error) return;
     const text = [
       error.title ? `Title: ${error.title}` : "",
       error.message ? `Message: ${error.message}` : "",
@@ -162,35 +158,35 @@ export default function Toast(props: ToastProps) {
       error.details ? `Details: ${error.details}` : "",
     ]
       .filter(Boolean)
-      .join("\n")
+      .join("\n");
 
     if (!navigator.clipboard) {
-      const textArea = document.createElement("textarea")
-      textArea.value = text
-      document.body.appendChild(textArea)
-      textArea.select()
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
       try {
-        document.execCommand("copy")
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        document.execCommand("copy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
       } catch (err) {
-        console.error("Failed to copy text", err)
+        console.error("Failed to copy text", err);
       }
-      document.body.removeChild(textArea)
-      return
+      document.body.removeChild(textArea);
+      return;
     }
 
     navigator.clipboard.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
-  }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
-  const hasExpandableContent = !!(error || details)
+  const hasExpandableContent = !!(error || details);
 
   const toggleTimer = () => {
-    setIsPaused(!isPaused)
-  }
+    setIsPaused(!isPaused);
+  };
   return (
     <Item
       variant="outline"
@@ -224,8 +220,8 @@ export default function Toast(props: ToastProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      retry()
-                      sonnerToast.dismiss(id)
+                      retry();
+                      sonnerToast.dismiss(id);
                     }}
                   >
                     <ArrowClockwiseIcon />
@@ -237,8 +233,8 @@ export default function Toast(props: ToastProps) {
                     variant="default"
                     size="sm"
                     onClick={() => {
-                      action.onClick()
-                      sonnerToast.dismiss(id)
+                      action.onClick();
+                      sonnerToast.dismiss(id);
                     }}
                   >
                     {action.label}
@@ -365,5 +361,5 @@ export default function Toast(props: ToastProps) {
         )}
       </Collapsible>
     </Item>
-  )
+  );
 }
