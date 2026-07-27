@@ -13,7 +13,7 @@ import { VerificationToken } from '../../auth/entities/verification-token.entity
 import { UserProfile } from './user-profile.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
-import * as bcrypt from "bcrypt"
+import * as bcrypt from 'bcrypt';
 @Entity()
 export class User extends SoftDeleteBaseEntity {
 	@Column({ unique: true })

@@ -79,7 +79,9 @@ export abstract class BaseService<T extends BaseEntity> {
 		return this.repository.save(entity);
 	}
 
-	async paginate(options: PaginateOptions<T> = {}): Promise<PaginatedResult<T>> {
+	async paginate(
+		options: PaginateOptions<T> = {},
+	): Promise<PaginatedResult<T>> {
 		const page = Math.max(1, options.page ?? 1);
 		const limit = Math.min(100, Math.max(1, options.limit ?? 20));
 		const [data, total] = await this.repository.findAndCount({

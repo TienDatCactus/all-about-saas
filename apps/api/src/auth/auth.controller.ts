@@ -9,26 +9,21 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
-import { Repository } from 'typeorm';
 import { Public } from '../common/decorator/is-public.decorator';
+import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
+import { GithubAuthGuard } from '../common/guard/github-auth.guard';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
+import { OAuthProvider } from '../users/entities/oauth-account.entity';
 import { UsersService } from '../users/users.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { SendVerificationEmailDto } from './dto/send-verification-email.dto';
 import { LoginDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import {
-	VerificationToken,
-	VerificationType,
-} from './entities/verification-token.entity';
+import { VerificationType } from './entities/verification-token.entity';
 import { AuthService } from './services/auth.service';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { GithubAuthGuard } from '../common/guard/github-auth.guard';
-import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
-import { OAuthProvider } from '../users/entities/oauth-account.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -36,8 +31,6 @@ export class AuthController {
 		private readonly authService: AuthService,
 		private readonly configService: ConfigService,
 		private readonly usersService: UsersService,
-		@InjectRepository(VerificationToken)
-		private readonly verificationTokenRepo: Repository<VerificationToken>,
 	) {}
 	@Public()
 	@Post('login')
