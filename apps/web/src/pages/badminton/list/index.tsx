@@ -71,11 +71,7 @@ export default function SessionListPage() {
             const total =
               session.computed?.grandTotal ??
               session.courtCost +
-                session.shuttleUnitPrice *
-                  (session.participants?.reduce(
-                    (a, p) => a + p.shuttleCount,
-                    0,
-                  ) ?? 0);
+                session.shuttleUnitPrice * (session.totalShuttleCount ?? 0);
             const players =
               session.computed?.rows.length ??
               session.participants?.length ??

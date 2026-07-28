@@ -1,5 +1,4 @@
 import {
-  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -34,9 +33,10 @@ export class ParticipantInputDto {
   @Max(1)
   discount?: number;
 
-  /** Whole shuttles attributed to this player. Defaults to 0. */
+  /** Weight for the shared shuttle pot, 0..1 (split like courtFraction). Defaults to 1. */
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
-  shuttleCount?: number;
+  @Max(1)
+  shuttleFraction?: number;
 }

@@ -21,7 +21,11 @@ interface PlayerRowProps {
 function numberFieldProps(
   field: any,
   isInvalid: boolean,
-  { integer = false, min, max }: { integer?: boolean; min?: number; max?: number } = {},
+  {
+    integer = false,
+    min,
+    max,
+  }: { integer?: boolean; min?: number; max?: number } = {},
 ) {
   return {
     name: field.name,
@@ -62,17 +66,21 @@ export function PlayerRow({
       </TableCell>
 
       <TableCell>
-        <FormField form={form} label="Shuttles" name={`${base}.shuttleCount`}>
+        <FormField
+          form={form}
+          label="Shuttle %"
+          name={`${base}.shuttlePercent`}
+        >
           {({ field, isInvalid }) => (
             <Input
-              id={`${base}-shuttles`}
+              id={`${base}-shuttle`}
               type="number"
               min={0}
-              step={1}
+              max={100}
               inputMode="numeric"
+              endAddon="%"
               className="text-right tabular-nums"
-              placeholder="0"
-              {...numberFieldProps(field, isInvalid, { integer: true, min: 0 })}
+              {...numberFieldProps(field, isInvalid, { min: 0, max: 100 })}
             />
           )}
         </FormField>
@@ -116,10 +124,10 @@ export function PlayerRow({
         </FormField>
       </TableCell>
 
-      <TableCell>
+      <TableCell className="align-bottom">
         <Button
           type="button"
-          variant="ghost"
+          variant="destructive"
           size="icon"
           aria-label="Remove player"
           onClick={onRemove}

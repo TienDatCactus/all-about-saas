@@ -36,9 +36,10 @@ describe('BadmintonService', () => {
       playedOn: '2026-07-25',
       courtCost: 100_000,
       shuttleUnitPrice: 1_000,
+      totalShuttleCount: 20,
       participants: [
-        { name: 'A', shuttleCount: 10 },
-        { name: 'B', shuttleCount: 10 },
+        { name: 'A', shuttleFraction: 0.5 },
+        { name: 'B', shuttleFraction: 0.5 },
       ],
     };
 
@@ -61,18 +62,19 @@ describe('BadmintonService', () => {
     expect(sessionRepo.save).toHaveBeenCalledTimes(1);
   });
 
-  it('create: applies field defaults (courtFraction=1, discount=0, shuttleCount=0)', async () => {
+  it('create: applies field defaults (courtFraction=1, discount=0, shuttleFraction=1)', async () => {
     const dto: CreateBadmintonSessionDto = {
       playedOn: '2026-07-25',
       courtCost: 50_000,
       shuttleUnitPrice: 1_000,
+      totalShuttleCount: 0,
       participants: [{ name: 'Solo' }],
     };
     const saved: any = await service.create('owner-1', dto);
     const p = saved.participants[0];
     expect(p.courtFraction).toBe(1);
     expect(p.discount).toBe(0);
-    expect(p.shuttleCount).toBe(0);
+    expect(p.shuttleFraction).toBe(1);
   });
 
   it('findOneOwned: throws NotFound when the session is not owned', async () => {
@@ -94,8 +96,9 @@ describe('BadmintonService', () => {
       title: undefined,
       courtCost: 100_000,
       shuttleUnitPrice: 1_000,
+      totalShuttleCount: 10,
       participants: [
-        { id: 'p1', name: 'A', courtFraction: 1, discount: 0, shuttleCount: 10 },
+        { id: 'p1', name: 'A', courtFraction: 1, discount: 0, shuttleFraction: 1 },
       ],
       computed: undefined,
     };
@@ -127,6 +130,7 @@ describe('BadmintonService', () => {
       playedOn: '2026-07-25',
       courtCost: 100_000,
       shuttleUnitPrice: 1_000,
+      totalShuttleCount: 10,
       participants: [
         {
           id: 'p1',
@@ -134,7 +138,7 @@ describe('BadmintonService', () => {
           name: 'A',
           courtFraction: 1,
           discount: 0,
-          shuttleCount: 10,
+          shuttleFraction: 1,
         },
       ],
       computed: { rows: [] },

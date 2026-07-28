@@ -9,7 +9,7 @@ export const ParticipantInputSchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
   courtFraction: z.number().min(0).max(1).optional(),
   discount: z.number().min(0).max(1).optional(),
-  shuttleCount: z.number().int().min(0).optional(),
+  shuttleFraction: z.number().min(0).max(1).optional(),
 });
 
 export type ParticipantInput = z.infer<typeof ParticipantInputSchema>;
@@ -19,6 +19,7 @@ export const CreateSessionSchema = z.object({
   title: z.string().max(120).optional(),
   courtCost: z.number().int().min(0),
   shuttleUnitPrice: z.number().int().min(0),
+  totalShuttleCount: z.number().int().min(0),
   participants: z.array(ParticipantInputSchema).min(1, "Add at least one player"),
 });
 
@@ -50,7 +51,7 @@ export interface SessionParticipant {
   name: string;
   courtFraction: number;
   discount: number;
-  shuttleCount: number;
+  shuttleFraction: number;
 }
 
 export interface BadmintonSession {
@@ -60,6 +61,7 @@ export interface BadmintonSession {
   title?: string | null;
   courtCost: number;
   shuttleUnitPrice: number;
+  totalShuttleCount: number;
   shareToken: string;
   computed?: ComputedSnapshot | null;
   participants?: SessionParticipant[];
@@ -73,6 +75,7 @@ export interface PublicSession {
   playedOn: string;
   courtCost: number;
   shuttleUnitPrice: number;
+  totalShuttleCount: number;
   participants: Array<Omit<SessionParticipant, "userId">>;
   computed?: ComputedSnapshot | null;
 }

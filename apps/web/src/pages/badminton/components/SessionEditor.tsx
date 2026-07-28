@@ -1,14 +1,8 @@
 import { AddonInput as Input } from "@/components/custom/addon-input";
+import DataCard from "@/components/custom/data/card";
 import { FormField } from "@/components/custom/form-field";
 import { Button as StatefulButton } from "@/components/custom/stateful-button";
 import DatePicker from "@/components/date-picker";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
 import { formatVnd, parseVnd } from "@/pages/badminton/lib/format";
 import {
@@ -16,7 +10,11 @@ import {
   useUpdateSessionMutation,
 } from "@/services/badminton/queries";
 import type { BadmintonSession } from "@/services/badminton/types";
-import { CoinsIcon, CurrencyCircleDollarIcon } from "@phosphor-icons/react";
+import {
+  CoinsIcon,
+  CurrencyCircleDollarIcon,
+  RacquetIcon,
+} from "@phosphor-icons/react";
 import { useForm } from "@tanstack/react-form";
 import { format, parseISO } from "date-fns";
 import {
@@ -28,7 +26,6 @@ import {
 } from "../lib/form";
 import { PlayerEditor } from "./player-editor";
 import { BadmintonSummary } from "./Summary";
-import DataCard from "@/components/custom/data/card";
 
 interface SessionEditorProps {
   sessionId?: string;
@@ -61,9 +58,9 @@ export function SessionEditor({
         e.preventDefault();
         form.handleSubmit();
       }}
-      className="grid gap-6 lg:grid-cols-[1fr_minmax(320px,26rem)] lg:items-start"
+      className="grid gap-6 lg:grid-cols-5 lg:items-start"
     >
-      <div className="flex min-w-0 flex-col gap-6">
+      <div className="flex min-w-0 col-span-3 flex-col gap-6">
         <DataCard
           title="Session details"
           description="Court and shuttle costs for the day."
@@ -96,7 +93,8 @@ export function SessionEditor({
                     />
                   )}
                 </FormField>
-
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
                 <FormField
                   form={form}
                   name="courtCost"
@@ -121,13 +119,11 @@ export function SessionEditor({
                     />
                   )}
                 </FormField>
-
                 <FormField
                   form={form}
                   name="shuttleUnitPrice"
                   label="Shuttle price (each)"
-                  description="Shuttle total = price × shuttles counted below.
-  "
+                  description="Shuttle total = price × total shuttles."
                 >
                   {({ field }) => (
                     <Input
@@ -147,6 +143,33 @@ export function SessionEditor({
                     />
                   )}
                 </FormField>
+                <FormField
+                  form={form}
+                  name="totalShuttleCount"
+                  label="Total shuttles"
+                  description="Total shuttle count for the session, shared by all players."
+                >
+                  {({ field }) => (
+                    <Input
+                      id="totalShuttleCount"
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      aria-label="Total shuttles"
+                      placeholder="0"
+                      className="text-right tabular-nums"
+                      startAddon={<RacquetIcon />}
+                      value={field.state.value ?? ""}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const n = e.target.valueAsNumber;
+                        field.handleChange(
+                          Number.isNaN(n) ? 0 : Math.max(0, Math.trunc(n)),
+                        );
+                      }}
+                    />
+                  )}
+                </FormField>
               </div>
             </FieldGroup>
           }
@@ -159,7 +182,7 @@ export function SessionEditor({
         />
       </div>
 
-      <div className="flex flex-col gap-4 lg:sticky lg:top-6">
+      <div className="flex flex-col gap-4 col-span-2 lg:sticky lg:top-6">
         <form.Subscribe selector={(s: { values: EditorValues }) => s.values}>
           {(values: EditorValues) => (
             <BadmintonSummary

@@ -120,10 +120,11 @@ class SessionParticipant {
   @Column() name: string;
 
   // Split inputs.
-  @Column('float', { default: 1 }) courtFraction: number; // 0..1, 0 = excluded from court
-  @Column('int',   { default: 0 }) shuttleCount: number;   // whole shuttles; 0 = excluded from shuttle
-  @Column('float', { default: 0 }) discount: number;       // 0..1, e.g. 0.15
+  @Column('float', { default: 1 }) courtFraction: number;    // 0..1, 0 = excluded from court
+  @Column('float', { default: 1 }) shuttleFraction: number;  // 0..1 weight for the shared shuttle pot; 0 = excluded
+  @Column('float', { default: 0 }) discount: number;         // 0..1, e.g. 0.15
 }
+// Session-level: @Column('int', { default: 0 }) totalShuttleCount — the shared shuttle pot.
 ```
 
 `ComputedSnapshot` (stored jsonb, also the copy-to-clipboard source):
@@ -138,7 +139,7 @@ type ComputedRow = {
 };
 type ComputedSnapshot = {
   courtCost: number;
-  shuttleCost: number;       // derived = shuttleUnitPrice * Σ shuttleCount
+  shuttleCost: number;       // derived = shuttleUnitPrice * totalShuttleCount
   grandTotal: number;        // courtCost + shuttleCost, rounded to 1000
   rows: ComputedRow[];
   roundingResidual: number;  // exact expense − Σ rounded totals, absorbed by organizer
@@ -161,19 +162,21 @@ output is `ComputedSnapshot`.
 Inputs:
   courtCost                              // VND int
   shuttleUnitPrice                       // VND int
-  participants[i]: { courtFraction f_i, shuttleCount c_i, discount d_i }
+  totalShuttleCount                      // shared pot, int
+  participants[i]: { courtFraction f_i, shuttleFraction s_i, discount d_i }
 
 Derived:
-  shuttleCost = shuttleUnitPrice * Σ c_i
+  shuttleCost = shuttleUnitPrice * totalShuttleCount
 
 Court (time-proportional):
   totalFraction = Σ f_i
   courtRaw_i    = totalFraction == 0 ? 0 : courtCost * f_i / totalFraction
   // f_i = 0 ⇒ pays nothing for court ("exclude from court" = set fraction 0)
 
-Shuttle (count-weighted, no discount yet):
-  totalCount   = Σ c_i
-  shuttleRaw_i = totalCount == 0 ? 0 : shuttleCost * c_i / totalCount
+Shuttle (weight-proportional, shared pot, no discount yet):
+  totalShuttleFraction = Σ s_i
+  shuttleRaw_i = totalShuttleFraction == 0 ? 0 : shuttleCost * s_i / totalShuttleFraction
+  // s_i = 0 ⇒ pays nothing for shuttles ("exclude from shuttle" = set weight 0)
 
 Undiscounted fair share (Σ over players == courtCost + shuttleCost == expense):
   fair_i = courtRaw_i + shuttleRaw_i
@@ -241,7 +244,7 @@ Copy-to-clipboard emits a plain-text / markdown table built from the snapshot.
 ---
 
 ## 7. Validation & edge rules
-- VND amounts: non-negative integers. `courtFraction ∈ [0,1]`, `discount ∈ [0,1)`, `shuttleCount` integer ≥ 0.
+- VND amounts: non-negative integers. `courtFraction ∈ [0,1]`, `discount ∈ [0,1)`, `shuttleFraction ∈ [0,1]`, `totalShuttleCount` integer ≥ 0.
 - `Σ courtFraction == 0` ⇒ no one charged court (allowed; court effectively free/absorbed elsewhere).
 - `Σ effectiveWeight == 0` (everyone 0 shuttles or 100% discount) ⇒ shuttle shares all 0; surface a warning.
 - A participant needs a `name`; `userId` optional.

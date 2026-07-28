@@ -7,22 +7,26 @@ const p = (
   overrides: Partial<{
     courtFraction: number;
     discount: number;
-    shuttleCount: number;
+    shuttleFraction: number;
   }> = {},
 ) => ({
   id,
   name: id,
   courtFraction: overrides.courtFraction ?? 1,
   discount: overrides.discount ?? 0,
-  shuttleCount: overrides.shuttleCount ?? 0,
+  shuttleFraction: overrides.shuttleFraction ?? 0,
 });
 
 describe('computeSplit', () => {
-  it('derives shuttle cost from unit price × total count', () => {
+  it('derives shuttle cost from unit price × total shuttle count', () => {
     const input: CalcInput = {
       courtCost: 100_000,
       shuttleUnitPrice: 1_000,
-      participants: [p('A', { shuttleCount: 10 }), p('B', { shuttleCount: 10 })],
+      totalShuttleCount: 20,
+      participants: [
+        p('A', { shuttleFraction: 0.5 }),
+        p('B', { shuttleFraction: 0.5 }),
+      ],
     };
     const out = computeSplit(input, AT);
     expect(out.shuttleCost).toBe(20_000);
@@ -33,7 +37,11 @@ describe('computeSplit', () => {
     const input: CalcInput = {
       courtCost: 100_000,
       shuttleUnitPrice: 1_000,
-      participants: [p('A', { shuttleCount: 10 }), p('B', { shuttleCount: 10 })],
+      totalShuttleCount: 20,
+      participants: [
+        p('A', { shuttleFraction: 0.5 }),
+        p('B', { shuttleFraction: 0.5 }),
+      ],
     };
     const out = computeSplit(input, AT);
     expect(out.rows).toEqual([
@@ -47,9 +55,10 @@ describe('computeSplit', () => {
     const input: CalcInput = {
       courtCost: 100_000,
       shuttleUnitPrice: 1_000,
+      totalShuttleCount: 20,
       participants: [
-        p('A', { shuttleCount: 10 }),
-        p('B', { shuttleCount: 10, discount: 0.5 }),
+        p('A', { shuttleFraction: 0.5 }),
+        p('B', { shuttleFraction: 0.5, discount: 0.5 }),
       ],
     };
     const out = computeSplit(input, AT);
@@ -65,30 +74,32 @@ describe('computeSplit', () => {
     expect(b.court + b.shuttle).toBe(b.total);
   });
 
-  it('excludes fraction=0 from court and count=0 from shuttle', () => {
+  it('excludes courtFraction=0 from court and shuttleFraction=0 from shuttle', () => {
     const input: CalcInput = {
       courtCost: 90_000,
       shuttleUnitPrice: 1_000,
+      totalShuttleCount: 20,
       participants: [
-        p('Player', { courtFraction: 1, shuttleCount: 10 }),
-        p('CourtOnly', { courtFraction: 1, shuttleCount: 0 }),
-        p('ShuttleOnly', { courtFraction: 0, shuttleCount: 10 }),
+        p('Player', { courtFraction: 1, shuttleFraction: 0.5 }),
+        p('CourtOnly', { courtFraction: 1, shuttleFraction: 0 }),
+        p('ShuttleOnly', { courtFraction: 0, shuttleFraction: 0.5 }),
       ],
     };
     const out = computeSplit(input, AT);
     const shuttleOnly = out.rows.find((r) => r.participantId === 'ShuttleOnly')!;
     const courtOnly = out.rows.find((r) => r.participantId === 'CourtOnly')!;
-    expect(shuttleOnly.court).toBe(0); // fraction 0 → no court
-    expect(courtOnly.shuttle).toBe(0); // count 0 → no shuttle
+    expect(shuttleOnly.court).toBe(0); // court weight 0 → no court
+    expect(courtOnly.shuttle).toBe(0); // shuttle weight 0 → no shuttle
   });
 
   it('applies time-proportional court split', () => {
     const input: CalcInput = {
       courtCost: 100_000,
       shuttleUnitPrice: 0,
+      totalShuttleCount: 0,
       participants: [
-        p('Full', { courtFraction: 1, shuttleCount: 0 }),
-        p('Half', { courtFraction: 0.5, shuttleCount: 0 }),
+        p('Full', { courtFraction: 1, shuttleFraction: 0 }),
+        p('Half', { courtFraction: 0.5, shuttleFraction: 0 }),
       ],
     };
     const out = computeSplit(input, AT);
@@ -104,26 +115,28 @@ describe('computeSplit', () => {
       {
         courtCost: 150_000,
         shuttleUnitPrice: 4_583,
+        totalShuttleCount: 70,
         participants: [
-          p('Lam', { shuttleCount: 10 }),
-          p('Dat', { shuttleCount: 10 }),
-          p('Kien', { shuttleCount: 10 }),
-          p('Thai', { shuttleCount: 10 }),
-          p('Hieu', { shuttleCount: 8 }),
-          p('Truong', { shuttleCount: 8 }),
-          p('Trang', { shuttleCount: 8, discount: 0.15 }),
-          p('Giang', { shuttleCount: 8, discount: 0.15 }),
+          p('Lam', { shuttleFraction: 10 / 70 }),
+          p('Dat', { shuttleFraction: 10 / 70 }),
+          p('Kien', { shuttleFraction: 10 / 70 }),
+          p('Thai', { shuttleFraction: 10 / 70 }),
+          p('Hieu', { shuttleFraction: 8 / 70 }),
+          p('Truong', { shuttleFraction: 8 / 70 }),
+          p('Trang', { shuttleFraction: 8 / 70, discount: 0.15 }),
+          p('Giang', { shuttleFraction: 8 / 70, discount: 0.15 }),
         ],
       },
       {
         courtCost: 237_777,
         shuttleUnitPrice: 3_111,
+        totalShuttleCount: 27,
         participants: [
-          p('A', { courtFraction: 0.3, shuttleCount: 5, discount: 0.1 }),
-          p('B', { courtFraction: 1, shuttleCount: 12 }),
-          p('C', { courtFraction: 0.75, shuttleCount: 0, discount: 0.2 }),
-          p('D', { courtFraction: 1, shuttleCount: 7 }),
-          p('E', { courtFraction: 0, shuttleCount: 3 }),
+          p('A', { courtFraction: 0.3, shuttleFraction: 5 / 27, discount: 0.1 }),
+          p('B', { courtFraction: 1, shuttleFraction: 12 / 27 }),
+          p('C', { courtFraction: 0.75, shuttleFraction: 0, discount: 0.2 }),
+          p('D', { courtFraction: 1, shuttleFraction: 7 / 27 }),
+          p('E', { courtFraction: 0, shuttleFraction: 3 / 27 }),
         ],
       },
     ];
@@ -151,7 +164,12 @@ describe('computeSplit', () => {
   it('handles the empty-session and all-discounted edge cases without throwing', () => {
     expect(
       computeSplit(
-        { courtCost: 50_000, shuttleUnitPrice: 1_000, participants: [] },
+        {
+          courtCost: 50_000,
+          shuttleUnitPrice: 1_000,
+          totalShuttleCount: 0,
+          participants: [],
+        },
         AT,
       ).rows,
     ).toEqual([]);
@@ -160,7 +178,8 @@ describe('computeSplit', () => {
       {
         courtCost: 50_000,
         shuttleUnitPrice: 1_000,
-        participants: [p('A', { shuttleCount: 5, discount: 1 })],
+        totalShuttleCount: 5,
+        participants: [p('A', { shuttleFraction: 1, discount: 1 })],
       },
       AT,
     );

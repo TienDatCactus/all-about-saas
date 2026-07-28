@@ -54,7 +54,7 @@ export class BadmintonParticipant {
 	@Column('float', { default: 0 })
 	discount: number;
 
-	/** Whole shuttles attributed to this player. 0 = excluded from shuttle fee. */
-	@Column('int', { default: 0 })
-	shuttleCount: number;
+	/** Weight for the shared shuttle pot, 0..1. Split works like {@link courtFraction}; 0 = excluded from shuttle fee. */
+	@Column('float', { default: 1 })
+	shuttleFraction: number;
 }

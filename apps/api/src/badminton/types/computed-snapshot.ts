@@ -20,7 +20,7 @@ export interface ComputedRow {
 export interface ComputedSnapshot {
   /** Court cost input, VND. */
   courtCost: number;
-  /** Derived shuttle cost = shuttleUnitPrice * sum(shuttleCount), VND. */
+  /** Derived shuttle cost = shuttleUnitPrice * totalShuttleCount, VND. */
   shuttleCost: number;
   /** courtCost + shuttleCost, rounded to the nearest 1,000 VND. */
   grandTotal: number;

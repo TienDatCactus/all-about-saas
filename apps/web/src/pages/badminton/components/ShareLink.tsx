@@ -8,13 +8,11 @@ import {
 } from "@/components/ui/input-group";
 
 export function ShareLink({ shareToken }: { shareToken: string }) {
-  const path = `/s/${shareToken}`;
+  const path = `/badminton/s/${shareToken}`;
 
   const handleCopy = async () => {
     const url =
-      typeof window !== "undefined"
-        ? `${window.location.origin}${path}`
-        : path;
+      typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Share link copied");

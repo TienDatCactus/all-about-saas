@@ -19,12 +19,13 @@ function toComputed(session: PublicSession) {
   return computeSplit({
     courtCost: session.courtCost,
     shuttleUnitPrice: session.shuttleUnitPrice,
+    totalShuttleCount: session.totalShuttleCount,
     participants: session.participants.map((p) => ({
       id: p.id,
       name: p.name,
       courtFraction: p.courtFraction,
       discount: p.discount,
-      shuttleCount: p.shuttleCount,
+      shuttleFraction: p.shuttleFraction,
     })),
   });
 }

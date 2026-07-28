@@ -28,6 +28,7 @@ export class BadmintonService {
 			title: dto.title,
 			courtCost: dto.courtCost,
 			shuttleUnitPrice: dto.shuttleUnitPrice,
+			totalShuttleCount: dto.totalShuttleCount,
 			shareToken: this.generateShareToken(),
 			participants: this.buildParticipants(dto.participants),
 		});
@@ -59,6 +60,8 @@ export class BadmintonService {
 		if (dto.courtCost !== undefined) session.courtCost = dto.courtCost;
 		if (dto.shuttleUnitPrice !== undefined)
 			session.shuttleUnitPrice = dto.shuttleUnitPrice;
+		if (dto.totalShuttleCount !== undefined)
+			session.totalShuttleCount = dto.totalShuttleCount;
 		if (dto.participants !== undefined)
 			session.participants = this.buildParticipants(dto.participants);
 
@@ -85,12 +88,13 @@ export class BadmintonService {
 			playedOn: session.playedOn,
 			courtCost: session.courtCost,
 			shuttleUnitPrice: session.shuttleUnitPrice,
+			totalShuttleCount: session.totalShuttleCount,
 			participants: session.participants.map((p) => ({
 				id: p.id,
 				name: p.name,
 				courtFraction: p.courtFraction,
 				discount: p.discount,
-				shuttleCount: p.shuttleCount,
+				shuttleFraction: p.shuttleFraction,
 			})),
 			computed: session.computed,
 		};
@@ -144,7 +148,7 @@ export class BadmintonService {
 				name: d.name,
 				courtFraction: d.courtFraction ?? 1,
 				discount: d.discount ?? 0,
-				shuttleCount: d.shuttleCount ?? 0,
+				shuttleFraction: d.shuttleFraction ?? 1,
 			}),
 		);
 	}
@@ -153,12 +157,13 @@ export class BadmintonService {
 		return {
 			courtCost: session.courtCost,
 			shuttleUnitPrice: session.shuttleUnitPrice,
+			totalShuttleCount: session.totalShuttleCount,
 			participants: session.participants.map((p) => ({
 				id: p.id,
 				name: p.name,
 				courtFraction: p.courtFraction,
 				discount: p.discount,
-				shuttleCount: p.shuttleCount,
+				shuttleFraction: p.shuttleFraction,
 			})),
 		};
 	}

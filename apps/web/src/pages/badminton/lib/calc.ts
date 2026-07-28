@@ -12,12 +12,13 @@ export interface CalcParticipant {
   name: string;
   courtFraction: number; // 0..1
   discount: number; // 0..1
-  shuttleCount: number; // whole shuttles
+  shuttleFraction: number; // 0..1, weight for the shared shuttle pot
 }
 
 export interface CalcInput {
   courtCost: number;
   shuttleUnitPrice: number;
+  totalShuttleCount: number; // shared pot: shuttleCost = shuttleUnitPrice × this
   participants: CalcParticipant[];
 }
 
@@ -32,11 +33,9 @@ export function computeSplit(
   input: CalcInput,
   computedAt: string = new Date().toISOString(),
 ): ComputedSnapshot {
-  const { courtCost, shuttleUnitPrice, participants } = input;
-  console.log("🚀 ~ computeSplit ~ input:", input);
+  const { courtCost, shuttleUnitPrice, totalShuttleCount, participants } = input;
 
-  const totalCount = participants.reduce((a, p) => a + p.shuttleCount, 0);
-  const shuttleCost = shuttleUnitPrice * totalCount;
+  const shuttleCost = shuttleUnitPrice * totalShuttleCount;
   const expense = courtCost + shuttleCost;
   const grandTotal = roundToUnit(expense);
 
@@ -52,25 +51,19 @@ export function computeSplit(
   }
 
   const totalFraction = sum(participants.map((p) => p.courtFraction));
+  const totalShuttleFraction = sum(participants.map((p) => p.shuttleFraction));
 
-  // Undiscounted fair share + its court/shuttle breakdown.
+  // Undiscounted fair share + its court/shuttle breakdown. Both pots are split by
+  // each player's respective weight (court by courtFraction, shuttle by shuttleFraction).
   const fair = participants.map((p) => {
     const court =
       totalFraction === 0 ? 0 : (courtCost * p.courtFraction) / totalFraction;
-    console.log("🚀 ~ computeSplit ~ shuttleCost:", shuttleCost);
-    console.log("🚀 ~ computeSplit ~ p.shuttleCount:", p.shuttleCount);
     const shuttle =
-      totalCount === 0 ? 0 : (shuttleCost * p.shuttleCount) / totalCount;
-    console.log(
-      "🚀 ~ computeSplit ~ (shuttleCost * p.shuttleCount) / totalCount:",
-      (shuttleCost * p.shuttleCount) / totalCount,
-    );
-    console.log("🚀 ~ computeSplit ~ shuttle:", shuttle);
-    console.log("🚀 ~ computeSplit ~ totalCount:", totalCount);
-
+      totalShuttleFraction === 0
+        ? 0
+        : (shuttleCost * p.shuttleFraction) / totalShuttleFraction;
     return { court, shuttle, total: court + shuttle };
   });
-  console.log("🚀 ~ computeSplit ~ fair:", fair);
 
   // Whole-bill discount redistributed by a single rescale so Σ === expense.
   const eff = participants.map((p, i) => fair[i].total * (1 - p.discount));

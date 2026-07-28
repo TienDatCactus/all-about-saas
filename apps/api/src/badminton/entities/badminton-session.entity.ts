@@ -42,9 +42,13 @@ export class BadmintonSession {
   @Column('int')
   courtCost: number;
 
-  /** Price per shuttle, VND. Total shuttle cost is DERIVED: unitPrice * sum(shuttleCount). */
+  /** Price per shuttle, VND. Total shuttle cost is DERIVED: unitPrice * totalShuttleCount. */
   @Column('int')
   shuttleUnitPrice: number;
+
+  /** Total shuttles used in the session (shared pot). Drives shuttleCost = unitPrice * this. */
+  @Column('int', { default: 0 })
+  totalShuttleCount: number;
 
   /** Unguessable token for the public read-only share link. */
   @Index({ unique: true })

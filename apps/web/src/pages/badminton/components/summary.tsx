@@ -28,6 +28,7 @@ import {
 import { formatVnd } from "@/pages/badminton/lib/format";
 import { buildSummaryText } from "@/pages/badminton/lib/summary-text";
 import type { ComputedSnapshot } from "@/services/badminton/types";
+import DataCard from "@/components/custom/data/card";
 
 interface SummaryProps {
   computed: ComputedSnapshot;
@@ -46,26 +47,24 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
     }
   };
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Split summary</CardTitle>
-        <CardDescription>
+    <DataCard
+      title="Split summary"
+      description="
           Collected always equals the total expense.
-        </CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopy}
-            disabled={!hasRows}
-          >
-            <CopyIcon data-icon="inline-start" />
-            Copy
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        {hasRows ? (
+    "
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCopy}
+          disabled={!hasRows}
+        >
+          <CopyIcon data-icon="inline-start" />
+          Copy
+        </Button>
+      }
+      content={
+        hasRows ? (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -120,8 +119,8 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
-        )}
-      </CardContent>
-    </Card>
+        )
+      }
+    />
   );
 }

@@ -27,10 +27,15 @@ export class CreateBadmintonSessionDto {
   @Min(0)
   courtCost: number;
 
-  /** Price per shuttle, VND (whole number). Total shuttle cost is derived from the counts. */
+  /** Price per shuttle, VND (whole number). Total shuttle cost = unitPrice × totalShuttleCount. */
   @IsInt()
   @Min(0)
   shuttleUnitPrice: number;
+
+  /** Total shuttles used in the session (shared pot). Defaults to 0. */
+  @IsInt()
+  @Min(0)
+  totalShuttleCount: number;
 
   @IsArray()
   @ArrayMinSize(1)

@@ -11,7 +11,8 @@ export interface EditorPlayer {
   name: string;
   courtPercent: number;
   discountPercent: number;
-  shuttleCount: number;
+  /** Weight for the shared shuttle pot, 0..100 (converted to a 0..1 fraction on save). */
+  shuttlePercent: number;
 }
 
 export interface EditorValues {
@@ -19,6 +20,7 @@ export interface EditorValues {
   playedOn: string;
   courtCost: number;
   shuttleUnitPrice: number;
+  totalShuttleCount: number;
   players: EditorPlayer[];
 }
 
@@ -38,7 +40,7 @@ export function newPlayer(name = ""): EditorPlayer {
     name,
     courtPercent: 100,
     discountPercent: 0,
-    shuttleCount: 0,
+    shuttlePercent: 100,
   };
 }
 
@@ -49,7 +51,7 @@ function seedPlayer(index: number): EditorPlayer {
     name: "",
     courtPercent: 100,
     discountPercent: 0,
-    shuttleCount: 0,
+    shuttlePercent: 100,
   };
 }
 
@@ -59,6 +61,7 @@ export function defaultValues(): EditorValues {
     playedOn: todayIso(),
     courtCost: 0,
     shuttleUnitPrice: 0,
+    totalShuttleCount: 0,
     players: [seedPlayer(0), seedPlayer(1)],
   };
 }
@@ -69,29 +72,29 @@ export function sessionToValues(s: BadmintonSession): EditorValues {
     playedOn: s.playedOn,
     courtCost: s.courtCost,
     shuttleUnitPrice: s.shuttleUnitPrice,
+    totalShuttleCount: s.totalShuttleCount,
     players: (s.participants ?? []).map((p) => ({
       id: p.id,
       userId: p.userId ?? undefined,
       name: p.name,
       courtPercent: Math.round(p.courtFraction * 100),
       discountPercent: Math.round(p.discount * 100),
-      shuttleCount: p.shuttleCount,
+      shuttlePercent: Math.round(p.shuttleFraction * 100),
     })),
   };
 }
 
 export function valuesToComputed(v: EditorValues) {
-  console.log("🚀 ~ valuesToComputed ~ v:", v);
-
   return computeSplit({
     courtCost: v.courtCost || 0,
     shuttleUnitPrice: v.shuttleUnitPrice || 0,
+    totalShuttleCount: wholeShuttles(v.totalShuttleCount),
     participants: v.players.map((p) => ({
       id: p.id,
       name: p.name.trim() || "Unnamed",
       courtFraction: clamp01((p.courtPercent || 0) / 100),
       discount: clamp01((p.discountPercent || 0) / 100),
-      shuttleCount: p.shuttleCount,
+      shuttleFraction: clamp01((p.shuttlePercent || 0) / 100),
     })),
   });
 }
@@ -102,6 +105,7 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
     title: v.title.trim() || undefined,
     courtCost: v.courtCost || 0,
     shuttleUnitPrice: v.shuttleUnitPrice || 0,
+    totalShuttleCount: wholeShuttles(v.totalShuttleCount),
     participants: v.players
       .filter((p) => p.name.trim().length > 0)
       .map((p) => ({
@@ -109,7 +113,7 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
         name: p.name.trim(),
         courtFraction: clamp01((p.courtPercent || 0) / 100),
         discount: clamp01((p.discountPercent || 0) / 100),
-        shuttleCount: wholeShuttles(p.shuttleCount),
+        shuttleFraction: clamp01((p.shuttlePercent || 0) / 100),
       })),
   };
 }

@@ -25,7 +25,7 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
             <TableHeader>
               <TableRow>
                 <TableCell>Player</TableCell>
-                <TableCell className="text-right">Shuttles</TableCell>
+                <TableCell className="text-right">Shuttle %</TableCell>
                 <TableCell className="text-right">Court %</TableCell>
                 <TableCell className="text-right">Discount %</TableCell>
                 <TableCell>Remove</TableCell>
@@ -48,6 +48,7 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
               <Button
                 type="button"
                 variant="outline"
+
                 size="sm"
                 onClick={() => field.pushValue(newPlayer())}
               >

@@ -15,15 +15,17 @@ export interface CalcParticipant {
   courtFraction: number;
   /** Whole-bill discount, 0..1 (e.g. 0.15). Redistributed onto other players. */
   discount: number;
-  /** Whole shuttles attributed to this player. */
-  shuttleCount: number;
+  /** This player's weight for the shared shuttle pot, 0..1. Split works like courtFraction. */
+  shuttleFraction: number;
 }
 
 export interface CalcInput {
   /** Court cost, VND. */
   courtCost: number;
-  /** Price per shuttle, VND. Total shuttle cost is derived. */
+  /** Price per shuttle, VND. */
   shuttleUnitPrice: number;
+  /** Total shuttles used in the session (shared pot). shuttleCost = shuttleUnitPrice × this. */
+  totalShuttleCount: number;
   participants: CalcParticipant[];
 }
 
@@ -39,7 +41,8 @@ const roundToUnit = (x: number): number => Math.round(x / ROUND_UNIT) * ROUND_UN
  *
  * Model (see docs/badminton-splitter-spec.md §5):
  *  - Court fee is split time-proportionally by `courtFraction`.
- *  - Shuttle fee is split by `shuttleCount` (total shuttle cost = unitPrice × Σcount).
+ *  - Shuttle fee is a shared pot (shuttleCost = unitPrice × totalShuttleCount) split by
+ *    each player's `shuttleFraction` weight — exactly like the court split.
  *  - A player's discount reduces their WHOLE bill (court + shuttle); the shortfall is
  *    redistributed proportionally onto everyone via a single rescale, so the collected
  *    amount still equals the expense.
@@ -52,10 +55,9 @@ export function computeSplit(
   input: CalcInput,
   computedAt: string,
 ): ComputedSnapshot {
-  const { courtCost, shuttleUnitPrice, participants } = input;
+  const { courtCost, shuttleUnitPrice, totalShuttleCount, participants } = input;
 
-  const totalCount = sum(participants.map((p) => p.shuttleCount));
-  const shuttleCost = shuttleUnitPrice * totalCount;
+  const shuttleCost = shuttleUnitPrice * totalShuttleCount;
   const expense = courtCost + shuttleCost;
   const grandTotal = roundToUnit(expense);
 
@@ -71,11 +73,16 @@ export function computeSplit(
   }
 
   const totalFraction = sum(participants.map((p) => p.courtFraction));
+  const totalShuttleFraction = sum(participants.map((p) => p.shuttleFraction));
 
-  // Undiscounted fair share per player, and its court/shuttle breakdown.
+  // Undiscounted fair share per player, and its court/shuttle breakdown. Both the
+  // court pot and the shuttle pot are split by each player's respective weight.
   const fair = participants.map((p) => {
     const court = totalFraction === 0 ? 0 : (courtCost * p.courtFraction) / totalFraction;
-    const shuttle = totalCount === 0 ? 0 : (shuttleCost * p.shuttleCount) / totalCount;
+    const shuttle =
+      totalShuttleFraction === 0
+        ? 0
+        : (shuttleCost * p.shuttleFraction) / totalShuttleFraction;
     return { court, shuttle, total: court + shuttle };
   });
 
