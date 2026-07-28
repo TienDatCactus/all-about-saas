@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { SessionEditor } from "../components/session-editor";
+import { SessionEditor } from "../components/SessionEditor";
 import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 
 export default function NewSessionPage() {

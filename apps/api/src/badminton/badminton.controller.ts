@@ -35,7 +35,6 @@ export class BadmintonController {
 	@UseGuards(JwtAuthGuard)
 	// @CheckPolicies({ action: 'create', resource: 'BadmintonSession' })
 	create(@Req() req, @Body() dto: CreateBadmintonSessionDto) {
-		Logger.debug(req.user);
 		return this.service.create(req.user.id, dto);
 	}
 

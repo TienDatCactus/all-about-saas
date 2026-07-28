@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -17,21 +17,6 @@ import type { MutationStatus } from "@tanstack/react-query";
 /**
  * CVA variants for the underlying button element.
  */
-const buttonVariants = cva(
-  "relative w-25 gap-1 overflow-hidden disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-100",
-  {
-    variants: {
-      size: {
-        default: "h-9 px-3.5 py-2 has-[>svg]:px-3",
-        sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-4.5 has-[>svg]:px-4",
-      },
-    },
-    defaultVariants: {
-      size: "default",
-    },
-  },
-);
 
 /**
  * CVA variants for the progress indicator.

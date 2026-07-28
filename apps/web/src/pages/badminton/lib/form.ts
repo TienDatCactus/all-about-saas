@@ -1,4 +1,4 @@
-import { computeSplit } from "@/lib/badminton/calc";
+import { computeSplit } from "@/pages/badminton/lib/calc";
 import type {
   BadmintonSession,
   CreateSessionIn,
@@ -28,13 +28,18 @@ const uid = () =>
     : Math.random().toString(36).slice(2);
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
-const wholeShuttles = (n: number) => Math.max(0, Math.round(n) || 0);
-
+const wholeShuttles = (n: unknown) => Math.max(0, Math.trunc(Number(n)) || 0);
 export const todayIso = () => new Date().toISOString().slice(0, 10);
 
 /** Random-keyed player for client-side adds (after mount). */
 export function newPlayer(name = ""): EditorPlayer {
-  return { id: uid(), name, courtPercent: 100, discountPercent: 0, shuttleCount: 0 };
+  return {
+    id: uid(),
+    name,
+    courtPercent: 100,
+    discountPercent: 0,
+    shuttleCount: 0,
+  };
 }
 
 /** Deterministic-keyed player for the initial render, so SSR and client match. */
@@ -76,6 +81,8 @@ export function sessionToValues(s: BadmintonSession): EditorValues {
 }
 
 export function valuesToComputed(v: EditorValues) {
+  console.log("🚀 ~ valuesToComputed ~ v:", v);
+
   return computeSplit({
     courtCost: v.courtCost || 0,
     shuttleUnitPrice: v.shuttleUnitPrice || 0,
@@ -84,7 +91,7 @@ export function valuesToComputed(v: EditorValues) {
       name: p.name.trim() || "Unnamed",
       courtFraction: clamp01((p.courtPercent || 0) / 100),
       discount: clamp01((p.discountPercent || 0) / 100),
-      shuttleCount: wholeShuttles(p.shuttleCount),
+      shuttleCount: p.shuttleCount,
     })),
   });
 }

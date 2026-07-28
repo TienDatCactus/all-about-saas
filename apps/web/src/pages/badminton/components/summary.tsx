@@ -25,8 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatVnd } from "@/lib/badminton/format";
-import { buildSummaryText } from "@/lib/badminton/summary-text";
+import { formatVnd } from "@/pages/badminton/lib/format";
+import { buildSummaryText } from "@/pages/badminton/lib/summary-text";
 import type { ComputedSnapshot } from "@/services/badminton/types";
 
 interface SummaryProps {
@@ -45,7 +45,6 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
       toast.error("Couldn't copy — check clipboard permissions");
     }
   };
-
   return (
     <Card>
       <CardHeader>

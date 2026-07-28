@@ -1,10 +1,10 @@
 import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
+	Column,
+	Entity,
+	Index,
+	JoinColumn,
+	ManyToOne,
+	PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { BadmintonSession } from './badminton-session.entity';
@@ -20,41 +20,41 @@ import { BadmintonSession } from './badminton-session.entity';
 @Entity()
 @Index(['sessionId', 'userId'], { unique: true, where: '"userId" IS NOT NULL' })
 export class BadmintonParticipant {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+	@PrimaryGeneratedColumn('uuid')
+	id: string;
 
-  @ManyToOne(() => BadmintonSession, (s) => s.participants, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'sessionId' })
-  session: BadmintonSession;
+	@ManyToOne(() => BadmintonSession, (s) => s.participants, {
+		onDelete: 'CASCADE',
+	})
+	@JoinColumn({ name: 'sessionId' })
+	session: BadmintonSession;
 
-  @Column('uuid')
-  @Index()
-  sessionId: string;
+	@Column('uuid')
+	@Index()
+	sessionId: string;
 
-  /** Linked app user, if this participant is a registered account. Optional. */
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'userId' })
-  user?: User;
+	/** Linked app user, if this participant is a registered account. Optional. */
+	@ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+	@JoinColumn({ name: 'userId' })
+	user?: User;
 
-  @Column('uuid', { nullable: true })
-  @Index()
-  userId?: string;
+	@Column('uuid', { nullable: true })
+	@Index()
+	userId?: string;
 
-  /** Display name: free-text guest name, or a snapshot of the linked user's name. */
-  @Column()
-  name: string;
+	/** Display name: free-text guest name, or a snapshot of the linked user's name. */
+	@Column()
+	name: string;
 
-  /** Played fraction of the session, 0..1. Drives the time-proportional court split; 0 = excluded from court. */
-  @Column('float', { default: 1 })
-  courtFraction: number;
+	/** Played fraction of the session, 0..1. Drives the time-proportional court split; 0 = excluded from court. */
+	@Column('float', { default: 1 })
+	courtFraction: number;
 
-  /** Discount on the whole bill, 0..1 (e.g. 0.15). Redistributed onto other players. */
-  @Column('float', { default: 0 })
-  discount: number;
+	/** Discount on the whole bill, 0..1 (e.g. 0.15). Redistributed onto other players. */
+	@Column('float', { default: 0 })
+	discount: number;
 
-  /** Whole shuttles attributed to this player. 0 = excluded from shuttle fee. */
-  @Column('int', { default: 0 })
-  shuttleCount: number;
+	/** Whole shuttles attributed to this player. 0 = excluded from shuttle fee. */
+	@Column('int', { default: 0 })
+	shuttleCount: number;
 }

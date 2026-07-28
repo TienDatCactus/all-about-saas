@@ -17,7 +17,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatVnd } from "@/lib/badminton/format";
+import { formatVnd } from "@/pages/badminton/lib/format";
 import { useSessionsQuery } from "@/services/badminton/queries";
 import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 

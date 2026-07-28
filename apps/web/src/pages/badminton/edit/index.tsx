@@ -9,9 +9,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSessionQuery } from "@/services/badminton/queries";
 import { PageHeader, PageShell } from "../../../components/custom/page-shell";
-import { ShareLink } from "../components/share-link";
-import { SessionEditor } from "../components/session-editor";
-import { sessionToValues } from "../components/form";
+import { ShareLink } from "../components/ShareLink";
+import { SessionEditor } from "../components/SessionEditor";
+import { sessionToValues } from "../lib/form";
 
 export default function EditSessionPage({ sessionId }: { sessionId: string }) {
   const { data, isLoading, isError } = useSessionQuery(sessionId);

@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EmailTemplate } from '@transactional/emails';
@@ -168,10 +168,17 @@ export class AuthService {
 			if (!session || !!session.revokedAt || session.expiresAt < new Date()) {
 				throw new HttpException('Session expired or revoked', 401);
 			}
+			// Re-sign from a clean payload: the decoded token still carries `iat`/`exp`,
+			// and jsonwebtoken rejects `expiresIn` when `exp` is already present.
+			const newPayload: PayloadDto = {
+				sub: payload.sub,
+				email: payload.email,
+			};
 			const newAccessToken =
-				await this.tokensService.generateAccessToken(payload);
+				await this.tokensService.generateAccessToken(newPayload);
 			return newAccessToken;
 		} catch (error) {
+			Logger.debug(`Refresh token verification failed: ${error}`);
 			throw new HttpException('Invalid refresh token : ' + error, 401);
 		}
 	}

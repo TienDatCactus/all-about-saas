@@ -1,7 +1,4 @@
-import type {
-  ComputedRow,
-  ComputedSnapshot,
-} from "@/services/badminton/types";
+import type { ComputedRow, ComputedSnapshot } from "@/services/badminton/types";
 
 /**
  * Client-side port of the split algorithm for INSTANT preview while editing.
@@ -36,8 +33,9 @@ export function computeSplit(
   computedAt: string = new Date().toISOString(),
 ): ComputedSnapshot {
   const { courtCost, shuttleUnitPrice, participants } = input;
+  console.log("🚀 ~ computeSplit ~ input:", input);
 
-  const totalCount = sum(participants.map((p) => p.shuttleCount));
+  const totalCount = participants.reduce((a, p) => a + p.shuttleCount, 0);
   const shuttleCost = shuttleUnitPrice * totalCount;
   const expense = courtCost + shuttleCost;
   const grandTotal = roundToUnit(expense);
@@ -59,10 +57,20 @@ export function computeSplit(
   const fair = participants.map((p) => {
     const court =
       totalFraction === 0 ? 0 : (courtCost * p.courtFraction) / totalFraction;
+    console.log("🚀 ~ computeSplit ~ shuttleCost:", shuttleCost);
+    console.log("🚀 ~ computeSplit ~ p.shuttleCount:", p.shuttleCount);
     const shuttle =
       totalCount === 0 ? 0 : (shuttleCost * p.shuttleCount) / totalCount;
+    console.log(
+      "🚀 ~ computeSplit ~ (shuttleCost * p.shuttleCount) / totalCount:",
+      (shuttleCost * p.shuttleCount) / totalCount,
+    );
+    console.log("🚀 ~ computeSplit ~ shuttle:", shuttle);
+    console.log("🚀 ~ computeSplit ~ totalCount:", totalCount);
+
     return { court, shuttle, total: court + shuttle };
   });
+  console.log("🚀 ~ computeSplit ~ fair:", fair);
 
   // Whole-bill discount redistributed by a single rescale so Σ === expense.
   const eff = participants.map((p, i) => fair[i].total * (1 - p.discount));
@@ -86,6 +94,8 @@ export function computeSplit(
     roundedTotal[order[k].i] += ROUND_UNIT;
   }
 
+  // Split each rounded total back into court/shuttle for display, preserving the
+  // pre-discount court:shuttle ratio. court + shuttle === total per row (both VND).
   const rows: ComputedRow[] = participants.map((p, i) => {
     const total = roundedTotal[i];
     const fairTotal = fair[i].total;

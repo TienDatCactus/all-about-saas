@@ -7,11 +7,11 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { computeSplit } from "@/lib/badminton/calc";
+import { computeSplit } from "@/pages/badminton/lib/calc";
 import { usePublicSessionQuery } from "@/services/badminton/queries";
 import type { PublicSession } from "@/services/badminton/types";
 import { PageHeader, PageShell } from "../../../components/custom/page-shell";
-import { BadmintonSummary } from "../components/summary";
+import { BadmintonSummary } from "../components/Summary";
 
 function toComputed(session: PublicSession) {
   if (session.computed) return session.computed;
