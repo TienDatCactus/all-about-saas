@@ -1,4 +1,4 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EmailTemplate } from '@transactional/emails';
@@ -78,8 +78,7 @@ export class AuthService {
 				ipAddress: sessionInfo.ipAddress,
 				userAgent: sessionInfo.userAgent,
 				expiresAt: new Date(
-					// refreshExpiresIn is in seconds; Date math is in ms.
-					Date.now() + +this.configService.get('jwt.refreshExpiresIn') * 1000,
+					Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
 				),
 			}),
 		);
@@ -141,8 +140,7 @@ export class AuthService {
 			ipAddress: sessionInfo.ipAddress,
 			userAgent: sessionInfo.userAgent,
 			expiresAt: new Date(
-				// refreshExpiresIn is in seconds; Date math is in ms.
-				Date.now() + +this.configService.get('jwt.refreshExpiresIn') * 1000,
+				Date.now() + +this.configService.get('jwt.refreshExpiresIn'),
 			),
 		});
 		await this.sessionRepo.save(session);
@@ -168,18 +166,11 @@ export class AuthService {
 			if (!session || !!session.revokedAt || session.expiresAt < new Date()) {
 				throw new HttpException('Session expired or revoked', 401);
 			}
-			// Re-sign from a clean payload: the decoded token still carries `iat`/`exp`,
-			// and jsonwebtoken rejects `expiresIn` when `exp` is already present.
-			const newPayload: PayloadDto = {
-				sub: payload.sub,
-				email: payload.email,
-			};
 			const newAccessToken =
-				await this.tokensService.generateAccessToken(newPayload);
+				await this.tokensService.generateAccessToken(payload);
 			return newAccessToken;
-		} catch (error) {
-			Logger.debug(`Refresh token verification failed: ${error}`);
-			throw new HttpException('Invalid refresh token : ' + error, 401);
+		} catch {
+			throw new HttpException('Invalid refresh token', 401);
 		}
 	}
 
@@ -437,11 +428,9 @@ export class AuthService {
 	setCookie(res: Response, token: string) {
 		return res.cookie('refresh_token', token, {
 			httpOnly: true,
-			secure: this.configService.get<boolean>('cookie.secure') ?? true,
-			sameSite:
-				this.configService.get<'lax' | 'strict' | 'none'>('cookie.sameSite') ??
-				'lax',
-			maxAge: +this.configService.get('jwt.refreshExpiresIn') * 1000,
+			secure: true,
+			sameSite: 'lax',
+			maxAge: +this.configService.get('jwt.refreshExpiresIn'),
 		});
 	}
 }

@@ -40,13 +40,4 @@ export default () => ({
 	},
 	basePassword: process.env.BASE_PASSWORD,
 	frontendUrl: process.env.FRONTEND_URL,
-	cookie: {
-		// Cross-origin dev (web:3001 ↔ api:8000) needs sameSite='none' + secure=true.
-		// Same-site prod (web + api behind one domain via reverse proxy) can use 'lax'.
-		sameSite:
-			(process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax',
-		secure: process.env.COOKIE_SECURE
-			? process.env.COOKIE_SECURE === 'true'
-			: true,
-	},
 });

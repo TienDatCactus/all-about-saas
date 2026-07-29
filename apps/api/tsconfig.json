@@ -13,13 +13,7 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
-    "paths": {
-      "rxjs": ["../../node_modules/rxjs"],
-      "rxjs/*": ["../../node_modules/rxjs/*"]
-    },
     "incremental": true,
-    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
@@ -27,14 +21,6 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "strictPropertyInitialization": false,
-    "types": [
-      "jest",
-      "node"
-    ]
-  },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "test"
-  ]
+    "types": ["jest", "node"]
+  }
 }

@@ -1,34 +1,35 @@
+"use client"
+
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldDescription,
-} from "@/components/ui/field";
-import type { DeepKeys } from "@tanstack/react-form";
-import type React from "react";
-import type { ReactNode } from "react";
+} from "@/components/ui/field"
+import type { DeepKeys } from "@tanstack/react-form"
+import type React from "react"
+import type { ReactNode } from "react"
 
 type FormFieldProps<TFormData> = {
-  form: any;
-  name: DeepKeys<TFormData>;
+  form: any
+  name: DeepKeys<TFormData>
 
-  label?: string | React.ReactNode;
-  description?: string | React.ReactNode;
-  showError?: boolean;
+  label?: string | React.ReactNode
+  description?: string | React.ReactNode
+  showError?: boolean
   children: (props: {
-    field: any;
+    field: any
     inputProps: {
-      name: string;
-      value: any;
-      onBlur: () => void;
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-      "aria-invalid": boolean;
-    };
+      name: string
+      value: any
+      onBlur: () => void
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+      "aria-invalid": boolean
+    }
 
-    isInvalid: boolean;
-  }) => ReactNode;
-  
-};
+    isInvalid: boolean
+  }) => ReactNode
+}
 
 export function FormField<TFormData>({
   form,
@@ -40,11 +41,10 @@ export function FormField<TFormData>({
 }: FormFieldProps<TFormData>) {
   return (
     <form.Field
-    
       name={name}
       children={(field: any) => {
         const isInvalid =
-          field.state.meta.isTouched && !field.state.meta.isValid;
+          field.state.meta.isTouched && !field.state.meta.isValid
 
         return (
           <Field data-invalid={isInvalid}>
@@ -72,8 +72,8 @@ export function FormField<TFormData>({
               <FieldError errors={field.state.meta.errors} />
             )}
           </Field>
-        );
+        )
       }}
     />
-  );
+  )
 }

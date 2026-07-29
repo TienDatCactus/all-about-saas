@@ -12,7 +12,6 @@ import helmet from 'helmet';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { BadmintonModule } from './badminton/badminton.module';
 import { CaslModule } from './casl/casl.module';
 import configuration from './common/config/configuration';
 import database from './common/config/database';
@@ -46,7 +45,6 @@ import { UsersModule } from './users/users.module';
 		}),
 
 		MailModule,
-		BadmintonModule,
 	],
 	controllers: [AppController],
 	providers: [
