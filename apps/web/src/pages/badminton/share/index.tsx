@@ -30,7 +30,7 @@ function toComputed(session: PublicSession) {
   });
 }
 
-export default function PublicSessionPage({
+export default function BadmintonSummaryPage({
   shareToken,
 }: {
   shareToken: string;
@@ -45,7 +45,7 @@ export default function PublicSessionPage({
       />
 
       {isLoading ? (
-        <Skeleton className="h-80 w-full max-w-xl rounded-xl" />
+        <Skeleton className="h-80 w-full rounded-xl" />
       ) : isError || !data ? (
         <Empty>
           <EmptyHeader>
@@ -59,7 +59,7 @@ export default function PublicSessionPage({
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="max-w-xl">
+        <div className="w-full">
           <BadmintonSummary
             computed={toComputed(data)}
             meta={{ title: data.title, playedOn: data.playedOn }}
