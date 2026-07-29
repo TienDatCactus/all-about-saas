@@ -27,9 +27,6 @@ import { FacebookStrategy } from './strategy/facebook.strategy';
 			inject: [ConfigService],
 			useFactory: (configService: ConfigService) => ({
 				secret: configService.get<string>('jwt.secret')!,
-				signOptions: {
-					expiresIn: Number(configService.get<string>('jwt.expiresIn')!),
-				},
 			}),
 		}),
 		PassportModule,

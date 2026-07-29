@@ -3,6 +3,7 @@ import {
 	Body,
 	Controller,
 	Get,
+	Logger,
 	Post,
 	Req,
 	Res,
@@ -167,6 +168,7 @@ export class AuthController {
 	@Post('refresh')
 	async refresh(@Req() req) {
 		const refreshToken = req.cookies['refresh_token'];
+		Logger.debug(`Refresh token: ${refreshToken}`);
 		if (!refreshToken) {
 			throw new Error('Refresh token not found');
 		}

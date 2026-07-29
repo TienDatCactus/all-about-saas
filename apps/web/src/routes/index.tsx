@@ -1,10 +1,11 @@
-import { toast } from "@/components/custom/toast"
-import { Button } from "@/components/ui/button"
-import { createFileRoute } from "@tanstack/react-router"
+import { toast } from "@/components/custom/toast";
+import { Button } from "@/components/ui/button";
+import { authApi } from "@/services/auth";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   component: App,
-})
+});
 
 function App() {
   return (
@@ -17,12 +18,12 @@ function App() {
         </div>
         <Button
           onClick={() => {
-            toast("dat")
+            authApi.refresh();
           }}
         >
           dat
         </Button>
       </div>
     </div>
-  )
+  );
 }

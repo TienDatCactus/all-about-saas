@@ -10,6 +10,11 @@
     "check-types": "turbo run check-types",
     "email:dev": "cd packages/transactional && npm run email",
     "email:build": "cd packages/transactional && npm run build",
+    "docker:up": "docker compose --env-file apps/api/.env.development.local up -d",
+    "docker:down": "docker compose down",
+    "docker:reset": "docker compose down -v",
+    "docker:logs": "docker compose logs -f",
+    "bootstrap": "npm install && npm run docker:up",
     "prepare": "husky"
   },
   "devDependencies": {

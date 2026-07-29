@@ -3,6 +3,7 @@ import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PayloadDto } from '../dto/jwt-payload.dto';
+import { ConfigService } from '@nestjs/config';
 
 export interface GeneratedToken {
 	rawToken: string;
@@ -11,14 +12,23 @@ export interface GeneratedToken {
 
 @Injectable()
 export class TokensService {
-	constructor(private readonly jwtService: JwtService) {}
+	constructor(
+		private readonly jwtService: JwtService,
+		private readonly configService: ConfigService,
+	) {}
 
 	// ==========================================
 	// JWT Support
 	// ==========================================
 
 	async signJwt(payload: any, options?: JwtSignOptions): Promise<string> {
-		return this.jwtService.signAsync(payload, options);
+		// Strip reserved claims so a re-signed (previously decoded) payload can't
+		// clash with `expiresIn`/`notBefore` — jsonwebtoken throws if both are set.
+		const { exp, iat, nbf, ...rest } = payload ?? {};
+		void exp;
+		void iat;
+		void nbf;
+		return this.jwtService.signAsync(rest, options);
 	}
 
 	async verifyJwt(token: string, options?: JwtVerifyOptions): Promise<any> {
@@ -27,13 +37,15 @@ export class TokensService {
 
 	async generateAccessToken(payload: PayloadDto): Promise<string> {
 		return this.signJwt(payload, {
-			expiresIn: '1h',
+			expiresIn: Number(this.configService.get<string>('jwt.expiresIn')!),
 		});
 	}
 
 	async generateRefreshToken(payload: PayloadDto): Promise<string> {
 		return this.signJwt(payload, {
-			expiresIn: '7d',
+			expiresIn: Number(
+				this.configService.get<string>('jwt.refreshExpiresIn')!,
+			),
 		});
 	}
 

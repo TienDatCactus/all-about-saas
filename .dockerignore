@@ -1,0 +1,26 @@
+# Keep the Docker build context small and secret-free.
+# Everything here is excluded from `COPY . .` in any Dockerfile.
+
+**/node_modules
+**/dist
+**/build
+**/.turbo
+**/.next
+**/coverage
+**/.git
+**/.github
+**/.husky
+
+# Never ship real secrets into an image; examples are fine.
+**/.env
+**/.env.*
+!**/.env.example
+
+**/.vscode
+**/.idea
+**/*.log
+**/.DS_Store
+
+Dockerfile*
+**/Dockerfile*
+docker-compose*.yml

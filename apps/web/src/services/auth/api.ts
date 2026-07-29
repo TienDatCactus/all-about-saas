@@ -10,7 +10,11 @@ import type {
 
 export const authApi = {
   login: async (data: LoginIn): Promise<string> => {
-    return http.post(AUTH.login, data)
+    const res = await http.post<{ accessToken: string } | string>(
+      AUTH.login,
+      data,
+    )
+    return typeof res === "string" ? res : res.accessToken
   },
   logout: async (): Promise<void> => {
     return http.post(AUTH.logout)
@@ -28,7 +32,8 @@ export const authApi = {
     window.location.href = AUTH.facebookLogin
   },
   refresh: async (): Promise<string> => {
-    return http.post(AUTH.refresh)
+    const res = await http.post<{ accessToken: string } | string>(AUTH.refresh)
+    return typeof res === "string" ? res : res.accessToken
   },
   verifyEmail: async (data: VerifyEmailIn) => {
     return http.post(AUTH.verifyEmail, data)
