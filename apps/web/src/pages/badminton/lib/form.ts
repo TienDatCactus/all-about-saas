@@ -103,18 +103,24 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
   return {
     playedOn: v.playedOn,
     title: v.title.trim() || undefined,
-    courtCost: v.courtCost || 0,
-    shuttleUnitPrice: v.shuttleUnitPrice || 0,
+    courtCost: v.courtCost ?? 0,
+    shuttleUnitPrice: v.shuttleUnitPrice ?? 0,
     totalShuttleCount: wholeShuttles(v.totalShuttleCount),
-    participants: v.players
-      .filter((p) => p.name.trim().length > 0)
-      .map((p) => ({
+    participants: v.players.reduce<any>((acc, p) => {
+      const name = p.name.trim();
+
+      if (!name) return acc;
+
+      acc.push({
         userId: p.userId,
-        name: p.name.trim(),
-        courtFraction: clamp01((p.courtPercent || 0) / 100),
-        discount: clamp01((p.discountPercent || 0) / 100),
-        shuttleFraction: clamp01((p.shuttlePercent || 0) / 100),
-      })),
+        name,
+        courtFraction: clamp01((p.courtPercent ?? 0) / 100),
+        discount: clamp01((p.discountPercent ?? 0) / 100),
+        shuttleFraction: clamp01((p.shuttlePercent ?? 0) / 100),
+      });
+
+      return acc;
+    }, []),
   };
 }
 
