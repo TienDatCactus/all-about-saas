@@ -30,9 +30,36 @@ export class BadmintonService {
 			shuttleUnitPrice: dto.shuttleUnitPrice,
 			totalShuttleCount: dto.totalShuttleCount,
 			shareToken: this.generateShareToken(),
-			participants: this.buildParticipants(dto.participants),
 		});
-		session.computed = computeSplit(this.toCalcInput(session), this.now());
+		const { participants } = dto;
+		// Attach after the session object exists so each child carries the relation
+		// reference — TypeORM then resolves the FK at insert time on both paths.
+		session.participants = participants.map((d) =>
+			this.participantRepo.create({
+				id: randomUUID(),
+				userId: d.userId,
+				name: d.name,
+				courtFraction: d.courtFraction ?? 1,
+				discount: d.discount ?? 0,
+				shuttleFraction: d.shuttleFraction ?? 1,
+				session,
+			}),
+		);
+		session.computed = computeSplit(
+			{
+				courtCost: session.courtCost,
+				shuttleUnitPrice: session.shuttleUnitPrice,
+				totalShuttleCount: session.totalShuttleCount,
+				participants: session.participants.map((p) => ({
+					id: p.id,
+					name: p.name,
+					courtFraction: p.courtFraction,
+					discount: p.discount,
+					shuttleFraction: p.shuttleFraction,
+				})),
+			},
+			new Date().toISOString(),
+		);
 		return this.sessionRepo.save(session);
 	}
 
@@ -55,18 +82,49 @@ export class BadmintonService {
 	async update(ownerId: string, id: string, dto: UpdateBadmintonSessionDto) {
 		const session = await this.findOneOwned(ownerId, id);
 
-		if (dto.playedOn !== undefined) session.playedOn = dto.playedOn;
-		if (dto.title !== undefined) session.title = dto.title;
-		if (dto.courtCost !== undefined) session.courtCost = dto.courtCost;
-		if (dto.shuttleUnitPrice !== undefined)
-			session.shuttleUnitPrice = dto.shuttleUnitPrice;
-		if (dto.totalShuttleCount !== undefined)
-			session.totalShuttleCount = dto.totalShuttleCount;
-		if (dto.participants !== undefined)
-			session.participants = this.buildParticipants(dto.participants);
+		const { participants, ...rest } = dto;
 
-		session.computed = computeSplit(this.toCalcInput(session), this.now());
-		// orphanedRowAction: 'delete' removes participants dropped from the array.
+		Object.assign(
+			session,
+			Object.fromEntries(
+				Object.entries(rest).filter(([, v]) => v !== undefined),
+			),
+		);
+		Logger.debug(
+			`Updating session ${id} with data: ${JSON.stringify(session)}`,
+		);
+		if (participants !== undefined) {
+			await this.participantRepo
+				.delete({
+					sessionId: session.id,
+				})
+				.then(() => {
+					session.participants = participants.map((p) =>
+						this.participantRepo.create({
+							...p,
+							session,
+							sessionId: session.id,
+						}),
+					);
+				});
+		}
+
+		session.computed = computeSplit(
+			{
+				courtCost: session.courtCost,
+				shuttleUnitPrice: session.shuttleUnitPrice,
+				totalShuttleCount: session.totalShuttleCount,
+				participants: session.participants.map((p) => ({
+					id: p.id,
+					name: p.name,
+					courtFraction: p.courtFraction,
+					discount: p.discount,
+					shuttleFraction: p.shuttleFraction,
+				})),
+			},
+			new Date().toISOString(),
+		);
+
 		return this.sessionRepo.save(session);
 	}
 
@@ -136,43 +194,7 @@ export class BadmintonService {
 		};
 	}
 
-	// --- helpers ---
-
-	private buildParticipants(
-		dtos: ParticipantInputDto[],
-	): BadmintonParticipant[] {
-		return dtos.map((d) =>
-			this.participantRepo.create({
-				id: randomUUID(),
-				userId: d.userId,
-				name: d.name,
-				courtFraction: d.courtFraction ?? 1,
-				discount: d.discount ?? 0,
-				shuttleFraction: d.shuttleFraction ?? 1,
-			}),
-		);
-	}
-
-	private toCalcInput(session: BadmintonSession): CalcInput {
-		return {
-			courtCost: session.courtCost,
-			shuttleUnitPrice: session.shuttleUnitPrice,
-			totalShuttleCount: session.totalShuttleCount,
-			participants: session.participants.map((p) => ({
-				id: p.id,
-				name: p.name,
-				courtFraction: p.courtFraction,
-				discount: p.discount,
-				shuttleFraction: p.shuttleFraction,
-			})),
-		};
-	}
-
 	private generateShareToken(): string {
 		return randomBytes(16).toString('base64url'); // 22 chars, unguessable
-	}
-
-	private now(): string {
-		return new Date().toISOString();
 	}
 }

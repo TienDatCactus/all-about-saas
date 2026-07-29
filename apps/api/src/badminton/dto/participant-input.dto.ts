@@ -8,7 +8,7 @@ import {
   Min,
 } from 'class-validator';
 
-export class ParticipantInputDto {
+export class  ParticipantInputDto {
   /** Linked app user id, if this participant is a registered account. Omit for a free-text guest. */
   @IsOptional()
   @IsUUID()

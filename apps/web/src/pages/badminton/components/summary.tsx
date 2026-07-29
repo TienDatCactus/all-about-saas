@@ -1,14 +1,6 @@
-import { CalculatorIcon, CopyIcon } from "@phosphor-icons/react";
+import DataCard from "@/components/custom/data/card";
 import { toast } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -28,7 +20,7 @@ import {
 import { formatVnd } from "@/pages/badminton/lib/format";
 import { buildSummaryText } from "@/pages/badminton/lib/summary-text";
 import type { ComputedSnapshot } from "@/services/badminton/types";
-import DataCard from "@/components/custom/data/card";
+import { CalculatorIcon, CopyIcon } from "@phosphor-icons/react";
 
 interface SummaryProps {
   computed: ComputedSnapshot;
@@ -38,8 +30,9 @@ interface SummaryProps {
 export function BadmintonSummary({ computed, meta }: SummaryProps) {
   const hasRows = computed.rows.length > 0;
 
-  const handleCopy = async () => {
+  const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     try {
+      e.preventDefault();
       await navigator.clipboard.writeText(buildSummaryText(computed, meta));
       toast.success("Summary copied to clipboard");
     } catch {
