@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { BadmintonService } from './badminton.service';
 import { CreateBadmintonSessionDto } from './dto/create-badminton-session.dto';
+import { BadmintonParticipant } from './entities/badminton-participant.entity';
 
 /** Minimal TypeORM Repository stub — create() echoes its input, save() echoes the entity. */
 function mockRepo() {
@@ -14,20 +15,36 @@ function mockRepo() {
   };
 }
 
+/** DataSource stub whose transaction() just runs the callback with a shared manager. */
+function mockDataSource() {
+  const manager = {
+    delete: jest.fn(),
+    save: jest.fn(async (x: unknown) => x),
+  };
+  const dataSource = {
+    transaction: jest.fn(async (cb: (m: unknown) => unknown) => cb(manager)),
+  };
+  return { manager, dataSource };
+}
+
 describe('BadmintonService', () => {
   let service: BadmintonService;
   let sessionRepo: ReturnType<typeof mockRepo>;
   let participantRepo: ReturnType<typeof mockRepo>;
   let usersRepo: ReturnType<typeof mockRepo>;
+  let manager: ReturnType<typeof mockDataSource>['manager'];
+  let dataSource: ReturnType<typeof mockDataSource>['dataSource'];
 
   beforeEach(() => {
     sessionRepo = mockRepo();
     participantRepo = mockRepo();
     usersRepo = mockRepo();
+    ({ manager, dataSource } = mockDataSource());
     service = new BadmintonService(
       sessionRepo as never,
       participantRepo as never,
       usersRepo as never,
+      dataSource as never,
     );
   });
 
@@ -108,7 +125,88 @@ describe('BadmintonService', () => {
 
     expect(res.courtCost).toBe(200_000);
     expect(res.computed.courtCost).toBe(200_000);
-    expect(sessionRepo.save).toHaveBeenCalledTimes(1);
+    expect(manager.save).toHaveBeenCalledTimes(1);
+    // No participant payload → nothing to replace.
+    expect(manager.delete).not.toHaveBeenCalled();
+  });
+
+  it('update: replacement participants get generated ids that the snapshot rows reference', async () => {
+    const existing = {
+      id: 's1',
+      ownerId: 'o1',
+      playedOn: '2026-07-25',
+      courtCost: 100_000,
+      shuttleUnitPrice: 1_000,
+      totalShuttleCount: 10,
+      participants: [
+        { id: 'p-old', name: 'Old', courtFraction: 1, discount: 0, shuttleFraction: 1 },
+      ],
+      computed: undefined,
+    };
+    sessionRepo.findOne.mockResolvedValue(existing);
+
+    const res: any = await service.update('o1', 's1', {
+      participants: [{ name: 'X' }, { name: 'Y' }],
+    });
+
+    expect(res.participants).toHaveLength(2);
+    for (const p of res.participants) {
+      expect(typeof p.id).toBe('string');
+      expect(p.id).not.toBe('p-old');
+    }
+    // The stored snapshot must reference the participants we actually save.
+    expect(res.computed.rows.map((r: any) => r.participantId)).toEqual(
+      res.participants.map((p: any) => p.id),
+    );
+    // Same field defaults as create(), so the snapshot never computes on undefined.
+    expect(res.participants[0].courtFraction).toBe(1);
+    expect(res.participants[0].discount).toBe(0);
+    expect(res.participants[0].shuttleFraction).toBe(1);
+    expect(res.computed.rows.every((r: any) => Number.isFinite(r.total))).toBe(true);
+  });
+
+  it('update: replaces participants inside a single transaction (delete + save share the manager)', async () => {
+    const existing = {
+      id: 's1',
+      ownerId: 'o1',
+      playedOn: '2026-07-25',
+      courtCost: 100_000,
+      shuttleUnitPrice: 1_000,
+      totalShuttleCount: 10,
+      participants: [],
+      computed: undefined,
+    };
+    sessionRepo.findOne.mockResolvedValue(existing);
+
+    await service.update('o1', 's1', { participants: [{ name: 'X' }] });
+
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    expect(manager.delete).toHaveBeenCalledWith(BadmintonParticipant, {
+      sessionId: 's1',
+    });
+    expect(manager.save).toHaveBeenCalledTimes(1);
+    // Nothing may bypass the transaction boundary.
+    expect(participantRepo.save).not.toHaveBeenCalled();
+    expect(sessionRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('update: a failed save propagates so the transaction rolls the delete back', async () => {
+    const existing = {
+      id: 's1',
+      ownerId: 'o1',
+      playedOn: '2026-07-25',
+      courtCost: 100_000,
+      shuttleUnitPrice: 1_000,
+      totalShuttleCount: 10,
+      participants: [],
+      computed: undefined,
+    };
+    sessionRepo.findOne.mockResolvedValue(existing);
+    manager.save.mockRejectedValue(new Error('db down'));
+
+    await expect(
+      service.update('o1', 's1', { participants: [{ name: 'X' }] }),
+    ).rejects.toThrow('db down');
   });
 
   it('remove: soft-removes an owned session and returns its id', async () => {

@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes, randomUUID } from 'crypto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { computeSplit, type CalcInput } from './badminton.calc';
 import { CreateBadmintonSessionDto } from './dto/create-badminton-session.dto';
@@ -19,6 +19,7 @@ export class BadmintonService {
 		private readonly participantRepo: Repository<BadmintonParticipant>,
 		@InjectRepository(User)
 		private readonly usersRepo: Repository<User>,
+		private readonly dataSource: DataSource,
 	) {}
 
 	async create(ownerId: string, dto: CreateBadmintonSessionDto) {
@@ -96,19 +97,19 @@ export class BadmintonService {
 			`Updating session ${id} with data: ${JSON.stringify(session)}`,
 		);
 		if (participants !== undefined) {
-			await this.participantRepo
-				.delete({
+			// Same id + default discipline as create(): the snapshot is computed
+			// before the INSERT, so rows must reference ids we choose up front.
+			session.participants = participants.map((p) =>
+				this.participantRepo.create({
+					id: randomUUID(),
+					userId: p.userId,
+					name: p.name,
+					courtFraction: p.courtFraction || 1,
+					discount: p.discount || 0,
+					shuttleFraction: p.shuttleFraction || 1,
 					sessionId: session.id,
-				})
-				.then(() => {
-					session.participants = participants.map((p) =>
-						this.participantRepo.create({
-							...p,
-							session,
-							sessionId: session.id,
-						}),
-					);
-				});
+				}),
+			);
 		}
 
 		session.computed = computeSplit(
@@ -127,7 +128,14 @@ export class BadmintonService {
 			new Date().toISOString(),
 		);
 
-		return this.sessionRepo.save(session);
+		// Delete + cascade re-insert must be atomic: without the transaction, a
+		// failed save would leave the session with no participants at all.
+		return this.dataSource.transaction(async (manager) => {
+			if (participants !== undefined) {
+				await manager.delete(BadmintonParticipant, { sessionId: session.id });
+			}
+			return manager.save(session);
+		});
 	}
 
 	async remove(ownerId: string, id: string) {
