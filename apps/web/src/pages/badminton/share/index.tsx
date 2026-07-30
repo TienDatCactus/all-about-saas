@@ -1,11 +1,5 @@
 import { WarningIcon } from "@phosphor-icons/react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import DataEmpty from "@/components/custom/data/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { computeSplit } from "@/pages/badminton/lib/calc";
 import { usePublicSessionQuery } from "@/services/badminton/queries";
@@ -47,17 +41,11 @@ export default function BadmintonSummaryPage({
       {isLoading ? (
         <Skeleton className="h-80 w-full rounded-xl" />
       ) : isError || !data ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <WarningIcon />
-            </EmptyMedia>
-            <EmptyTitle>Split not found</EmptyTitle>
-            <EmptyDescription>
-              This share link is invalid or the session was removed.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <DataEmpty
+          media={{ variant: "icon", icon: <WarningIcon /> }}
+          title="Split not found"
+          description="This share link is invalid or the session was removed."
+        />
       ) : (
         <div className="w-full">
           <BadmintonSummary

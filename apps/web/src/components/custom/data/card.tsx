@@ -27,7 +27,7 @@ export default function DataCard({
   return (
     <Card className={cn(className)}>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="truncate">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
         {action && <CardAction>{action}</CardAction>}
       </CardHeader>

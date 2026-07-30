@@ -1,10 +1,11 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { badmintonApi } from "./api";
-import type { CreateSessionIn, UpdateSessionIn } from "./types";
+import type {
+  BadmintonSession,
+  CreateSessionIn,
+  UpdateSessionIn,
+} from "./types";
+import { toast } from "@/components/custom/toast";
 
 export const badmintonKeys = {
   all: ["badminton"] as const,
@@ -77,3 +78,53 @@ export const useDeleteSessionMutation = () => {
     },
   });
 };
+
+const UNDO_WINDOW_MS = 5000;
+
+export function useUndoableDeleteSession() {
+  const queryClient = useQueryClient();
+  const { mutate: commitDelete } = useDeleteSessionMutation();
+
+  return (session: BadmintonSession) => {
+    queryClient.setQueryData<BadmintonSession[]>(
+      badmintonKeys.sessions(),
+      (prev) => prev?.filter((s) => s.id !== session.id),
+    );
+
+    let undone = false;
+    toast({
+      status: "info",
+      title: `Deleted "${session.title || "Untitled session"}"`,
+      description: "You can undo this until the message closes.",
+      duration: UNDO_WINDOW_MS,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          undone = true;
+          // Re-insert only this session (not a full snapshot restore, which
+          // would resurrect other deletes still in their undo window), then
+          // refetch so ordering matches the server.
+          queryClient.setQueryData<BadmintonSession[]>(
+            badmintonKeys.sessions(),
+            (prev) => (prev ? [...prev, session] : prev),
+          );
+          queryClient.invalidateQueries({
+            queryKey: badmintonKeys.sessions(),
+          });
+        },
+      },
+
+      onDismiss: () => {
+        if (undone) return;
+        commitDelete(session.id, {
+          onError: (error) => {
+            toast.api(error, "Couldn't delete the session");
+            queryClient.invalidateQueries({
+              queryKey: badmintonKeys.sessions(),
+            });
+          },
+        });
+      },
+    });
+  };
+}

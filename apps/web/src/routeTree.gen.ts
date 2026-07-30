@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BadmintonRouteRouteImport } from './routes/badminton/route'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthChangePasswordRouteImport } from './routes/auth/change-password'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
@@ -23,6 +24,11 @@ import { Route as BadmintonSShareTokenRouteImport } from './routes/badminton/s/$
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BadmintonRouteRoute = BadmintonRouteRouteImport.update({
+  id: '/badminton',
+  path: '/badminton',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -51,28 +57,29 @@ const AuthSignUpRoute = AuthSignUpRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const BadmintonIndexRoute = BadmintonIndexRouteImport.update({
-  id: '/badminton/',
-  path: '/badminton/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => BadmintonRouteRoute,
 } as any)
 const BadmintonSessionIdRoute = BadmintonSessionIdRouteImport.update({
-  id: '/badminton/$sessionId',
-  path: '/badminton/$sessionId',
-  getParentRoute: () => rootRouteImport,
+  id: '/$sessionId',
+  path: '/$sessionId',
+  getParentRoute: () => BadmintonRouteRoute,
 } as any)
 const BadmintonNewRoute = BadmintonNewRouteImport.update({
-  id: '/badminton/new',
-  path: '/badminton/new',
-  getParentRoute: () => rootRouteImport,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => BadmintonRouteRoute,
 } as any)
 const BadmintonSShareTokenRoute = BadmintonSShareTokenRouteImport.update({
-  id: '/badminton/s/$shareToken',
-  path: '/badminton/s/$shareToken',
-  getParentRoute: () => rootRouteImport,
+  id: '/s/$shareToken',
+  path: '/s/$shareToken',
+  getParentRoute: () => BadmintonRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/badminton': typeof BadmintonRouteRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/badminton': typeof BadmintonRouteRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
@@ -112,6 +120,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/badminton'
     | '/verify-email'
     | '/auth/change-password'
     | '/auth/login'
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/badminton'
     | '/verify-email'
     | '/auth/change-password'
     | '/auth/login'
@@ -149,15 +159,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BadmintonRouteRoute: typeof BadmintonRouteRouteWithChildren
   VerifyEmailRoute: typeof VerifyEmailRoute
   AuthChangePasswordRoute: typeof AuthChangePasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
-  BadmintonSessionIdRoute: typeof BadmintonSessionIdRoute
-  BadmintonNewRoute: typeof BadmintonNewRoute
-  BadmintonIndexRoute: typeof BadmintonIndexRoute
-  BadmintonSShareTokenRoute: typeof BadmintonSShareTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -167,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/badminton': {
+      id: '/badminton'
+      path: '/badminton'
+      fullPath: '/badminton'
+      preLoaderRoute: typeof BadmintonRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -206,46 +220,61 @@ declare module '@tanstack/react-router' {
     }
     '/badminton/': {
       id: '/badminton/'
-      path: '/badminton'
+      path: '/'
       fullPath: '/badminton/'
       preLoaderRoute: typeof BadmintonIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof BadmintonRouteRoute
     }
     '/badminton/$sessionId': {
       id: '/badminton/$sessionId'
-      path: '/badminton/$sessionId'
+      path: '/$sessionId'
       fullPath: '/badminton/$sessionId'
       preLoaderRoute: typeof BadmintonSessionIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof BadmintonRouteRoute
     }
     '/badminton/new': {
       id: '/badminton/new'
-      path: '/badminton/new'
+      path: '/new'
       fullPath: '/badminton/new'
       preLoaderRoute: typeof BadmintonNewRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof BadmintonRouteRoute
     }
     '/badminton/s/$shareToken': {
       id: '/badminton/s/$shareToken'
-      path: '/badminton/s/$shareToken'
+      path: '/s/$shareToken'
       fullPath: '/badminton/s/$shareToken'
       preLoaderRoute: typeof BadmintonSShareTokenRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof BadmintonRouteRoute
     }
   }
 }
 
+interface BadmintonRouteRouteChildren {
+  BadmintonSessionIdRoute: typeof BadmintonSessionIdRoute
+  BadmintonNewRoute: typeof BadmintonNewRoute
+  BadmintonIndexRoute: typeof BadmintonIndexRoute
+  BadmintonSShareTokenRoute: typeof BadmintonSShareTokenRoute
+}
+
+const BadmintonRouteRouteChildren: BadmintonRouteRouteChildren = {
+  BadmintonSessionIdRoute: BadmintonSessionIdRoute,
+  BadmintonNewRoute: BadmintonNewRoute,
+  BadmintonIndexRoute: BadmintonIndexRoute,
+  BadmintonSShareTokenRoute: BadmintonSShareTokenRoute,
+}
+
+const BadmintonRouteRouteWithChildren = BadmintonRouteRoute._addFileChildren(
+  BadmintonRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BadmintonRouteRoute: BadmintonRouteRouteWithChildren,
   VerifyEmailRoute: VerifyEmailRoute,
   AuthChangePasswordRoute: AuthChangePasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignUpRoute: AuthSignUpRoute,
-  BadmintonSessionIdRoute: BadmintonSessionIdRoute,
-  BadmintonNewRoute: BadmintonNewRoute,
-  BadmintonIndexRoute: BadmintonIndexRoute,
-  BadmintonSShareTokenRoute: BadmintonSShareTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

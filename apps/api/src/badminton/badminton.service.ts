@@ -31,9 +31,11 @@ export class BadmintonService {
 			totalShuttleCount: dto.totalShuttleCount,
 			shareToken: this.generateShareToken(),
 		});
+
 		const { participants } = dto;
 		// Attach after the session object exists so each child carries the relation
 		// reference — TypeORM then resolves the FK at insert time on both paths.
+
 		session.participants = participants.map((d) =>
 			this.participantRepo.create({
 				id: randomUUID(),
@@ -42,7 +44,7 @@ export class BadmintonService {
 				courtFraction: d.courtFraction ?? 1,
 				discount: d.discount ?? 0,
 				shuttleFraction: d.shuttleFraction ?? 1,
-				session,
+				sessionId: session.id,
 			}),
 		);
 		session.computed = computeSplit(

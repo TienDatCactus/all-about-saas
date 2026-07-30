@@ -1,5 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 
+import { ConfirmProvider } from "@/components/custom/confirm"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { MotionProvider, useMotion } from "@/lib/context/animation"
@@ -9,6 +10,7 @@ import { MotionConfig } from "motion/react"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
+  staticData: { crumb: "Home" },
   head: () => ({
     meta: [
       {
@@ -81,7 +83,9 @@ function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <RootDocument>{children}</RootDocument>
+            <ConfirmProvider>
+              <RootDocument>{children}</RootDocument>
+            </ConfirmProvider>
           </TooltipProvider>
         </AuthProvider>
         <Toaster position="top-right" />

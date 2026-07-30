@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { BadmintonSession } from './badminton-session.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 /**
  * One attendee of one {@link BadmintonSession}. Identity is EITHER a linked app
@@ -19,10 +20,7 @@ import { BadmintonSession } from './badminton-session.entity';
  */
 @Entity()
 @Index(['sessionId', 'userId'], { unique: true, where: '"userId" IS NOT NULL' })
-export class BadmintonParticipant {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
-
+export class BadmintonParticipant extends BaseEntity {
 	@ManyToOne(() => BadmintonSession, (s) => s.participants, {
 		onDelete: 'CASCADE',
 	})

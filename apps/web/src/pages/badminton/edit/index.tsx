@@ -1,11 +1,5 @@
 import { WarningIcon } from "@phosphor-icons/react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import DataEmpty from "@/components/custom/data/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSessionQuery } from "@/services/badminton/queries";
 import { PageHeader, PageShell } from "../../../components/custom/page-shell";
@@ -26,17 +20,11 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
       {isLoading ? (
         <EditorSkeleton />
       ) : isError || !data ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <WarningIcon />
-            </EmptyMedia>
-            <EmptyTitle>Session not found</EmptyTitle>
-            <EmptyDescription>
-              It may have been deleted, or you don&apos;t have access to it.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <DataEmpty
+          media={{ variant: "icon", icon: <WarningIcon /> }}
+          title="Session not found"
+          description="It may have been deleted, or you don't have access to it."
+        />
       ) : (
         <>
           <ShareLink shareToken={data.shareToken} />

@@ -1,13 +1,7 @@
 import DataCard from "@/components/custom/data/card";
+import DataEmpty from "@/components/custom/data/empty";
 import { toast } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import {
   Table,
   TableBody,
@@ -101,17 +95,11 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
             </Table>
           </div>
         ) : (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <CalculatorIcon />
-              </EmptyMedia>
-              <EmptyTitle>Nothing to split yet</EmptyTitle>
-              <EmptyDescription>
-                Add players and costs to see each person&apos;s share.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <DataEmpty
+            media={{ variant: "icon", icon: <CalculatorIcon /> }}
+            title="Nothing to split yet"
+            description="Add players and costs to see each person's share."
+          />
         )
       }
     />

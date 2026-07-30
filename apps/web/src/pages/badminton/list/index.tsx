@@ -1,29 +1,19 @@
-import { PlusIcon, UsersIcon } from "@phosphor-icons/react";
+import { PlusIcon, TrashIcon, UsersIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
+import DataCard from "@/components/custom/data/card";
+import DataEmpty from "@/components/custom/data/empty";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatVnd } from "@/pages/badminton/lib/format";
-import { useSessionsQuery } from "@/services/badminton/queries";
+import {
+  useSessionsQuery,
+  useUndoableDeleteSession,
+} from "@/services/badminton/queries";
 import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 
 export default function SessionListPage() {
   const { data, isLoading } = useSessionsQuery();
-
+  const deleteSession = useUndoableDeleteSession();
   return (
     <PageShell>
       <PageHeader
@@ -41,30 +31,25 @@ export default function SessionListPage() {
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-32 w-full rounded-xl" />
           ))}
         </div>
       ) : !data || data.length === 0 ? (
-        <Empty className="border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <UsersIcon />
-            </EmptyMedia>
-            <EmptyTitle>No sessions yet</EmptyTitle>
-            <EmptyDescription>
-              Create your first session to split court and shuttle costs.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
+        <DataEmpty
+          className="border"
+          media={{ variant: "icon", icon: <UsersIcon /> }}
+          title="No sessions yet"
+          description="Create your first session to split court and shuttle costs."
+          content={
             <Button asChild>
               <Link to="/badminton/new">
                 <PlusIcon data-icon="inline-start" />
                 New session
               </Link>
             </Button>
-          </EmptyContent>
-        </Empty>
+          }
+        />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((session) => {
@@ -83,23 +68,37 @@ export default function SessionListPage() {
                   params={{ sessionId: session.id }}
                   className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <Card className="h-full transition-colors hover:border-ring">
-                    <CardHeader>
-                      <CardTitle className="truncate">
-                        {session.title || "Untitled session"}
-                      </CardTitle>
-                      <CardDescription>{session.playedOn}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex items-center justify-between">
-                      <span className="text-lg font-semibold tabular-nums">
-                        {formatVnd(total)} ₫
-                      </span>
-                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <UsersIcon />
-                        {players}
-                      </span>
-                    </CardContent>
-                  </Card>
+                  <DataCard
+                    title={session.title || "Untitled session"}
+                    description={session.playedOn}
+                    content={
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-semibold tabular-nums">
+                          {formatVnd(total)} ₫
+                        </span>
+                        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <UsersIcon />
+                          {players}
+                        </span>
+                      </div>
+                    }
+                    className="group smooth-transition hover:shadow-xl hover:-translate-y-0.5"
+                    action={
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        aria-label="Delete session"
+                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          deleteSession(session);
+                        }}
+                      >
+                        <TrashIcon />
+                      </Button>
+                    }
+                  />
                 </Link>
               </li>
             );

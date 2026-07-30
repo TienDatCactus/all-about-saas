@@ -175,7 +175,6 @@ export class AuthController {
 		const newAccessToken = await this.authService.refresh(refreshToken);
 		return {
 			accessToken: newAccessToken,
-			message: 'Token refreshed successfully',
 		};
 	}
 	/* =================================  */

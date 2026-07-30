@@ -1,10 +1,4 @@
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import DataEmpty from "@/components/custom/data/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react";
@@ -334,29 +328,23 @@ function ImageLoader({
 
 function DefaultNoSrcEmpty() {
   return (
-    <Empty className="absolute inset-0 flex flex-col items-center justify-center">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <ImageIcon />
-        </EmptyMedia>
-        <EmptyTitle>No image</EmptyTitle>
-        <EmptyDescription>No image source provided.</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <DataEmpty
+      className="absolute inset-0 flex flex-col items-center justify-center"
+      media={{ variant: "icon", icon: <ImageIcon /> }}
+      title="No image"
+      description="No image source provided."
+    />
   );
 }
 
 function DefaultErrorEmpty() {
   return (
-    <Empty className="absolute inset-0 flex flex-col items-center justify-center">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <ImageBrokenIcon />
-        </EmptyMedia>
-        <EmptyTitle>Image unavailable</EmptyTitle>
-        <EmptyDescription>This image could not be loaded.</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <DataEmpty
+      className="absolute inset-0 flex flex-col items-center justify-center"
+      media={{ variant: "icon", icon: <ImageBrokenIcon /> }}
+      title="Image unavailable"
+      description="This image could not be loaded."
+    />
   );
 }
 

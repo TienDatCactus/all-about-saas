@@ -43,6 +43,12 @@ export interface ToastOptions {
     label: string;
     onClick(): void;
   };
+  /**
+   * Fires once when the toast leaves the screen for any reason (countdown,
+   * close button, or after an action click). Useful for commit-on-dismiss
+   * flows like undoable deletes.
+   */
+  onDismiss?: () => void;
   dismissible?: boolean;
   duration?: number;
   persistent?: boolean;
