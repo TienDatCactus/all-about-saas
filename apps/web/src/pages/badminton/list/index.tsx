@@ -1,13 +1,7 @@
-import {
-  ArrowClockwiseIcon,
-  PlusIcon,
-  TrashIcon,
-  UsersIcon,
-} from "@phosphor-icons/react";
+import { PlusIcon, TrashIcon, UsersIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import DataCard from "@/components/custom/data/card";
-import DataEmpty from "@/components/custom/data/empty";
-import DataError from "@/components/custom/data/error";
+import DataPage from "@/components/custom/data/page";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatVnd } from "@/pages/badminton/lib/format";
@@ -15,61 +9,54 @@ import {
   useSessionsQuery,
   useUndoableDeleteSession,
 } from "@/services/badminton/queries";
-import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 
 export default function SessionListPage() {
-  const { data, isLoading, isError, refetch } = useSessionsQuery();
+  const sessionsQuery = useSessionsQuery();
   const deleteSession = useUndoableDeleteSession();
   return (
-    <PageShell>
-      <PageHeader
-        title="Badminton sessions"
-        description="Your saved splits."
-        actions={
+    <DataPage
+      query={sessionsQuery}
+      title="Badminton sessions"
+      description="Your saved splits."
+      actions={
+        <Button asChild>
+          <Link to="/badminton/new">
+            <PlusIcon data-icon="inline-start" />
+            New session
+          </Link>
+        </Button>
+      }
+      loading={
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+      }
+      error={{
+        title: "Couldn't load your sessions",
+        description:
+          "Something went wrong fetching your saved splits. Check your connection and try again.",
+      }}
+      empty={{
+        className: "border",
+        media: { variant: "icon", icon: <UsersIcon /> },
+        title: "No sessions yet",
+        description:
+          "Create your first session to split court and shuttle costs.",
+        content: (
           <Button asChild>
             <Link to="/badminton/new">
               <PlusIcon data-icon="inline-start" />
               New session
             </Link>
           </Button>
-        }
-      />
-
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : isError ? (
-        <DataError
-          title="Couldn't load your sessions"
-          description="Something went wrong fetching your saved splits. Check your connection and try again."
-          content={
-            <Button variant="outline" onClick={() => refetch()}>
-              <ArrowClockwiseIcon data-icon="inline-start" />
-              Try again
-            </Button>
-          }
-        />
-      ) : !data || data.length === 0 ? (
-        <DataEmpty
-          className="border"
-          media={{ variant: "icon", icon: <UsersIcon /> }}
-          title="No sessions yet"
-          description="Create your first session to split court and shuttle costs."
-          content={
-            <Button asChild>
-              <Link to="/badminton/new">
-                <PlusIcon data-icon="inline-start" />
-                New session
-              </Link>
-            </Button>
-          }
-        />
-      ) : (
+        ),
+      }}
+    >
+      {(sessions) => (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.map((session) => {
+          {sessions.map((session) => {
             const total =
               session.computed?.grandTotal ??
               session.courtCost +
@@ -122,6 +109,6 @@ export default function SessionListPage() {
           })}
         </ul>
       )}
-    </PageShell>
+    </DataPage>
   );
 }
