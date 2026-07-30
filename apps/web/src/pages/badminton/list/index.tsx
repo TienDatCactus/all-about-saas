@@ -1,7 +1,13 @@
-import { PlusIcon, TrashIcon, UsersIcon } from "@phosphor-icons/react";
+import {
+  ArrowClockwiseIcon,
+  PlusIcon,
+  TrashIcon,
+  UsersIcon,
+} from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import DataCard from "@/components/custom/data/card";
 import DataEmpty from "@/components/custom/data/empty";
+import DataError from "@/components/custom/data/error";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatVnd } from "@/pages/badminton/lib/format";
@@ -12,7 +18,7 @@ import {
 import { PageHeader, PageShell } from "../../../components/custom/page-shell";
 
 export default function SessionListPage() {
-  const { data, isLoading } = useSessionsQuery();
+  const { data, isLoading, isError, refetch } = useSessionsQuery();
   const deleteSession = useUndoableDeleteSession();
   return (
     <PageShell>
@@ -35,6 +41,17 @@ export default function SessionListPage() {
             <Skeleton key={i} className="h-32 w-full rounded-xl" />
           ))}
         </div>
+      ) : isError ? (
+        <DataError
+          title="Couldn't load your sessions"
+          description="Something went wrong fetching your saved splits. Check your connection and try again."
+          content={
+            <Button variant="outline" onClick={() => refetch()}>
+              <ArrowClockwiseIcon data-icon="inline-start" />
+              Try again
+            </Button>
+          }
+        />
       ) : !data || data.length === 0 ? (
         <DataEmpty
           className="border"
