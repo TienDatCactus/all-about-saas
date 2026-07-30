@@ -1,14 +1,7 @@
-import {
-	Column,
-	Entity,
-	Index,
-	JoinColumn,
-	ManyToOne,
-	PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { BadmintonSession } from './badminton-session.entity';
-import { BaseEntity } from '../../common/entities/base.entity';
 
 /**
  * One attendee of one {@link BadmintonSession}. Identity is EITHER a linked app
@@ -20,7 +13,7 @@ import { BaseEntity } from '../../common/entities/base.entity';
  */
 @Entity()
 @Index(['sessionId', 'userId'], { unique: true, where: '"userId" IS NOT NULL' })
-export class BadmintonParticipant extends BaseEntity {
+export class BadmintonParticipant extends SoftDeleteBaseEntity {
 	@ManyToOne(() => BadmintonSession, (s) => s.participants, {
 		onDelete: 'CASCADE',
 	})

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import PublicSessionPage from "@/pages/badminton/share";
 
 export const Route = createFileRoute("/badminton/s/$shareToken")({
+  staticData: { crumb: `Share Session` },
   component: RouteComponent,
 });
 

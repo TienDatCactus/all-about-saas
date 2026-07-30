@@ -117,8 +117,7 @@ export function useUndoableDeleteSession() {
       onDismiss: () => {
         if (undone) return;
         commitDelete(session.id, {
-          onError: (error) => {
-            toast.api(error, "Couldn't delete the session");
+          onError: () => {
             queryClient.invalidateQueries({
               queryKey: badmintonKeys.sessions(),
             });

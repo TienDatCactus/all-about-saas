@@ -10,18 +10,10 @@ import { Button } from "../ui/button";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { Breadcrumbs } from "./breadcrumb";
 
-export function PageShell({
-  children,
-  breadcrumbs = true,
-}: {
-  children: ReactNode;
-  /** Render the router-driven breadcrumb trail at the top. Defaults to `true`. */
-  breadcrumbs?: boolean;
-}) {
+export function PageShell({ children }: { children: ReactNode }) {
   return (
     <main className="min-h-dvh w-full self-start">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 py-8 md:p-8">
-        {breadcrumbs ? <Breadcrumbs /> : null}
         {children}
       </div>
     </main>
@@ -49,12 +41,8 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
               </Button>
             </PopoverTrigger>
           </div>
-          <PopoverContent>
-            <PopoverHeader>
-              <PopoverDescription>
-                <Breadcrumbs />
-              </PopoverDescription>
-            </PopoverHeader>
+          <PopoverContent className="w-fit">
+            <Breadcrumbs />
           </PopoverContent>
         </Popover>
         {description ? (

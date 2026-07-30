@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatVnd } from "@/pages/badminton/lib/format";
+import { formatDong, formatVnd } from "@/pages/badminton/lib/format";
 import { buildSummaryText } from "@/pages/badminton/lib/summary-text";
 import type { ComputedSnapshot } from "@/services/badminton/types";
 import { CalculatorIcon, CopyIcon } from "@phosphor-icons/react";
@@ -67,13 +67,13 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
                   <TableRow key={row.participantId}>
                     <TableCell className="font-medium">{row.name}</TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVnd(row.court)}
+                      {formatDong(row.court)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVnd(row.shuttle)}
+                      {formatDong(row.shuttle)}
                     </TableCell>
                     <TableCell className="text-right font-semibold tabular-nums">
-                      {formatVnd(row.total)}
+                      {formatDong(row.total)}
                     </TableCell>
                   </TableRow>
                 ))}
