@@ -1,15 +1,15 @@
-import { AddonInput as Input } from "@/components/custom/addon-input";
-import { FormField } from "@/components/custom/form-field";
-import { Button } from "@/components/ui/button";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { TrashIcon } from "@phosphor-icons/react";
-import type React from "react";
+import { AddonInput as Input } from "@/components/custom/addon-input"
+import { FormField } from "@/components/custom/form-field"
+import { Button } from "@/components/ui/button"
+import { TableCell, TableRow } from "@/components/ui/table"
+import { TrashIcon } from "@phosphor-icons/react"
+import type React from "react"
 
 interface PlayerRowProps {
-  form: any;
-  index: number;
-  canRemove: boolean;
-  onRemove: () => void;
+  form: any
+  index: number
+  canRemove: boolean
+  onRemove: () => void
 }
 
 /**
@@ -25,7 +25,7 @@ function numberFieldProps(
     integer = false,
     min,
     max,
-  }: { integer?: boolean; min?: number; max?: number } = {},
+  }: { integer?: boolean; min?: number; max?: number } = {}
 ) {
   return {
     name: field.name,
@@ -33,14 +33,14 @@ function numberFieldProps(
     value: field.state.value ?? "",
     onBlur: field.handleBlur,
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-      let n = e.target.valueAsNumber;
-      if (Number.isNaN(n)) n = min ?? 0;
-      if (integer) n = Math.trunc(n);
-      if (min !== undefined) n = Math.max(min, n);
-      if (max !== undefined) n = Math.min(max, n);
-      field.handleChange(n);
+      let n = e.target.valueAsNumber
+      if (Number.isNaN(n)) n = min ?? 0
+      if (integer) n = Math.trunc(n)
+      if (min !== undefined) n = Math.max(min, n)
+      if (max !== undefined) n = Math.min(max, n)
+      field.handleChange(n)
     },
-  };
+  }
 }
 
 export function PlayerRow({
@@ -49,7 +49,7 @@ export function PlayerRow({
   canRemove,
   onRemove,
 }: PlayerRowProps) {
-  const base = `players[${index}]`;
+  const base = `players[${index}]`
   return (
     <TableRow key={base}>
       <TableCell>
@@ -137,5 +137,5 @@ export function PlayerRow({
         </Button>
       </TableCell>
     </TableRow>
-  );
+  )
 }

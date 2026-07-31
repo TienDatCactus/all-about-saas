@@ -1,4 +1,4 @@
-const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
 export const AUTH = {
   login: "/auth/login",
   signup: "/auth/signup",
@@ -11,11 +11,11 @@ export const AUTH = {
   sendVerificationEmail: "/auth/send-verification-email",
   changePassword: "/auth/change-password",
   resetPassword: "/auth/reset-password",
-};
+}
 
 export const BADMINTON = {
   sessions: "/badminton/sessions",
   session: (id: string) => `/badminton/sessions/${id}`,
   suggest: "/badminton/participants/suggest",
   publicSession: (shareToken: string) => `/badminton/public/${shareToken}`,
-};
+}

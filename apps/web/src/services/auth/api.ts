@@ -12,7 +12,7 @@ export const authApi = {
   login: async (data: LoginIn): Promise<string> => {
     const res = await http.post<{ accessToken: string } | string>(
       AUTH.login,
-      data,
+      data
     )
     return typeof res === "string" ? res : res.accessToken
   },

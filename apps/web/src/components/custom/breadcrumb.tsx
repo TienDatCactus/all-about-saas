@@ -1,5 +1,5 @@
-import { Fragment, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Fragment, type ReactNode } from "react"
+import { Link, useRouterState } from "@tanstack/react-router"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,14 +7,14 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+} from "@/components/ui/breadcrumb"
 
 /** Context handed to a function-form crumb so dynamic segments can build a label. */
 export interface CrumbContext {
-  params: Record<string, string>;
-  loaderData: unknown;
+  params: Record<string, string>
+  loaderData: unknown
   /** Resolved, real pathname of this match (params already substituted). */
-  pathname: string;
+  pathname: string
 }
 
 /**
@@ -22,7 +22,7 @@ export interface CrumbContext {
  * (use the function form for dynamic segments, e.g. `(c) => c.params.sessionId`).
  * Return `null`/`undefined` from the function to skip the route entirely.
  */
-export type Crumb = ReactNode | ((ctx: CrumbContext) => ReactNode);
+export type Crumb = ReactNode | ((ctx: CrumbContext) => ReactNode)
 
 // Make `staticData.crumb` type-safe on every `createFileRoute(...)` / `createRootRoute(...)`.
 declare module "@tanstack/react-router" {
@@ -31,25 +31,25 @@ declare module "@tanstack/react-router" {
      * Label for this route in the breadcrumb trail. Omit to hide the route
      * from the trail (useful for pathless/layout routes).
      */
-    crumb?: Crumb;
+    crumb?: Crumb
   }
 }
 
 interface ResolvedCrumb {
-  label: ReactNode;
+  label: ReactNode
   /** Real pathname to link to; the last crumb is rendered as plain text. */
-  pathname: string;
+  pathname: string
 }
 
 export interface BreadcrumbsProps {
-  className?: string;
+  className?: string
   /**
    * Manual override. When provided, the trail is rendered from these items
    * instead of the route tree — for the rare page that needs a bespoke trail.
    */
-  items?: Array<{ label: ReactNode; to?: string }>;
+  items?: Array<{ label: ReactNode; to?: string }>
   /** Custom separator between crumbs. Defaults to the primitive's caret. */
-  separator?: ReactNode;
+  separator?: ReactNode
 }
 
 /**
@@ -71,16 +71,12 @@ export interface BreadcrumbsProps {
  * Routes without a `crumb` are skipped, so pathless/layout routes disappear
  * cleanly. The deepest crumb renders as the current page (not a link).
  */
-export function Breadcrumbs({
-  className,
-  items,
-  separator,
-}: BreadcrumbsProps) {
+export function Breadcrumbs({ className, items, separator }: BreadcrumbsProps) {
   const routeCrumbs = useRouterState({
     select: (state): ResolvedCrumb[] =>
       state.matches.flatMap((match) => {
-        const crumb = match.staticData.crumb;
-        if (crumb == null) return [];
+        const crumb = match.staticData.crumb
+        if (crumb == null) return []
         const label =
           typeof crumb === "function"
             ? crumb({
@@ -88,24 +84,24 @@ export function Breadcrumbs({
                 loaderData: match.loaderData,
                 pathname: match.pathname,
               })
-            : crumb;
-        if (label == null) return [];
-        return [{ label, pathname: match.pathname }];
+            : crumb
+        if (label == null) return []
+        return [{ label, pathname: match.pathname }]
       }),
-  });
+  })
 
   const crumbs: ResolvedCrumb[] = items
     ? items.map((item) => ({ label: item.label, pathname: item.to ?? "" }))
-    : routeCrumbs;
+    : routeCrumbs
 
-  if (crumbs.length === 0) return null;
+  if (crumbs.length === 0) return null
 
   return (
     <Breadcrumb className={className}>
       <BreadcrumbList>
         {crumbs.map((crumb, i) => {
-          const isLast = i === crumbs.length - 1;
-          const linkable = !isLast && crumb.pathname !== "";
+          const isLast = i === crumbs.length - 1
+          const linkable = !isLast && crumb.pathname !== ""
           return (
             <Fragment key={`${crumb.pathname}-${i}`}>
               <BreadcrumbItem>
@@ -121,9 +117,9 @@ export function Breadcrumbs({
                 <BreadcrumbSeparator>{separator}</BreadcrumbSeparator>
               )}
             </Fragment>
-          );
+          )
         })}
       </BreadcrumbList>
     </Breadcrumb>
-  );
+  )
 }

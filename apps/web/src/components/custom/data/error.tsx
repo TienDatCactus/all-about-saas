@@ -38,10 +38,7 @@ export default function DataError({
   return (
     <Empty
       role="alert"
-      className={cn(
-        "border border-destructive/20 bg-destructive/5",
-        className,
-      )}
+      className={cn("border border-destructive/20 bg-destructive/5", className)}
     >
       <EmptyHeader>
         <EmptyMedia

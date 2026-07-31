@@ -1,8 +1,8 @@
-import { CaretDownIcon } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Breadcrumbs } from "./breadcrumb";
+import { CaretDownIcon } from "@phosphor-icons/react"
+import type { ReactNode } from "react"
+import { Button } from "../ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { Breadcrumbs } from "./breadcrumb"
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -11,13 +11,13 @@ export function PageShell({ children }: { children: ReactNode }) {
         {children}
       </div>
     </main>
-  );
+  )
 }
 
 interface PageHeaderProps {
-  title: ReactNode;
-  description?: ReactNode;
-  actions?: ReactNode;
+  title: ReactNode
+  description?: ReactNode
+  actions?: ReactNode
 }
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
@@ -45,5 +45,5 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
       </div>
       {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
     </div>
-  );
+  )
 }

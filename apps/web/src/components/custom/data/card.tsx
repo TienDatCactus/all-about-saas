@@ -5,16 +5,16 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import type React from "react";
+} from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import type React from "react"
 
 interface DataCardProp {
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-  className?: string;
-  content: React.ReactNode | string;
+  title: string
+  description?: string
+  action?: React.ReactNode
+  className?: string
+  content: React.ReactNode | string
 }
 
 export default function DataCard({
@@ -33,5 +33,5 @@ export default function DataCard({
       </CardHeader>
       <CardContent>{content}</CardContent>
     </Card>
-  );
+  )
 }

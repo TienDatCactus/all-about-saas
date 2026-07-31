@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
-} from "@/components/ui/pagination";
+} from "@/components/ui/pagination"
 import {
   Select,
   SelectContent,
@@ -12,15 +12,15 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-import * as React from "react";
+} from "@/components/ui/select"
+import { cn } from "@/lib/utils"
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
+import * as React from "react"
 
 interface UsePaginationOptions {
-  total?: number;
-  pageSize?: number;
-  initialPage?: number;
+  total?: number
+  pageSize?: number
+  initialPage?: number
 }
 
 /**
@@ -28,9 +28,9 @@ interface UsePaginationOptions {
  * derived, so the current page can never point past the end of the data.
  */
 interface UsePaginationOptions {
-  total?: number;
-  pageSize?: number;
-  initialPage?: number;
+  total?: number
+  pageSize?: number
+  initialPage?: number
 }
 
 export function usePagination({
@@ -38,37 +38,37 @@ export function usePagination({
   pageSize: initialPageSize = 12,
   initialPage = 1,
 }: UsePaginationOptions) {
-  const [page, setPage] = React.useState(initialPage);
-  const [pageSize, setRawPageSize] = React.useState(initialPageSize);
+  const [page, setPage] = React.useState(initialPage)
+  const [pageSize, setRawPageSize] = React.useState(initialPageSize)
 
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
 
-  const safePage = Math.min(page, pageCount);
+  const safePage = Math.min(page, pageCount)
 
   React.useEffect(() => {
     if (page !== safePage) {
-      setPage(safePage);
+      setPage(safePage)
     }
-  }, [page, safePage]);
+  }, [page, safePage])
 
   const setPageSize = React.useCallback((size: number) => {
-    setRawPageSize(size);
-    setPage(1);
-  }, []);
+    setRawPageSize(size)
+    setPage(1)
+  }, [])
 
   const query = React.useMemo(
     () => ({
       page: safePage,
       limit: pageSize,
     }),
-    [safePage, pageSize],
-  );
+    [safePage, pageSize]
+  )
 
   const slice = React.useCallback(
     <T,>(items: T[]) =>
       items.slice((safePage - 1) * pageSize, safePage * pageSize),
-    [safePage, pageSize],
-  );
+    [safePage, pageSize]
+  )
 
   return {
     page: safePage,
@@ -79,9 +79,9 @@ export function usePagination({
     setPageSize,
     query,
     slice,
-  };
+  }
 }
-export type PaginationState = ReturnType<typeof usePagination>;
+export type PaginationState = ReturnType<typeof usePagination>
 
 /**
  * Page numbers to render, with `null` marking an ellipsis gap.
@@ -90,31 +90,31 @@ export type PaginationState = ReturnType<typeof usePagination>;
 function pageWindow(
   page: number,
   pageCount: number,
-  siblings: number,
+  siblings: number
 ): (number | null)[] {
   // first + last + current + 2 ellipses + siblings on both sides
-  const slots = siblings * 2 + 5;
+  const slots = siblings * 2 + 5
   if (pageCount <= slots) {
-    return Array.from({ length: pageCount }, (_, i) => i + 1);
+    return Array.from({ length: pageCount }, (_, i) => i + 1)
   }
 
-  const left = Math.max(page - siblings, 1);
-  const right = Math.min(page + siblings, pageCount);
-  const showLeftGap = left > 2;
-  const showRightGap = right < pageCount - 1;
+  const left = Math.max(page - siblings, 1)
+  const right = Math.min(page + siblings, pageCount)
+  const showLeftGap = left > 2
+  const showRightGap = right < pageCount - 1
 
   if (!showLeftGap && showRightGap) {
-    const count = siblings * 2 + 3;
-    return [...Array.from({ length: count }, (_, i) => i + 1), null, pageCount];
+    const count = siblings * 2 + 3
+    return [...Array.from({ length: count }, (_, i) => i + 1), null, pageCount]
   }
 
   if (showLeftGap && !showRightGap) {
-    const count = siblings * 2 + 3;
+    const count = siblings * 2 + 3
     return [
       1,
       null,
       ...Array.from({ length: count }, (_, i) => pageCount - count + 1 + i),
-    ];
+    ]
   }
 
   return [
@@ -123,20 +123,20 @@ function pageWindow(
     ...Array.from({ length: right - left + 1 }, (_, i) => left + i),
     null,
     pageCount,
-  ];
+  ]
 }
 
 interface DataPaginationProps extends Pick<
   PaginationState,
   "page" | "pageSize" | "setPage" | "setPageSize"
 > {
-  total: number;
-  siblings?: number;
+  total: number
+  siblings?: number
   /** Renders a rows-per-page select when provided. */
-  pageSizeOptions?: number[];
+  pageSizeOptions?: number[]
   /** Hides the "N–M of T" summary. */
-  hideSummary?: boolean;
-  className?: string;
+  hideSummary?: boolean
+  className?: string
 }
 /*
 Drop under any list — spread the hook straight in:
@@ -159,16 +159,16 @@ export default function DataPagination({
   className,
 }: DataPaginationProps) {
   // Nothing to page through and no page-size choice to offer.
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const pages = pageWindow(page, pageCount, siblings);
-  const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const last = Math.min(page * pageSize, total);
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const pages = pageWindow(page, pageCount, siblings)
+  const first = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const last = Math.min(page * pageSize, total)
 
   return (
     <div
       className={cn(
         "flex flex-col-reverse items-center gap-4 sm:flex-row sm:justify-between",
-        className,
+        className
       )}
     >
       {!hideSummary && (
@@ -247,7 +247,7 @@ export default function DataPagination({
                       {p}
                     </Button>
                   </PaginationItem>
-                ),
+                )
               )}
 
               <PaginationItem>
@@ -266,5 +266,5 @@ export default function DataPagination({
         )}
       </div>
     </div>
-  );
+  )
 }

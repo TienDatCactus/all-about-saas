@@ -1,35 +1,35 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/calendar";
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import * as React from "react";
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import * as React from "react"
 
 export interface DatePickerProps {
   /** Controlled selected date. Pass this together with `onChange`. */
-  value?: Date;
+  value?: Date
   /** Initial date when used uncontrolled (no `value`/`onChange`). */
-  defaultValue?: Date;
+  defaultValue?: Date
   /** Fired when the user picks or clears a date. */
-  onChange?: (date: Date | undefined) => void;
+  onChange?: (date: Date | undefined) => void
   /** Fired when the popover closes — wire to TanStack Form's `field.handleBlur`. */
-  onBlur?: () => void;
+  onBlur?: () => void
   /** date-fns format for the trigger label. @default "PPP" */
-  displayFormat?: string;
-  placeholder?: string;
-  disabled?: boolean;
+  displayFormat?: string
+  placeholder?: string
+  disabled?: boolean
   /** Forwarded to the trigger so a `<FieldLabel htmlFor>` can target it. */
-  id?: string;
-  name?: string;
-  "aria-invalid"?: boolean;
-  className?: string;
+  id?: string
+  name?: string
+  "aria-invalid"?: boolean
+  className?: string
 }
 
 export default function DatePicker({
@@ -45,27 +45,25 @@ export default function DatePicker({
   "aria-invalid": ariaInvalid,
   className,
 }: DatePickerProps) {
-  const isControlled = value !== undefined || onChange !== undefined;
-  const [internal, setInternal] = React.useState<Date | undefined>(
-    defaultValue,
-  );
-  const [open, setOpen] = React.useState(false);
+  const isControlled = value !== undefined || onChange !== undefined
+  const [internal, setInternal] = React.useState<Date | undefined>(defaultValue)
+  const [open, setOpen] = React.useState(false)
 
-  const selected = isControlled ? value : internal;
+  const selected = isControlled ? value : internal
 
   const handleSelect = (date: Date | undefined) => {
-    if (!isControlled) setInternal(date);
-    onChange?.(date);
-    setOpen(false);
-  };
+    if (!isControlled) setInternal(date)
+    onChange?.(date)
+    setOpen(false)
+  }
 
   return (
     <Popover
       open={open}
       onOpenChange={(next) => {
-        setOpen(next);
+        setOpen(next)
         // Popover closing is the natural "blur" for a picker.
-        if (!next) onBlur?.();
+        if (!next) onBlur?.()
       }}
     >
       <PopoverTrigger asChild>
@@ -79,7 +77,7 @@ export default function DatePicker({
           className={cn(
             "w-full justify-start text-left font-normal",
             !selected && "text-muted-foreground",
-            className,
+            className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -100,5 +98,5 @@ export default function DatePicker({
         />
       </PopoverContent>
     </Popover>
-  );
+  )
 }

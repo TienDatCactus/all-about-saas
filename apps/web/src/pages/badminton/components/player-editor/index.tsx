@@ -1,5 +1,5 @@
-import { FormField } from "@/components/custom/form-field";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/custom/form-field"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -7,19 +7,19 @@ import {
   TableCell,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { PlusIcon } from "@phosphor-icons/react";
-import { newPlayer, type EditorPlayer } from "../../lib/form";
-import { PlayerRow } from "./PlayerRow";
+} from "@/components/ui/table"
+import { PlusIcon } from "@phosphor-icons/react"
+import { newPlayer, type EditorPlayer } from "../../lib/form"
+import { PlayerRow } from "./PlayerRow"
 
 interface PlayerEditorProps {
-  form: any;
+  form: any
 }
 export function PlayerEditor({ form }: PlayerEditorProps) {
   return (
     <FormField form={form} name="players">
       {({ field }) => {
-        const players: EditorPlayer[] = field.state.value;
+        const players: EditorPlayer[] = field.state.value
         return (
           <Table>
             <TableHeader>
@@ -48,7 +48,6 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
               <Button
                 type="button"
                 variant="outline"
-
                 size="sm"
                 onClick={() => field.pushValue(newPlayer())}
               >
@@ -57,8 +56,8 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
               </Button>
             </TableCaption>
           </Table>
-        );
+        )
       }}
     </FormField>
-  );
+  )
 }
