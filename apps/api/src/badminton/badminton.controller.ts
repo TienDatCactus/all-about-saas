@@ -47,9 +47,13 @@ export class BadmintonController {
 				totalShuttleCount: true,
 				createdAt: true,
 				participants: { id: true },
-				computed: {
-					grandTotal: true,
-				},
+				// The whole jsonb column, not `{ grandTotal: true }`. That projection
+				// asked TypeORM to reach inside a JSON value as if it were an embedded
+				// entity — behaviour that is not part of its select contract — and it
+				// left the list page dereferencing `computed.rows.length` on an object
+				// that may or may not have had `rows`. A few hundred bytes per row is
+				// a fair price for a shape that is the same on every endpoint.
+				computed: true,
 			},
 		});
 	}

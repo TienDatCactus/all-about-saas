@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { z } from 'zod';
 
 /**
@@ -47,6 +48,10 @@ const baseSchema = z.looseObject({
 	DATABASE_HOST: z.string().min(1),
 	DATABASE_PORT: z.string().regex(/^\d+$/),
 	DATABASE_NAME: z.string().min(1),
+	DATABASE_SSL: z.enum(['true', 'false']).optional(),
+	DATABASE_SSL_REJECT_UNAUTHORIZED: z.enum(['true', 'false']).optional(),
+	DATABASE_POOL_MAX: z.string().regex(/^\d+$/).optional(),
+	DATABASE_SYNCHRONIZE: z.enum(['true', 'false']).optional(),
 
 	JWT_SECRET: z
 		.string()
@@ -82,6 +87,33 @@ const envSchema = baseSchema.superRefine((env, ctx) => {
 			message:
 				'FRONTEND_URL is required in production — CORS needs an explicit origin allowlist',
 		});
+	}
+
+	// `synchronize` lets TypeORM reshape the schema from the entity files. Against
+	// a production database that means silent column drops and data loss, with no
+	// migration to review or roll back. database.ts already gates it on
+	// NODE_ENV==='development'; this makes an explicit attempt fail loudly rather
+	// than appear to work.
+	if (env.NODE_ENV === 'production' && env.DATABASE_SYNCHRONIZE === 'true') {
+		ctx.addIssue({
+			code: 'custom',
+			path: ['DATABASE_SYNCHRONIZE'],
+			message:
+				'DATABASE_SYNCHRONIZE=true is refused in production — it can drop columns without a migration; run `npm run migration:run` instead',
+		});
+	}
+
+	// TLS to the database with certificate verification disabled stops passive
+	// eavesdropping but not an active impersonator, so it is worth being explicit
+	// that it was chosen rather than inherited.
+	if (
+		env.NODE_ENV === 'production' &&
+		env.DATABASE_SSL === 'true' &&
+		env.DATABASE_SSL_REJECT_UNAUTHORIZED === 'false'
+	) {
+		Logger.warn(
+			'DATABASE_SSL_REJECT_UNAUTHORIZED=false: the database certificate is not verified, so TLS here protects against eavesdropping but not impersonation.',
+		);
 	}
 
 	// A real misconfiguration in this repo: .env ships REFRESH_EXPIRES_IN but

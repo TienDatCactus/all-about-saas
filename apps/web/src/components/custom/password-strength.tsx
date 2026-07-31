@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { LoginInSchema } from "@/services/auth"
+import { PasswordSchema } from "@/services/auth"
 import { validationMessages } from "@/services/auth/message"
 import {
   CheckCircleIcon,
@@ -7,15 +7,16 @@ import {
   XCircleIcon,
 } from "@phosphor-icons/react"
 import { useMemo } from "react"
+import * as z from "zod"
 import { ItemGroup } from "../ui/item"
 import { Progress } from "../ui/progress"
 import { AddonInput as Input, type InputProps } from "./addon-input"
 import DataItem from "./data/item"
 
 interface PasswordStrengthProps extends InputProps {}
-const PasswordStrengthSchema = LoginInSchema.pick({
-  password: true,
-})
+// The shared policy, not LoginInSchema — the login field is intentionally
+// permissive now, so picking from it would leave this meter with nothing to check.
+const PasswordStrengthSchema = z.object({ password: PasswordSchema })
 const checks = [
   validationMessages.password.min,
   validationMessages.password.max,

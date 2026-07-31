@@ -14,6 +14,21 @@ import { UserProfile } from './user-profile.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
 import * as bcrypt from 'bcrypt';
+
+/**
+ * OWASP's current bcrypt guidance; was 10. Each increment doubles the work, so
+ * this is ~4x slower to verify — a few hundred ms, paid once per login, in
+ * exchange for the same factor off an offline cracking rate.
+ *
+ * Raising this does not invalidate existing hashes: the cost is encoded in the
+ * hash itself, so old passwords keep verifying at 10 and are re-hashed at 12 the
+ * next time they are set.
+ */
+export const BCRYPT_COST = 12;
+
+/** `$2a$`/`$2b$`/`$2y$` + cost + salt — i.e. a value that is already hashed. */
+const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$/;
+
 @Entity()
 export class User extends SoftDeleteBaseEntity {
 	@Column({ unique: true })
@@ -48,9 +63,17 @@ export class User extends SoftDeleteBaseEntity {
 	@BeforeInsert()
 	@BeforeUpdate()
 	async hashPassword() {
-		if (this.password) {
-			const saltOrRounds = 10;
-			this.password = await bcrypt.hash(this.password, saltOrRounds);
+		if (!this.password) {
+			return;
 		}
+		// @BeforeUpdate fires on every save() of a User, including saves of an
+		// entity that was loaded *with* its already-hashed password. Hashing again
+		// would replace the hash with a hash-of-a-hash and permanently lock the
+		// account out, with nothing in the data to show what happened. Nothing in
+		// the current flows does that, but it costs one line to make it impossible.
+		if (BCRYPT_HASH.test(this.password)) {
+			return;
+		}
+		this.password = await bcrypt.hash(this.password, BCRYPT_COST);
 	}
 }

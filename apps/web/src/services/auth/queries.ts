@@ -3,8 +3,8 @@ import { storage } from "@/lib/utils/local-storage"
 import { useMutation } from "@tanstack/react-query"
 import {
   authApi,
-  type ChangePasswordIn,
   type LoginIn,
+  type ResetPasswordIn,
   type SendVerificationEmailIn,
   type SignUpIn,
   type VerifyEmailIn,
@@ -61,7 +61,7 @@ export const useSendVerificationEmailMutation = () => {
 export const useResetPasswordMutation = () => {
   return useMutation({
     mutationFn: (
-      data: Pick<ChangePasswordIn, "selector" | "token" | "password">
+      data: Pick<ResetPasswordIn, "selector" | "token" | "password">
     ) => authApi.resetPassword(data),
   })
 }

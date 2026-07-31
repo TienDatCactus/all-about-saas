@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
+import { ResponseMessage } from '../common/decorator/response-message.decorator';
 import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
 import { GithubAuthGuard } from '../common/guard/github-auth.guard';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
@@ -43,6 +44,7 @@ export class AuthController {
 	 */
 	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Public()
+	@ResponseMessage('Login successful')
 	@Post('login')
 	async login(
 		@Body() body: LoginDto,
@@ -55,10 +57,16 @@ export class AuthController {
 			body.password,
 			sessionInfo,
 		);
-		this.authService.setCookie(res, result.refreshToken);
+		this.authService.setCookie(
+			res,
+			result.refreshToken,
+			result.refreshTokenExpiresAt,
+		);
+		// The envelope message comes from @ResponseMessage, so this returns data only
+		// — TransformInterceptor no longer lifts a `message` out of a payload that
+		// has other fields in it.
 		return {
 			accessToken: result.accessToken,
-			message: 'Login successful',
 		};
 	}
 
@@ -70,8 +78,10 @@ export class AuthController {
 			email: body.email,
 			password: body.password,
 		});
+		// Phrased to be true whether or not the address was already taken — the
+		// service deliberately does not tell us which, so neither can this.
 		return {
-			message: 'User registered successfully',
+			message: 'Check your email to finish signing up.',
 		};
 	}
 
@@ -165,18 +175,24 @@ export class AuthController {
 		return { message: 'Password reset successfully' };
 	}
 
-	/** Changes the signed-in user's own password. */
+	/**
+	 * Changes the signed-in user's own password. Every other session is revoked;
+	 * the caller's own is spared so this doesn't log them out of the tab they
+	 * submitted from.
+	 */
 	@UseGuards(JwtAuthGuard)
 	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Post('password/change')
 	async changePassword(@Body() body: ChangePasswordDto, @Req() req) {
-		if (!req.user?.email) {
+		if (!req.user?.id) {
 			throw new BadRequestException('User not authenticated');
 		}
 		// The account is taken from the verified JWT, not the body.
 		await this.authService.changePassword({
-			password: body.password,
-			email: req.user.email,
+			userId: req.user.id,
+			currentPassword: body.currentPassword,
+			newPassword: body.newPassword,
+			keepRefreshToken: req.cookies?.['refresh_token'],
 		});
 		return { message: 'Password changed successfully' };
 	}
@@ -184,7 +200,7 @@ export class AuthController {
 	@Public()
 	@Throttle({ default: { limit: 20, ttl: 60_000 } })
 	@Post('refresh')
-	async refresh(@Req() req) {
+	async refresh(@Req() req, @Res({ passthrough: true }) res) {
 		const refreshToken = req.cookies['refresh_token'];
 		if (!refreshToken) {
 			// A bare Error here became a 500 (and, in production, a generic
@@ -192,9 +208,18 @@ export class AuthController {
 			// it simply needed to log in again.
 			throw new UnauthorizedException('Refresh token not found');
 		}
-		const newAccessToken = await this.authService.refresh(refreshToken);
+		const result = await this.authService.refresh(refreshToken);
+		// Absent when the call landed inside the rotation grace window, where the
+		// cookie already holds a newer token than the one we were handed.
+		if (result.refreshToken) {
+			this.authService.setCookie(
+				res,
+				result.refreshToken,
+				result.refreshTokenExpiresAt,
+			);
+		}
 		return {
-			accessToken: newAccessToken,
+			accessToken: result.accessToken,
 		};
 	}
 	/* =================================  */
@@ -217,7 +242,11 @@ export class AuthController {
 			sessionInfo,
 		);
 
-		this.authService.setCookie(res, result.refreshToken);
+		this.authService.setCookie(
+			res,
+			result.refreshToken,
+			result.refreshTokenExpiresAt,
+		);
 		const frontendUrl = this.configService.get<string>('frontendUrl')!;
 		return res.redirect(frontendUrl);
 	}
@@ -241,7 +270,11 @@ export class AuthController {
 			req.user,
 			sessionInfo,
 		);
-		this.authService.setCookie(res, result.refreshToken);
+		this.authService.setCookie(
+			res,
+			result.refreshToken,
+			result.refreshTokenExpiresAt,
+		);
 		const frontendUrl = this.configService.get<string>('frontendUrl')!;
 		return res.redirect(frontendUrl);
 	}
@@ -262,7 +295,11 @@ export class AuthController {
 			req.user,
 			sessionInfo,
 		);
-		this.authService.setCookie(res, result.refreshToken);
+		this.authService.setCookie(
+			res,
+			result.refreshToken,
+			result.refreshTokenExpiresAt,
+		);
 		const frontendUrl = this.configService.get<string>('frontendUrl')!;
 		return res.redirect(frontendUrl);
 	}

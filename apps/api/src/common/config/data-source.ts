@@ -1,6 +1,7 @@
 import { config as loadEnv } from 'dotenv';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
+import { resolveFileSecrets } from './file-secrets';
 
 /**
  * DataSource for the TypeORM **CLI only** (migration:generate / run / revert).
@@ -14,6 +15,11 @@ loadEnv({
 	path: `.env.${process.env.NODE_ENV ?? 'development'}.local`,
 	quiet: true,
 });
+
+// The migration job runs in the same Compose stack as the api and gets the same
+// mounted secrets, so it needs the same DATABASE_PASSWORD_FILE handling. Nest
+// does it in main.ts; nothing here goes through main.ts.
+resolveFileSecrets();
 
 export default new DataSource({
 	type: 'postgres',

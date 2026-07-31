@@ -12,6 +12,9 @@ import {
 	UpdateBadmintonSessionDto,
 } from './badminton.dto';
 
+/** Mirrors MIN_QUERY in the web autocomplete; enforced here so it cannot be skipped. */
+const MIN_SUGGEST_QUERY = 2;
+
 @Injectable()
 export class BadmintonService extends BaseService<BadmintonSession> {
 	constructor(
@@ -186,22 +189,37 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 	 * plus free-text guest names this owner has used before.
 	 */
 	async suggestParticipants(q: string) {
-		const term = `%${q}%`;
+		// `%%` matches every user in the table, so an empty or one-character query
+		// turned this into a bulk directory read for any authenticated caller. The
+		// web input already waits for two characters; this makes that a rule rather
+		// than a client-side courtesy.
+		const term = q.trim();
+		if (term.length < MIN_SUGGEST_QUERY) {
+			return { users: [] };
+		}
+		const pattern = `%${term}%`;
 
 		const users = await this.usersRepo
 			.createQueryBuilder('u')
 			.leftJoin('u.profile', 'profile')
-			.where('u.email ILIKE :term', { term })
-			.orWhere('profile.displayName ILIKE :term', { term })
-			.select(['u.id', 'profile.displayName'])
+			.where('u.email ILIKE :pattern', { pattern })
+			.orWhere('profile.displayName ILIKE :pattern', { pattern })
+			// u.email was missing from this list while the mapping below used it as
+			// the fallback label, so a user with no display name came back with
+			// `name: undefined` and the autocomplete rendered a blank, unpickable row.
+			.select(['u.id', 'u.email', 'profile.displayName'])
 			.limit(8)
 			.getMany();
 
 		return {
 			users: users.map((u) => ({
 				userId: u.id,
+				// The email is used as a label of last resort, but is not returned as
+				// its own field — it was always undefined there anyway, and nothing
+				// consumes it. Note this endpoint still reveals an address to any
+				// authenticated caller who guesses part of it; narrowing that to exact
+				// email match is a product decision, not a bug fix.
 				name: u.profile?.displayName ?? u.email,
-				email: u.email,
 			})),
 		};
 	}

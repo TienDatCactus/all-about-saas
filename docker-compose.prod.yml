@@ -1,14 +1,31 @@
 # Production stack for a single VPS.
 #
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#   1. Create the secret files once (they are gitignored):
+#        mkdir -p secrets
+#        openssl rand -hex 32 > secrets/jwt_secret
+#        openssl rand -base64 24 > secrets/db_password
+#   2. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 #
 # Differences from the dev docker-compose.yml that matter:
 #   - Postgres is NOT published to the host. Only caddy has published ports.
 #   - Schema comes from committed migrations via the one-shot `migrate` service,
 #     never from synchronize.
+#   - Secrets are mounted as files, not passed as environment variables.
 #   - Every service has a healthcheck and restart: unless-stopped.
 
 name: aas-prod
+
+# Mounted at /run/secrets/<name> in the services that list them. Not env vars, so
+# they are absent from `docker inspect`, from /proc/<pid>/environ, from child
+# processes, and from anything that dumps the environment on a crash.
+#
+# `file:` is the Compose-without-Swarm form. On Swarm or another orchestrator
+# these become external secrets with no change to the services below.
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  jwt_secret:
+    file: ./secrets/jwt_secret
 
 services:
   postgres:
@@ -16,13 +33,17 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DATABASE_USER:?set DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
+      # The official image resolves *_FILE itself.
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: ${DATABASE_NAME:?set DATABASE_NAME}
+    secrets: [db_password]
     volumes:
       - pgdata:/var/lib/postgresql/data
     # No `ports:` — the database is reachable only on the internal network.
     networks: [internal]
     healthcheck:
+      # No password needed: pg_isready over the local socket authenticates as the
+      # container's own postgres user.
       test:
         ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}']
       interval: 10s
@@ -40,10 +61,14 @@ services:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      # data-source.ts calls resolveFileSecrets() — the CLI never boots Nest, so
+      # main.ts is not in the picture here.
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
       DATABASE_NAME: ${DATABASE_NAME}
-      JWT_SECRET: ${JWT_SECRET}
+      # Not used by the CLI, but env validation still runs on this image.
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
       FRONTEND_URL: ${FRONTEND_URL}
+    secrets: [db_password, jwt_secret]
     # The image has no dev deps (no ts-node), so the CLI runs against the
     # COMPILED data-source. Its globs are __dirname-relative and match .js too,
     # so it finds dist/database/migrations/*.js here.
@@ -73,14 +98,19 @@ services:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
       DATABASE_NAME: ${DATABASE_NAME}
-      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (>=32 chars)}
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-900}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-604800}
       FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL for the CORS allowlist}
       COOKIE_SECURE: 'true'
       COOKIE_SAME_SITE: lax
+      # Same Docker network, no TLS between api and postgres. Turn on the moment
+      # the database lives anywhere else.
+      DATABASE_SSL: ${DATABASE_SSL:-false}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
+    secrets: [db_password, jwt_secret]
     networks: [internal]
     depends_on:
       postgres:

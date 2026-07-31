@@ -3,6 +3,7 @@ import { AUTH } from "../url"
 import type {
   ChangePasswordIn,
   LoginIn,
+  ResetPasswordIn,
   SendVerificationEmailIn,
   SignUpIn,
   VerifyEmailIn,
@@ -45,13 +46,17 @@ export const authApi = {
   },
   /** Finish a forgotten-password reset using the emailed selector + token. */
   resetPassword: async (
-    data: Pick<ChangePasswordIn, "selector" | "token" | "password">
+    data: Pick<ResetPasswordIn, "selector" | "token" | "password">
   ): Promise<void> => {
     return http.post(AUTH.resetPassword, data)
   },
-  /** Change the signed-in user's own password; the account comes from the JWT. */
+  /**
+   * Change the signed-in user's own password. The account comes from the JWT;
+   * `currentPassword` is the second factor, and the server revokes every other
+   * session on success.
+   */
   changePassword: async (
-    data: Pick<ChangePasswordIn, "password">
+    data: Pick<ChangePasswordIn, "currentPassword" | "newPassword">
   ): Promise<void> => {
     return http.post(AUTH.changePassword, data)
   },

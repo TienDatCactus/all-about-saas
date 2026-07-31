@@ -46,14 +46,15 @@ export function PlayerNameInput({
 
     // The account id travels on the option itself. Keying it by display name
     // would mislink whenever a guest happens to share a name with an account.
-    if (data.users.length > 0) {
-      out.push({
-        label: "Registered players",
-        options: data.users.map((u) => ({
-          value: u.name,
-          meta: { userId: u.userId },
-        })),
-      })
+    //
+    // flatMap, not map: a suggestion with no label is unpickable, so it is dropped
+    // rather than rendered as a blank row. (The API used to produce these — see
+    // ParticipantSuggestionSchema.)
+    const userOptions = data.users.flatMap((u) =>
+      u.name ? [{ value: u.name, meta: { userId: u.userId } }] : []
+    )
+    if (userOptions.length > 0) {
+      out.push({ label: "Registered players", options: userOptions })
     }
     if (data.guests && data.guests.length > 0) {
       out.push({

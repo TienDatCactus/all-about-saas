@@ -41,12 +41,30 @@ export class TokensService {
 		});
 	}
 
-	async generateRefreshToken(payload: PayloadDto): Promise<string> {
-		return this.signJwt(payload, {
-			expiresIn: Number(
-				this.configService.get<string>('jwt.refreshExpiresIn')!,
-			),
-		});
+	/**
+	 * @param expiresInSeconds overrides the configured TTL. Rotation passes the
+	 * *remaining* lifetime of the session so the token cannot outlive its row.
+	 */
+	async generateRefreshToken(
+		payload: PayloadDto,
+		expiresInSeconds?: number,
+	): Promise<string> {
+		return this.signJwt(
+			{
+				...payload,
+				// HS256 is deterministic, so two refresh tokens minted for the same
+				// user in the same second were byte-identical — two logins a moment
+				// apart produced one token and two rows claiming it. `jti` makes every
+				// token unique, which is also what lets refreshTokenHash be a unique
+				// index and lets a single session be identified for revocation.
+				jti: crypto.randomUUID(),
+			},
+			{
+				expiresIn:
+					expiresInSeconds ??
+					Number(this.configService.get<string>('jwt.refreshExpiresIn')!),
+			},
+		);
 	}
 
 	async verifyRefreshToken(token: string): Promise<PayloadDto> {

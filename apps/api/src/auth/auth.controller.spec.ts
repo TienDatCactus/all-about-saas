@@ -72,9 +72,11 @@ describe('AuthController', () => {
 			const res = makeRes();
 			const sessionInfo = { ipAddress: '127.0.0.1', userAgent: 'jest' };
 			mockAuthService.getSessionInfo.mockReturnValue(sessionInfo);
+			const expiresAt = new Date('2026-08-07T00:00:00.000Z');
 			mockAuthService.login.mockResolvedValue({
 				accessToken: 'access-tok',
 				refreshToken: 'refresh-tok',
+				refreshTokenExpiresAt: expiresAt,
 			});
 
 			const result = await controller.login(
@@ -89,14 +91,16 @@ describe('AuthController', () => {
 				'pw',
 				sessionInfo,
 			);
+			// The session's absolute expiry rides along, so the cookie cannot outlive
+			// the row that authorises it.
 			expect(mockAuthService.setCookie).toHaveBeenCalledWith(
 				res,
 				'refresh-tok',
+				expiresAt,
 			);
-			expect(result).toEqual({
-				accessToken: 'access-tok',
-				message: 'Login successful',
-			});
+			// Data only — "Login successful" now lives on @ResponseMessage, so the
+			// interceptor no longer has to dig it out of the payload.
+			expect(result).toEqual({ accessToken: 'access-tok' });
 		});
 	});
 
@@ -178,7 +182,7 @@ describe('AuthController', () => {
 	});
 
 	describe('signup', () => {
-		it('delegates email/password and returns the success message', async () => {
+		it('delegates email/password and returns a message that reveals nothing', async () => {
 			const result = await controller.signup({
 				email: 'dat@test.com',
 				password: 'pw',
@@ -188,7 +192,12 @@ describe('AuthController', () => {
 				email: 'dat@test.com',
 				password: 'pw',
 			});
-			expect(result).toEqual({ message: 'User registered successfully' });
+			// Identical whether or not the address already had an account — the old
+			// "User registered successfully" vs "Email already in use" pair was an
+			// enumeration oracle.
+			expect(result).toEqual({
+				message: 'Check your email to finish signing up.',
+			});
 		});
 	});
 
@@ -208,22 +217,46 @@ describe('AuthController', () => {
 		it('throws when no refresh_token cookie is present', async () => {
 			const req: any = { cookies: {} };
 
-			await expect(controller.refresh(req)).rejects.toThrow(
+			await expect(controller.refresh(req, makeRes())).rejects.toThrow(
 				'Refresh token not found',
 			);
 			expect(mockAuthService.refresh).not.toHaveBeenCalled();
 		});
 
-		it('returns a new access token when the cookie is present', async () => {
+		it('re-sets the cookie when the token was rotated', async () => {
 			const req: any = { cookies: { refresh_token: 'refresh-tok' } };
-			mockAuthService.refresh.mockResolvedValue('new-access-tok');
+			const res = makeRes();
+			const expiresAt = new Date('2026-08-07T00:00:00.000Z');
+			mockAuthService.refresh.mockResolvedValue({
+				accessToken: 'new-access-tok',
+				refreshToken: 'next-refresh-tok',
+				refreshTokenExpiresAt: expiresAt,
+			});
 
-			const result = await controller.refresh(req);
+			const result = await controller.refresh(req, res);
 
 			expect(mockAuthService.refresh).toHaveBeenCalledWith('refresh-tok');
-			expect(result).toEqual({
+			expect(mockAuthService.setCookie).toHaveBeenCalledWith(
+				res,
+				'next-refresh-tok',
+				expiresAt,
+			);
+			expect(result).toEqual({ accessToken: 'new-access-tok' });
+		});
+
+		it('leaves the cookie alone inside the rotation grace window', async () => {
+			const req: any = { cookies: { refresh_token: 'refresh-tok' } };
+			const res = makeRes();
+			// No refreshToken in the response: a concurrent refresh already rotated,
+			// so the cookie holds a newer token than the one we were handed.
+			mockAuthService.refresh.mockResolvedValue({
 				accessToken: 'new-access-tok',
 			});
+
+			const result = await controller.refresh(req, res);
+
+			expect(mockAuthService.setCookie).not.toHaveBeenCalled();
+			expect(result).toEqual({ accessToken: 'new-access-tok' });
 		});
 	});
 
@@ -256,23 +289,36 @@ describe('AuthController', () => {
 			const req: any = { user: null };
 
 			await expect(
-				controller.changePassword({ password: 'pw' } as any, req),
+				controller.changePassword(
+					{ currentPassword: 'old-pw', newPassword: 'new-pw-1234' },
+					req,
+				),
 			).rejects.toThrow(BadRequestException);
 			expect(mockAuthService.changePassword).not.toHaveBeenCalled();
 		});
 
 		it('takes the account from the JWT, not the request body', async () => {
-			const req: any = { user: { id: 'u1', email: 'dat@test.com' } };
+			const req: any = {
+				user: { id: 'u1', email: 'dat@test.com' },
+				cookies: { refresh_token: 'refresh-tok' },
+			};
 
 			const result = await controller.changePassword(
-				// An attacker-supplied email must not reach the service.
-				{ password: 'pw', email: 'victim@test.com' } as any,
+				// An attacker-supplied userId/email must not reach the service.
+				{
+					currentPassword: 'old-pw',
+					newPassword: 'new-pw-1234',
+					userId: 'victim-id',
+				} as any,
 				req,
 			);
 
 			expect(mockAuthService.changePassword).toHaveBeenCalledWith({
-				password: 'pw',
-				email: 'dat@test.com',
+				userId: 'u1',
+				currentPassword: 'old-pw',
+				newPassword: 'new-pw-1234',
+				// The caller's own session is spared the revoke-all.
+				keepRefreshToken: 'refresh-tok',
 			});
 			expect(result).toEqual({ message: 'Password changed successfully' });
 		});
@@ -353,8 +399,10 @@ describe('AuthController', () => {
 				};
 				const res = makeRes();
 				mockAuthService.getSessionInfo.mockReturnValue({ userAgent: 'jest' });
+				const expiresAt = new Date('2026-08-07T00:00:00.000Z');
 				mockAuthService.oauthAccess.mockResolvedValue({
 					refreshToken: 'refresh-tok',
+					refreshTokenExpiresAt: expiresAt,
 				});
 
 				await (controller as any)[method](req, res);
@@ -369,6 +417,7 @@ describe('AuthController', () => {
 				expect(mockAuthService.setCookie).toHaveBeenCalledWith(
 					res,
 					'refresh-tok',
+					expiresAt,
 				);
 				expect(res.redirect).toHaveBeenCalledWith('https://app.test');
 			},

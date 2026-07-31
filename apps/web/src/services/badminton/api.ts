@@ -1,37 +1,64 @@
 import { http } from "@/lib/utils/http"
+import { paginatedSchema, parseResponse } from "@/lib/utils/parse-response"
 import { BADMINTON } from "../url"
-import type {
-  BadmintonSession,
-  CreateSessionIn,
-  ParticipantSuggestion,
-  PublicSession,
-  UpdateSessionIn,
+import {
+  BadmintonSessionSchema,
+  DeletedIdSchema,
+  ParticipantSuggestionSchema,
+  PublicSessionSchema,
+  SessionListItemSchema,
+  type CreateSessionIn,
+  type UpdateSessionIn,
 } from "./types"
-import type { PageParams, Paginated } from "../utils"
+import type { PageParams } from "../utils"
 
+/**
+ * Every response goes through its schema, so the return types below are checked
+ * against the wire rather than asserted over it. Return types are inferred from
+ * the schemas — deliberately not annotated, which would let an annotation and a
+ * schema disagree again.
+ */
 export const badmintonApi = {
-  list: async (params?: PageParams): Promise<Paginated<BadmintonSession>> => {
-    return http.get(BADMINTON.sessions, { params })
-  },
-  get: async (id: string): Promise<BadmintonSession> => {
-    return http.get(BADMINTON.session(id))
-  },
-  create: async (data: CreateSessionIn): Promise<BadmintonSession> => {
-    return http.post(BADMINTON.sessions, data)
-  },
-  update: async (
-    id: string,
-    data: UpdateSessionIn
-  ): Promise<BadmintonSession> => {
-    return http.patch(BADMINTON.session(id), data)
-  },
-  remove: async (id: string): Promise<{ id: string }> => {
-    return http.delete(BADMINTON.session(id))
-  },
-  suggest: async (q: string): Promise<ParticipantSuggestion> => {
-    return http.get(BADMINTON.suggest, { params: { q } })
-  },
-  getByShareToken: async (shareToken: string): Promise<PublicSession> => {
-    return http.get(BADMINTON.publicSession(shareToken))
-  },
+  list: (params?: PageParams) =>
+    parseResponse(
+      "badminton.list",
+      paginatedSchema(SessionListItemSchema),
+      http.get(BADMINTON.sessions, { params })
+    ),
+  get: (id: string) =>
+    parseResponse(
+      "badminton.get",
+      BadmintonSessionSchema,
+      http.get(BADMINTON.session(id))
+    ),
+  create: (data: CreateSessionIn) =>
+    parseResponse(
+      "badminton.create",
+      BadmintonSessionSchema,
+      http.post(BADMINTON.sessions, data)
+    ),
+  update: (id: string, data: UpdateSessionIn) =>
+    parseResponse(
+      "badminton.update",
+      BadmintonSessionSchema,
+      http.patch(BADMINTON.session(id), data)
+    ),
+  remove: (id: string) =>
+    parseResponse(
+      "badminton.remove",
+      DeletedIdSchema,
+      http.delete(BADMINTON.session(id))
+    ),
+  suggest: (q: string) =>
+    parseResponse(
+      "badminton.suggest",
+      ParticipantSuggestionSchema,
+      http.get(BADMINTON.suggest, { params: { q } })
+    ),
+  getByShareToken: (shareToken: string) =>
+    parseResponse(
+      "badminton.getByShareToken",
+      PublicSessionSchema,
+      http.get(BADMINTON.publicSession(shareToken))
+    ),
 }

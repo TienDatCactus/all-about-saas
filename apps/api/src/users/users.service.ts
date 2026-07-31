@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { BaseService } from '../common/services/base.service';
 import { OAuthAccount, OAuthProvider } from './entities/oauth-account.entity';
-import { User } from './entities/user.entity';
+import { BCRYPT_COST, User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService extends BaseService<User> {
@@ -32,6 +33,25 @@ export class UsersService extends BaseService<User> {
 		});
 	}
 
+	/**
+	 * Throwaway hash, compared against when the account does not exist.
+	 *
+	 * Without it this method returned in well under a millisecond for an unknown
+	 * address and in a few hundred (bcrypt cost 12) for a known one — a membership
+	 * oracle that identical response messages do nothing to close. Built lazily and
+	 * cached: it is one hash for the process lifetime, and async so the first
+	 * unknown-address login doesn't stall the event loop.
+	 */
+	private absentUserHash?: Promise<string>;
+
+	private getAbsentUserHash(): Promise<string> {
+		this.absentUserHash ??= bcrypt.hash(
+			crypto.randomBytes(32).toString('hex'),
+			BCRYPT_COST,
+		);
+		return this.absentUserHash;
+	}
+
 	async validateUser(
 		email: string,
 		pass: string,
@@ -40,12 +60,15 @@ export class UsersService extends BaseService<User> {
 			return null;
 		}
 		const user = await this.findOneWithPassword({ email });
-		if (user?.password) {
-			const isMatch = await bcrypt.compare(pass, user.password);
-			if (isMatch) {
-				const { password: _password, ...result } = user;
-				return result;
-			}
+		if (!user?.password) {
+			// Spend the same time as a real verification would before failing.
+			await bcrypt.compare(pass, await this.getAbsentUserHash());
+			return null;
+		}
+		const isMatch = await bcrypt.compare(pass, user.password);
+		if (isMatch) {
+			const { password: _password, ...result } = user;
+			return result;
 		}
 		return null;
 	}

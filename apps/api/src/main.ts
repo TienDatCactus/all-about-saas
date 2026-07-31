@@ -9,19 +9,36 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import configuration from './common/config/configuration';
+import { resolveFileSecrets } from './common/config/file-secrets';
 import { HttpExceptionFilter } from './common/filter/http-exception.filter';
 import { TransformInterceptor } from './common/interceptor/transform.interceptor';
 
+const BODY_LIMIT = '100kb';
+
 async function bootstrap() {
+	// Before anything reads process.env — ConfigModule's factories run during
+	// module init, which is inside create() below.
+	resolveFileSecrets();
+
 	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 		logger: new ConsoleLogger({
 			logLevels: ['error', 'debug', 'verbose', 'fatal'],
 			prefix: 'all-about-saas',
 		}),
+		// Nest's own body parser is registered during create(), and express's json
+		// middleware skips a request whose body is already parsed — so an app.use()
+		// added afterwards would never see one, and its limit would be decoration.
+		// Declining the built-in is the only way to own the limit.
+		bodyParser: false,
 	});
+	// Was express's implicit 100kb. Same number, now stated: every endpoint here
+	// takes small JSON, and an unstated limit is one nobody notices changing.
+	app.use(json({ limit: BODY_LIMIT }));
+	app.use(urlencoded({ extended: true, limit: BODY_LIMIT }));
 	const frontendUrl = configuration().frontendUrl;
 	// No `origin: true` fallback: reflecting the caller's origin while
 	// credentials:true is set lets any site read authenticated responses. With
@@ -73,7 +90,7 @@ async function bootstrap() {
 	// appends itself — so a client-forged header cannot spoof the source IP.
 	app.set('trust proxy', 1);
 	app.useGlobalInterceptors(
-		new TransformInterceptor(),
+		new TransformInterceptor(app.get(Reflector)),
 		new ClassSerializerInterceptor(app.get(Reflector)),
 	);
 	app.useGlobalFilters(new HttpExceptionFilter());

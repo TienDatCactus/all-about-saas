@@ -5,11 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { badmintonApi } from "./api"
-import type {
-  BadmintonSession,
-  CreateSessionIn,
-  UpdateSessionIn,
-} from "./types"
+import type { CreateSessionIn, SessionListItem, UpdateSessionIn } from "./types"
 import { toast } from "@/components/custom/toast"
 import type { PageParams, Paginated } from "../utils"
 
@@ -94,12 +90,19 @@ export const useDeleteSessionMutation = () => {
 
 const UNDO_WINDOW_MS = 5000
 
+/**
+ * Just the two fields this reads. It is called from the list, whose rows are
+ * `SessionListItem` — asking for a full `BadmintonSession` demanded `ownerId`,
+ * `shareToken` and `updatedAt` that the list endpoint never sends.
+ */
+type DeletableSession = Pick<SessionListItem, "id" | "title">
+
 export function useUndoableDeleteSession() {
   const queryClient = useQueryClient()
   const { mutate: commitDelete } = useDeleteSessionMutation()
 
-  return (session: BadmintonSession) => {
-    queryClient.setQueriesData<Paginated<BadmintonSession>>(
+  return (session: DeletableSession) => {
+    queryClient.setQueriesData<Paginated<SessionListItem>>(
       { queryKey: badmintonKeys.sessions() },
       (prev) =>
         prev
