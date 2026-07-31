@@ -53,9 +53,17 @@ export function resolveFileSecrets(env: NodeJS.ProcessEnv = process.env): void {
 			);
 		}
 
-		// Strip one trailing newline — `echo secret > file` and most editors add
-		// one — but nothing else. A full trim() would silently alter a passphrase
-		// that legitimately starts or ends with a space.
-		env[name] = contents.replace(/\r?\n$/, '');
+		// Strip one trailing line terminator in any form — CRLF, LF, or a bare CR.
+		// Not a full trim(): that would silently alter a passphrase that
+		// legitimately begins or ends with a space.
+		//
+		// The bare-CR case is not hypothetical. `openssl rand ... > secrets/x` under
+		// Git Bash writes CRLF; a `tr -d '\n'` afterwards leaves the CR behind. An
+		// earlier version of this regex required an \n, so it kept that CR while
+		// the Postgres image's own *_FILE handling dropped it — the database was
+		// initialised with one password and the API sent another, failing with
+		// "password authentication failed" and nothing on either side to see.
+		// Being less forgiving than the other reader of the same file is the bug.
+		env[name] = contents.replace(/(?:\r\n|\n|\r)$/, '');
 	}
 }

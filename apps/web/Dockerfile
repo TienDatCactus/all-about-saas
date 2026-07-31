@@ -21,6 +21,19 @@ RUN turbo prune @app/web --docker
 
 FROM base AS builder
 WORKDIR /app
+
+# vite-plus's `vp` binary is Rust, and it initialises an HTTP client at startup —
+# before doing any work. Debian slim ships no CA bundle, so it panicked with
+# "failed to initialize HTTP client: No CA certificates were loaded from the
+# system" and the build died on the first instruction that mattered. This never
+# showed up locally, and never in the API image: Node carries its own CA store,
+# so only the Rust toolchain notices the system one is missing.
+#
+# Builder only, for that reason — the runner is Node and needs nothing here.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY --from=prepare /app/out/json/ .
 RUN npm ci --ignore-scripts=false
 COPY --from=prepare /app/out/full/ .

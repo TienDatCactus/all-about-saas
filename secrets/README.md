@@ -12,10 +12,17 @@ on a crash.
 
 ```bash
 mkdir -p secrets
-openssl rand -hex 32    > secrets/jwt_secret    # >=32 chars, enforced at boot
-openssl rand -base64 24 > secrets/db_password
+openssl rand -hex 32    | tr -d '\r\n' > secrets/jwt_secret   # >=32 chars, enforced at boot
+openssl rand -base64 24 | tr -d '\r\n' > secrets/db_password
 chmod 600 secrets/*
 ```
+
+`tr -d '\r\n'` is not decoration. Under Git Bash `openssl` writes CRLF, and a
+trailing carriage return becomes part of the password — the Postgres image drops
+it when it initialises the database, so the two ends disagree and you get
+`password authentication failed` with nothing to see on either side. The app now
+strips one trailing terminator in any form (see `file-secrets.spec.ts`), but a
+file with no stray bytes in it is one less thing to reason about.
 
 `jwt_secret` must not be rotated casually: every access and refresh token in
 circulation is signed with it, so replacing it logs out every user immediately.

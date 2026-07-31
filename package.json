@@ -15,7 +15,7 @@
     "docker:reset": "docker compose down -v",
     "docker:logs": "docker compose logs -f",
     "bootstrap": "npm install && npm run docker:up",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",

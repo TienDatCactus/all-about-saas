@@ -13,17 +13,12 @@ import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import configuration from './common/config/configuration';
-import { resolveFileSecrets } from './common/config/file-secrets';
 import { HttpExceptionFilter } from './common/filter/http-exception.filter';
 import { TransformInterceptor } from './common/interceptor/transform.interceptor';
 
 const BODY_LIMIT = '100kb';
 
 async function bootstrap() {
-	// Before anything reads process.env — ConfigModule's factories run during
-	// module init, which is inside create() below.
-	resolveFileSecrets();
-
 	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 		logger: new ConsoleLogger({
 			logLevels: ['error', 'debug', 'verbose', 'fatal'],

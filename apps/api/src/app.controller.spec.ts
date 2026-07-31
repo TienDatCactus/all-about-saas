@@ -1,23 +1,6 @@
-import { HttpStatus } from '@nestjs/common';
+import { ServiceUnavailableException } from '@nestjs/common';
 import type { DataSource } from 'typeorm';
 import { AppController } from './app.controller';
-
-/** Minimal express Response double: records the status and the JSON body. */
-function mockRes() {
-	const res: any = {
-		statusCode: undefined as number | undefined,
-		body: undefined as unknown,
-		status(code: number) {
-			res.statusCode = code;
-			return res;
-		},
-		json(payload: unknown) {
-			res.body = payload;
-			return res;
-		},
-	};
-	return res;
-}
 
 const controllerWith = (query: jest.Mock) =>
 	new AppController({ query } as unknown as DataSource);
@@ -34,43 +17,50 @@ describe('AppController', () => {
 		});
 	});
 
+	/**
+	 * These assertions used to be written against an @Res() double, and they
+	 * passed the whole time the endpoint was killing the process in production:
+	 * the fake `res` meant the handler's return value never reached
+	 * ClassSerializerInterceptor, which is where the real failure happened.
+	 *
+	 * Returning a plain object (and throwing for 503) is both the fix and what
+	 * makes the endpoint testable without simulating Express at all.
+	 */
 	describe('readiness /health/ready', () => {
-		it('returns 200 when the database answers', async () => {
-			const res = mockRes();
+		it('resolves with the ok body when the database answers', async () => {
+			const query = jest.fn().mockResolvedValue([{ '1': 1 }]);
 
-			await controllerWith(jest.fn().mockResolvedValue([{ '1': 1 }])).ready(
-				res,
-			);
-
-			expect(res.statusCode).toBe(HttpStatus.OK);
-			expect(res.body).toEqual({ status: 'ok', database: 'up' });
+			await expect(controllerWith(query).ready()).resolves.toEqual({
+				status: 'ok',
+				database: 'up',
+			});
+			expect(query).toHaveBeenCalledWith('SELECT 1');
 		});
 
-		it('returns 503 when the database is unreachable', async () => {
-			const res = mockRes();
-
-			await controllerWith(
+		it('throws 503 when the database is unreachable', async () => {
+			const controller = controllerWith(
 				jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
-			).ready(res);
+			);
 
-			// The old endpoint returned a static 'OK' here, so a broken instance
+			// The original endpoint returned a static 'OK' here, so a broken instance
 			// looked healthy to every proxy and healthcheck.
-			expect(res.statusCode).toBe(HttpStatus.SERVICE_UNAVAILABLE);
-			expect(res.body).toEqual({ status: 'error', database: 'down' });
+			await expect(controller.ready()).rejects.toThrow(
+				ServiceUnavailableException,
+			);
 		});
 
 		it('does not leak the driver error to an unauthenticated caller', async () => {
-			const res = mockRes();
-
-			await controllerWith(
+			const controller = controllerWith(
 				jest
 					.fn()
 					.mockRejectedValue(
 						new Error('password authentication failed for user "aas"'),
 					),
-			).ready(res);
+			);
 
-			expect(JSON.stringify(res.body)).not.toMatch(/password|aas/);
+			const error = await controller.ready().catch((e) => e);
+
+			expect(JSON.stringify(error.getResponse())).not.toMatch(/password|aas/);
 		});
 	});
 });

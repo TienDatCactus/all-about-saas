@@ -69,17 +69,18 @@ services:
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       FRONTEND_URL: ${FRONTEND_URL}
     secrets: [db_password, jwt_secret]
-    # The image has no dev deps (no ts-node), so the CLI runs against the
-    # COMPILED data-source. Its globs are __dirname-relative and match .js too,
-    # so it finds dist/database/migrations/*.js here.
-    command:
-      [
-        'node',
-        '/app/node_modules/typeorm/cli.js',
-        'migration:run',
-        '-d',
-        'dist/common/config/data-source.js',
-      ]
+    # The image has no dev deps (no ts-node), so this runs the plain `typeorm`
+    # binary against the COMPILED data-source. Its migration globs are
+    # __dirname-relative and match .js, so it finds dist/database/migrations/*.js.
+    #
+    # Via `npm run`, not an absolute path into node_modules. It used to invoke
+    # /app/node_modules/typeorm/cli.js, which only existed while the image copied
+    # the whole dev tree and npm happened to hoist typeorm to the root — with the
+    # production-only install it resolves to apps/api/node_modules instead, and
+    # the migration job died with MODULE_NOT_FOUND before touching the database.
+    # `npm run` puts the local node_modules/.bin on PATH, so hoisting stops
+    # mattering.
+    command: ['npm', 'run', 'migration:run:prod']
     working_dir: /app/apps/api
     networks: [internal]
     depends_on:

@@ -40,6 +40,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
 		if (exceptionResponse) {
 			if (typeof exceptionResponse === 'string') {
 				message = exceptionResponse;
+				// `new HttpException('msg', 400)` returns its message as a plain
+				// string, so this branch left `code` on its INTERNAL_SERVER_ERROR
+				// default — every such 400 went out labelled as a server error, which
+				// is actively misleading to a client that branches on `code`.
+				code = exception?.name || 'HTTP_EXCEPTION';
 			} else if (typeof exceptionResponse === 'object') {
 				const obj = exceptionResponse as any;
 				message = obj.message || message;
@@ -62,6 +67,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
 				`${request.method} ${request.url} → ${status} [${traceId}] ${exception?.message ?? 'unknown error'}`,
 				exception?.stack,
 			);
+		}
+
+		// A handler that already responded and then threw — an @Res() route whose
+		// return value blows up downstream, an error after a stream started.
+		// Writing again raises ERR_HTTP_HEADERS_SENT, and that second throw inside
+		// Node's HTTP error path aborts the whole process with
+		// ERR_INTERNAL_ASSERTION. So one misbehaving route took down every request
+		// in flight and restart-looped the container. /health/ready did exactly
+		// that; this guard is what stops the next one from being fatal too.
+		if (response.headersSent) {
+			this.logger.error(
+				`${request.method} ${request.url} → threw AFTER responding [${traceId}]: ${
+					exception?.message ?? 'unknown error'
+				}`,
+				exception?.stack,
+			);
+			return;
 		}
 
 		response.status(status).json({

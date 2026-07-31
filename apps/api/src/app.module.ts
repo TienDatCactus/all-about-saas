@@ -15,12 +15,27 @@ import { BadmintonModule } from './badminton/badminton.module';
 import configuration from './common/config/configuration';
 import database from './common/config/database';
 import { validateEnv } from './common/config/env.validation';
+import { resolveFileSecrets } from './common/config/file-secrets';
 import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { CustomeThrottlerGuard } from './common/guard/throttler.guard';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { MailModule } from './mail/mail.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
+
+// Mounted secrets (DATABASE_PASSWORD_FILE, JWT_SECRET_FILE) into process.env,
+// before anything reads it.
+//
+// It has to be here rather than in bootstrap(): ConfigModule.forRoot() below runs
+// `validate` synchronously when the decorator argument is evaluated — during the
+// *import* of this module, which main.ts does before its own first statement. A
+// call at the top of bootstrap() therefore ran too late, and the containerised
+// app crash-looped on "DATABASE_PASSWORD: expected string, received undefined"
+// even though the secret was mounted correctly.
+//
+// A top-level statement, not an import side effect: import order is at the mercy
+// of formatters and organise-imports, statement order is not.
+resolveFileSecrets();
 
 @Module({
 	imports: [

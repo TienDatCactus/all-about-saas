@@ -26,6 +26,11 @@
     "@react-email/render": "2.0.8"
   },
   "devDependencies": {
-    "@react-email/ui": "^6.6.0"
+    "@react-email/ui": "^6.6.0",
+    "@repo/typescript-config": "*",
+    "typescript": "^6.0.3",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
   }
 }

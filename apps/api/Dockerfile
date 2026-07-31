@@ -49,10 +49,29 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Whole tree, because the API resolves its workspace deps through the symlinks
-# npm created in node_modules. (Size optimisation for later: a second install
-# with --omit=dev, once this is verified working.)
-COPY --from=builder --chown=node:node /app .
+# A second, production-only install rather than copying the builder's tree.
+# Copying it produced a 1.44GB image: jest, the Nest CLI, typescript, eslint and
+# every transitive dev dep travelled to production, where nothing calls them and
+# they are only extra attack surface. Installing fresh here is what leaves them
+# behind, and it still creates the node_modules symlinks the API needs to resolve
+# @repo/badminton-calc and @transactional/emails (both production deps).
+#   --ignore-scripts=false is kept, not dropped: bcrypt is a native module and
+#   needs its install script to fetch/build the .node binary, so an install that
+#   skipped scripts would produce an image that boots and dies on first login.
+#   That is also why the root `prepare` script is `husky || true` — with
+#   --omit=dev husky is not installed, and `prepare` failing took the whole
+#   install down with exit 127.
+COPY --from=prepare /app/out/json/ .
+RUN npm ci --omit=dev --ignore-scripts=false \
+ && npm cache clean --force
+
+# Compiled output has to come from the builder: the install above restored the
+# workspace symlinks, but each package's dist/ is a build artefact that does not
+# exist in a fresh install. Root-owned and world-readable — the app runs as
+# `node` and has no business rewriting its own code.
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/packages/badminton-calc/dist ./packages/badminton-calc/dist
+COPY --from=builder /app/packages/transactional/dist ./packages/transactional/dist
 
 USER node
 EXPOSE 8000

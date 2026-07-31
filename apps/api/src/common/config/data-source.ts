@@ -43,5 +43,13 @@ export default new DataSource({
 	// Never true here. Schema changes go through committed migrations so a fresh
 	// production database is reproducible.
 	synchronize: false,
+
+	// Same reasoning as synchronize:false. Left on, TypeORM's driver quietly runs
+	// CREATE EXTENSION "uuid-ossp" on connect because the entities have generated
+	// uuid columns — a schema change that happens outside any migration and is
+	// invisible in the migration history. The initial migration now creates it
+	// explicitly, which is also what lets it run where the role cannot.
+	installExtensions: false,
+
 	logging: ['error'],
 });
