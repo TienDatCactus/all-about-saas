@@ -7,10 +7,11 @@ import type {
   PublicSession,
   UpdateSessionIn,
 } from "./types";
+import type { PageParams, Paginated } from "../utils";
 
 export const badmintonApi = {
-  list: async (): Promise<BadmintonSession[]> => {
-    return http.get(BADMINTON.sessions);
+  list: async (params?: PageParams): Promise<Paginated<BadmintonSession>> => {
+    return http.get(BADMINTON.sessions, { params });
   },
   get: async (id: string): Promise<BadmintonSession> => {
     return http.get(BADMINTON.session(id));

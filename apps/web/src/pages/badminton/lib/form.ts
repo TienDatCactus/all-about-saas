@@ -1,4 +1,4 @@
-import { computeSplit } from "@/pages/badminton/lib/calc";
+import { computeSplit } from "@repo/badminton-calc";
 import type {
   BadmintonSession,
   CreateSessionIn,
@@ -113,7 +113,7 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
 
       acc.push({
         userId: p.userId,
-        name,
+        name: name || "Unnamed",
         courtFraction: clamp01((p.courtPercent ?? 0) / 100),
         discount: clamp01((p.discountPercent ?? 0) / 100),
         shuttleFraction: clamp01((p.shuttlePercent ?? 0) / 100),

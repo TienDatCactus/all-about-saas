@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { BadmintonParticipant } from './badminton-participant.entity';
-import type { ComputedSnapshot } from '../types/computed-snapshot';
+import type { ComputedSnapshot } from '@repo/badminton-calc';
 import {
 	BaseEntity,
 	SoftDeleteBaseEntity,

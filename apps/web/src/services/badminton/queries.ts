@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { badmintonApi } from "./api";
 import type {
   BadmintonSession,
@@ -6,20 +11,28 @@ import type {
   UpdateSessionIn,
 } from "./types";
 import { toast } from "@/components/custom/toast";
+import type { PageParams, Paginated } from "../utils";
 
 export const badmintonKeys = {
   all: ["badminton"] as const,
+  /** Prefix for every page of the list — use this to invalidate them all. */
   sessions: () => [...badmintonKeys.all, "sessions"] as const,
+  /** One specific page. Params are part of the key so pages cache separately. */
+  sessionsPage: (params: PageParams = {}) =>
+    [...badmintonKeys.sessions(), params] as const,
   session: (id: string) => [...badmintonKeys.all, "session", id] as const,
   publicSession: (token: string) =>
     [...badmintonKeys.all, "public", token] as const,
   suggest: (q: string) => [...badmintonKeys.all, "suggest", q] as const,
 };
 
-export const useSessionsQuery = () => {
+export const useSessionsQuery = (params: PageParams = {}) => {
   return useQuery({
-    queryKey: badmintonKeys.sessions(),
-    queryFn: () => badmintonApi.list(),
+    queryKey: badmintonKeys.sessionsPage(params),
+    queryFn: () => badmintonApi.list(params),
+    // Keep the current page on screen while the next one loads, so paging
+    // doesn't tear the list down to a skeleton on every click.
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -86,9 +99,16 @@ export function useUndoableDeleteSession() {
   const { mutate: commitDelete } = useDeleteSessionMutation();
 
   return (session: BadmintonSession) => {
-    queryClient.setQueryData<BadmintonSession[]>(
-      badmintonKeys.sessions(),
-      (prev) => prev?.filter((s) => s.id !== session.id),
+    queryClient.setQueriesData<Paginated<BadmintonSession>>(
+      { queryKey: badmintonKeys.sessions() },
+      (prev) =>
+        prev
+          ? {
+              ...prev,
+              data: prev.data.filter((s) => s.id !== session.id),
+              total: Math.max(0, prev.total - 1),
+            }
+          : prev,
     );
 
     let undone = false;
@@ -101,13 +121,6 @@ export function useUndoableDeleteSession() {
         label: "Undo",
         onClick: () => {
           undone = true;
-          // Re-insert only this session (not a full snapshot restore, which
-          // would resurrect other deletes still in their undo window), then
-          // refetch so ordering matches the server.
-          queryClient.setQueryData<BadmintonSession[]>(
-            badmintonKeys.sessions(),
-            (prev) => (prev ? [...prev, session] : prev),
-          );
           queryClient.invalidateQueries({
             queryKey: badmintonKeys.sessions(),
           });

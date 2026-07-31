@@ -1,12 +1,41 @@
-import type {
-  ComputedRow,
-  ComputedSnapshot,
-} from './types/computed-snapshot';
+/**
+ * Canonical badminton money-split algorithm.
+ *
+ * This package is the single source of truth for the calculation: the API calls
+ * it on save to freeze `BadmintonSession.computed`, and the web app calls it to
+ * render the live editing preview. They must never drift, which is exactly why
+ * the implementation lives here rather than being copied into both.
+ *
+ * Pure data in, pure data out — no entity/ORM coupling.
+ */
+
+/** One player's rounded share of one session. All amounts are whole VND. */
+export interface ComputedRow {
+  participantId: string;
+  name: string;
+  court: number;
+  shuttle: number;
+  total: number;
+}
 
 /**
- * Split-calculation inputs. Pure data — no entity/ORM coupling, so this function
- * can move to a shared `packages/badminton-calc` later and be reused by the web app.
+ * Frozen result of the split calculation, stored on the session and served to
+ * the public share link so the numbers never recompute / drift.
  */
+export interface ComputedSnapshot {
+  /** Court cost input, VND. */
+  courtCost: number;
+  /** Derived shuttle cost = shuttleUnitPrice * totalShuttleCount, VND. */
+  shuttleCost: number;
+  /** courtCost + shuttleCost, rounded to the nearest 1,000 VND. */
+  grandTotal: number;
+  rows: ComputedRow[];
+  /** Exact expense minus sum(rounded totals); absorbed by the organizer. */
+  roundingResidual: number;
+  /** ISO timestamp the snapshot was computed. */
+  computedAt: string;
+}
+
 export interface CalcParticipant {
   /** Stable id used to key the output row back to the participant. */
   id: string;
@@ -34,7 +63,8 @@ const ROUND_UNIT = 1000;
 const sum = (xs: number[]): number => xs.reduce((a, b) => a + b, 0);
 
 /** Round to the nearest {@link ROUND_UNIT} (1,000 VND). */
-const roundToUnit = (x: number): number => Math.round(x / ROUND_UNIT) * ROUND_UNIT;
+const roundToUnit = (x: number): number =>
+  Math.round(x / ROUND_UNIT) * ROUND_UNIT;
 
 /**
  * Compute each player's share of a session.
@@ -49,11 +79,12 @@ const roundToUnit = (x: number): number => Math.round(x / ROUND_UNIT) * ROUND_UN
  *  - Each player's total is rounded to the nearest 1,000 VND using the largest-remainder
  *    method, guaranteeing Σ(rounded totals) === round(expense) exactly.
  *
- * `computedAt` is injected (not read from the clock) to keep this function pure/testable.
+ * `computedAt` is injectable (rather than always read from the clock) so callers that
+ * care about determinism — the API's snapshot tests — can pin it.
  */
 export function computeSplit(
   input: CalcInput,
-  computedAt: string,
+  computedAt: string = new Date().toISOString(),
 ): ComputedSnapshot {
   const { courtCost, shuttleUnitPrice, totalShuttleCount, participants } = input;
 
@@ -67,7 +98,7 @@ export function computeSplit(
       shuttleCost,
       grandTotal,
       rows: [],
-      roundingResidual: expense - 0,
+      roundingResidual: expense,
       computedAt,
     };
   }
@@ -78,7 +109,8 @@ export function computeSplit(
   // Undiscounted fair share per player, and its court/shuttle breakdown. Both the
   // court pot and the shuttle pot are split by each player's respective weight.
   const fair = participants.map((p) => {
-    const court = totalFraction === 0 ? 0 : (courtCost * p.courtFraction) / totalFraction;
+    const court =
+      totalFraction === 0 ? 0 : (courtCost * p.courtFraction) / totalFraction;
     const shuttle =
       totalShuttleFraction === 0
         ? 0
@@ -115,7 +147,8 @@ export function computeSplit(
   const rows: ComputedRow[] = participants.map((p, i) => {
     const total = roundedTotal[i];
     const fairTotal = fair[i].total;
-    const court = fairTotal === 0 ? 0 : Math.round((total * fair[i].court) / fairTotal);
+    const court =
+      fairTotal === 0 ? 0 : Math.round((total * fair[i].court) / fairTotal);
     const shuttle = total - court;
     return { participantId: p.id, name: p.name, court, shuttle, total };
   });

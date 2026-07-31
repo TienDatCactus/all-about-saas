@@ -1,6 +1,6 @@
 import DataPage from "@/components/custom/data/page";
 import { Skeleton } from "@/components/ui/skeleton";
-import { computeSplit } from "@/pages/badminton/lib/calc";
+import { computeSplit } from "@repo/badminton-calc";
 import { usePublicSessionQuery } from "@/services/badminton/queries";
 import type { PublicSession } from "@/services/badminton/types";
 import { BadmintonSummary } from "../components/Summary";

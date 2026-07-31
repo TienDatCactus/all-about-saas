@@ -178,8 +178,10 @@ export class AuthService {
 				await this.tokensService.generateAccessToken(newPayload);
 			return newAccessToken;
 		} catch (error) {
+			// Detail stays server-side: the client is unauthenticated here, so the
+			// response must not describe why verification failed.
 			Logger.debug(`Refresh token verification failed: ${error}`);
-			throw new HttpException('Invalid refresh token : ' + error, 401);
+			throw new HttpException('Invalid refresh token', 401);
 		}
 	}
 

@@ -99,7 +99,7 @@ export class HttpClient {
             return this.axiosInstance(originalRequest);
           } catch (refreshError) {
             storage.clear();
-            // window.location.href = "/auth/login";
+            window.location.href = "/auth/login";
             return Promise.reject(refreshError);
           }
         }
@@ -107,7 +107,7 @@ export class HttpClient {
         if (status === 401 && isAuthRequest) {
           storage.clear();
           if (requestUrl.includes("/auth/refresh")) {
-            // window.location.href = "/auth/login";
+            window.location.href = "/auth/login";
           }
           return Promise.reject(error);
         }

@@ -18,8 +18,11 @@ import { RegisterResource } from '../common/decorator/resource.decorator';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
 import { PoliciesGuard } from '../common/guard/policies.guard';
 import { BadmintonService } from './badminton.service';
-import { CreateBadmintonSessionDto } from './dto/create-badminton-session.dto';
-import { UpdateBadmintonSessionDto } from './dto/update-badminton-session.dto';
+import {
+	CreateBadmintonSessionDto,
+	QueryBadmintonSessionDto,
+	UpdateBadmintonSessionDto,
+} from './badminton.dto';
 
 @RegisterResource({
 	name: 'BadmintonSession',
@@ -35,18 +38,35 @@ export class BadmintonController {
 	@UseGuards(JwtAuthGuard)
 	// @CheckPolicies({ action: 'create', resource: 'BadmintonSession' })
 	create(@Req() req, @Body() dto: CreateBadmintonSessionDto) {
-		return this.service.create(req.user.id, dto);
+		return this.service.createSession(req.user.id, dto);
 	}
 
 	@Get('/sessions')
 	@UseGuards(JwtAuthGuard)
 	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
-	findAll(@Req() req) {
-		Logger.debug(req.user);
-		return this.service.findAllByOwner(req.user.id);
+	findAll(@Req() req, @Query() query: QueryBadmintonSessionDto) {
+		return this.service.paginate({
+			page: query.page,
+			limit: query.limit,
+			where: { ownerId: req.user.id },
+			order: { playedOn: 'DESC', createdAt: 'DESC' },
+			relations: { participants: true },
+			select: {
+				id: true,
+				title: true,
+				playedOn: true,
+				courtCost: true,
+				shuttleUnitPrice: true,
+				totalShuttleCount: true,
+				createdAt: true,
+				participants: { id: true },
+				computed: {
+					grandTotal: true,
+				},
+			},
+		});
 	}
 
-	// Declared before ':id' so the static path wins the route match.
 	@Get('/participants/suggest')
 	@UseGuards(JwtAuthGuard)
 	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
@@ -67,13 +87,13 @@ export class BadmintonController {
 		@Param('id', ParseUUIDPipe) id: string,
 		@Body() dto: UpdateBadmintonSessionDto,
 	) {
-		return this.service.update(req.user.id, id, dto);
+		return this.service.updateSession(req.user.id, id, dto);
 	}
 
 	@Delete('/sessions/:id')
 	@UseGuards(JwtAuthGuard, PoliciesGuard)
 	remove(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
-		return this.service.remove(req.user.id, id);
+		return this.service.removeSession(req.user.id, id);
 	}
 	@Public()
 	@Get('/public/:shareToken')

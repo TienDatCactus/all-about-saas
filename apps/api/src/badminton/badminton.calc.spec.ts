@@ -1,4 +1,4 @@
-import { CalcInput, computeSplit } from './badminton.calc';
+import { CalcInput, computeSplit } from '@repo/badminton-calc';
 
 const AT = '2026-07-25T00:00:00.000Z';
 

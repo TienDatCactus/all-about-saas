@@ -1,13 +1,7 @@
-import type { ReactNode } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTrigger,
-} from "../ui/popover";
-import { Button } from "../ui/button";
 import { CaretDownIcon } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Breadcrumbs } from "./breadcrumb";
 
 export function PageShell({ children }: { children: ReactNode }) {

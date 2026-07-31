@@ -1,11 +1,10 @@
 import * as z from "zod";
 
-/**
- * A single participant as entered in the editor. Identity is EITHER a linked app
- * user (`userId`) or a free-text guest name. Percentages are fractions (0..1).
- */
+export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc";
+import type { ComputedSnapshot } from "@repo/badminton-calc";
+
 export const ParticipantInputSchema = z.object({
-  userId: z.string().uuid().optional(),
+  userId: z.uuid().optional(),
   name: z.string().min(1, "Name is required").max(120),
   courtFraction: z.number().min(0).max(1).optional(),
   discount: z.number().min(0).max(1).optional(),
@@ -20,31 +19,15 @@ export const CreateSessionSchema = z.object({
   courtCost: z.number().int().min(0),
   shuttleUnitPrice: z.number().int().min(0),
   totalShuttleCount: z.number().int().min(0),
-  participants: z.array(ParticipantInputSchema).min(1, "Add at least one player"),
+  participants: z
+    .array(ParticipantInputSchema)
+    .min(1, "Add at least one player"),
 });
 
 export type CreateSessionIn = z.infer<typeof CreateSessionSchema>;
 export type UpdateSessionIn = Partial<CreateSessionIn>;
 
-// --- Server response shapes (mirror apps/api entities + ComputedSnapshot) ---
-
-export interface ComputedRow {
-  participantId: string;
-  name: string;
-  court: number;
-  shuttle: number;
-  total: number;
-}
-
-export interface ComputedSnapshot {
-  courtCost: number;
-  shuttleCost: number;
-  grandTotal: number;
-  rows: ComputedRow[];
-  roundingResidual: number;
-  computedAt: string;
-}
-
+/** Envelope returned by the API's BaseService.paginate(). */
 export interface SessionParticipant {
   id: string;
   userId?: string | null;

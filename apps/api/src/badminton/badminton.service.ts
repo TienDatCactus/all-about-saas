@@ -3,15 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes, randomUUID } from 'crypto';
 import { DataSource, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { computeSplit, type CalcInput } from './badminton.calc';
-import { CreateBadmintonSessionDto } from './dto/create-badminton-session.dto';
-import { ParticipantInputDto } from './dto/participant-input.dto';
-import { UpdateBadmintonSessionDto } from './dto/update-badminton-session.dto';
+import { computeSplit } from '@repo/badminton-calc';
 import { BadmintonParticipant } from './entities/badminton-participant.entity';
 import { BadmintonSession } from './entities/badminton-session.entity';
+import { BaseService } from '../common/services/base.service';
+import {
+	CreateBadmintonSessionDto,
+	UpdateBadmintonSessionDto,
+} from './badminton.dto';
 
 @Injectable()
-export class BadmintonService {
+export class BadmintonService extends BaseService<BadmintonSession> {
 	constructor(
 		@InjectRepository(BadmintonSession)
 		private readonly sessionRepo: Repository<BadmintonSession>,
@@ -20,9 +22,11 @@ export class BadmintonService {
 		@InjectRepository(User)
 		private readonly usersRepo: Repository<User>,
 		private readonly dataSource: DataSource,
-	) {}
+	) {
+		super(sessionRepo);
+	}
 
-	async create(ownerId: string, dto: CreateBadmintonSessionDto) {
+	async createSession(ownerId: string, dto: CreateBadmintonSessionDto) {
 		const session = this.sessionRepo.create({
 			ownerId,
 			playedOn: dto.playedOn,
@@ -66,13 +70,6 @@ export class BadmintonService {
 		return this.sessionRepo.save(session);
 	}
 
-	async findAllByOwner(ownerId: string) {
-		return this.sessionRepo.find({
-			where: { ownerId },
-			order: { playedOn: 'DESC', createdAt: 'DESC' },
-		});
-	}
-
 	async findOneOwned(ownerId: string, id: string) {
 		const session = await this.sessionRepo.findOne({
 			where: { id, ownerId },
@@ -82,55 +79,71 @@ export class BadmintonService {
 		return session;
 	}
 
-	async update(ownerId: string, id: string, dto: UpdateBadmintonSessionDto) {
-		const session = await this.findOneOwned(ownerId, id);
-
+	async updateSession(
+		ownerId: string,
+		id: string,
+		dto: UpdateBadmintonSessionDto,
+	) {
 		const { participants, ...rest } = dto;
 
-		Object.assign(
-			session,
-			Object.fromEntries(
-				Object.entries(rest).filter(([, v]) => v !== undefined),
-			),
-		);
-		Logger.debug(
-			`Updating session ${id} with data: ${JSON.stringify(session)}`,
-		);
-		if (participants !== undefined) {
-			// Same id + default discipline as create(): the snapshot is computed
-			// before the INSERT, so rows must reference ids we choose up front.
-			session.participants = participants.map((p) =>
-				this.participantRepo.create({
-					id: randomUUID(),
-					userId: p.userId,
-					name: p.name,
-					courtFraction: p.courtFraction || 1,
-					discount: p.discount || 0,
-					shuttleFraction: p.shuttleFraction || 1,
-					sessionId: session.id,
-				}),
-			);
-		}
-
-		session.computed = computeSplit(
-			{
-				courtCost: session.courtCost,
-				shuttleUnitPrice: session.shuttleUnitPrice,
-				totalShuttleCount: session.totalShuttleCount,
-				participants: session.participants.map((p) => ({
-					id: p.id,
-					name: p.name,
-					courtFraction: p.courtFraction,
-					discount: p.discount,
-					shuttleFraction: p.shuttleFraction,
-				})),
-			},
-			new Date().toISOString(),
-		);
-
-		// Delete + cascade re-insert must be atomic: without the transaction, a
-		// failed save would leave the session with no participants at all.
+		// The whole read-modify-write runs in one transaction, and the session row
+		// is locked FOR UPDATE up front. Without the lock, two concurrent updates
+		// both read the old state, then their delete/insert pairs interleave: the
+		// second DELETE runs on a snapshot that predates the first INSERT, so both
+		// participant sets survive while `computed` only describes one of them.
 		return this.dataSource.transaction(async (manager) => {
+			// Locked separately from its relation: Postgres rejects FOR UPDATE on
+			// the nullable side of the outer join that `relations` would generate.
+			const session = await manager.findOne(BadmintonSession, {
+				where: { id, ownerId },
+				lock: { mode: 'pessimistic_write' },
+			});
+			if (!session) throw new NotFoundException('Session not found');
+
+			session.participants = await manager.findBy(BadmintonParticipant, {
+				sessionId: id,
+			});
+
+			Object.assign(
+				session,
+				Object.fromEntries(
+					Object.entries(rest).filter(([, v]) => v !== undefined),
+				),
+			);
+
+			if (participants !== undefined) {
+				// Same id + default discipline as createSession(): the snapshot is
+				// computed before the INSERT, so rows must reference ids we choose
+				// up front.
+				session.participants = participants.map((p) =>
+					this.participantRepo.create({
+						id: randomUUID(),
+						userId: p.userId,
+						name: p.name,
+						courtFraction: p.courtFraction ?? 1,
+						discount: p.discount ?? 0,
+						shuttleFraction: p.shuttleFraction ?? 1,
+						sessionId: session.id,
+					}),
+				);
+			}
+
+			session.computed = computeSplit(
+				{
+					courtCost: session.courtCost,
+					shuttleUnitPrice: session.shuttleUnitPrice,
+					totalShuttleCount: session.totalShuttleCount,
+					participants: session.participants.map((p) => ({
+						id: p.id,
+						name: p.name,
+						courtFraction: p.courtFraction,
+						discount: p.discount,
+						shuttleFraction: p.shuttleFraction,
+					})),
+				},
+				new Date().toISOString(),
+			);
+
 			if (participants !== undefined) {
 				await manager.delete(BadmintonParticipant, { sessionId: session.id });
 			}
@@ -138,7 +151,7 @@ export class BadmintonService {
 		});
 	}
 
-	async remove(ownerId: string, id: string) {
+	async removeSession(ownerId: string, id: string) {
 		const session = await this.findOneOwned(ownerId, id);
 		await this.sessionRepo.softRemove(session);
 		return { id };
