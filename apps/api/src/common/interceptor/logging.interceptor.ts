@@ -29,7 +29,7 @@ export class LoggingInterceptor implements NestInterceptor {
 					const status = err?.status ?? 500;
 					this.logger.error(
 						`${method} ${url} ${status} +${Date.now() - startedAt}ms - ${
-							err?.message ?? err
+							err?.message ?? 'unknown error'
 						}`,
 					);
 				},

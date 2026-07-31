@@ -38,7 +38,9 @@ describe('AppController', () => {
 		it('returns 200 when the database answers', async () => {
 			const res = mockRes();
 
-			await controllerWith(jest.fn().mockResolvedValue([{ '1': 1 }])).ready(res);
+			await controllerWith(jest.fn().mockResolvedValue([{ '1': 1 }])).ready(
+				res,
+			);
 
 			expect(res.statusCode).toBe(HttpStatus.OK);
 			expect(res.body).toEqual({ status: 'ok', database: 'up' });

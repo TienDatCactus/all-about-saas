@@ -50,7 +50,10 @@ const baseSchema = z.looseObject({
 
 	JWT_SECRET: z
 		.string()
-		.min(32, 'JWT_SECRET must be at least 32 characters (use `openssl rand -hex 32`)'),
+		.min(
+			32,
+			'JWT_SECRET must be at least 32 characters (use `openssl rand -hex 32`)',
+		),
 	JWT_EXPIRES_IN: secondsField('JWT_EXPIRES_IN'),
 	JWT_REFRESH_EXPIRES_IN: secondsField('JWT_REFRESH_EXPIRES_IN'),
 

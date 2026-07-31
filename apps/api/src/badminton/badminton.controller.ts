@@ -3,14 +3,12 @@ import {
 	Controller,
 	Delete,
 	Get,
-	Logger,
 	Param,
 	ParseUUIDPipe,
 	Patch,
 	Post,
 	Query,
 	Req,
-	UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorator/is-public.decorator';

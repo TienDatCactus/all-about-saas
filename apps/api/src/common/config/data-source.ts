@@ -30,7 +30,9 @@ export default new DataSource({
 	// A `src/**/*.ts` glob found zero migrations inside the container, so the
 	// deploy step would have reported success while applying nothing.
 	entities: [join(__dirname, '..', '..', '**', '*.entity.{ts,js}')],
-	migrations: [join(__dirname, '..', '..', 'database', 'migrations', '*.{ts,js}')],
+	migrations: [
+		join(__dirname, '..', '..', 'database', 'migrations', '*.{ts,js}'),
+	],
 
 	// Never true here. Schema changes go through committed migrations so a fresh
 	// production database is reproducible.

@@ -57,7 +57,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 		// The detail withheld above still has to land somewhere, or production
 		// 500s become unreadable. traceId is what ties this line to the response
 		// the user saw.
-		if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+		if (status >= 500) {
 			this.logger.error(
 				`${request.method} ${request.url} → ${status} [${traceId}] ${exception?.message ?? 'unknown error'}`,
 				exception?.stack,

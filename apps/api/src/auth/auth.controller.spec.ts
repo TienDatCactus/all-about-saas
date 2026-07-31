@@ -78,7 +78,7 @@ describe('AuthController', () => {
 			});
 
 			const result = await controller.login(
-				{ email: 'dat@test.com', password: 'pw' } as any,
+				{ email: 'dat@test.com', password: 'pw' },
 				res,
 				req,
 			);
@@ -122,7 +122,7 @@ describe('AuthController', () => {
 				selector: 's',
 				token: 't',
 				type: VerificationType.PASSWORD_RESET,
-			} as any);
+			});
 
 			expect(
 				mockAuthService.verifyVerificationTokenRecord,
@@ -150,7 +150,7 @@ describe('AuthController', () => {
 				selector: 's',
 				token: 't',
 				type: VerificationType.EMAIL_VERIFY,
-			} as any);
+			});
 
 			expect(
 				mockAuthService.verifyVerificationTokenRecord,
@@ -171,7 +171,7 @@ describe('AuthController', () => {
 				selector: 's',
 				token: 't',
 				type: VerificationType.PASSWORD_RESET,
-			} as any);
+			});
 
 			expect(mockUsersService.update).not.toHaveBeenCalled();
 		});
@@ -182,7 +182,7 @@ describe('AuthController', () => {
 			const result = await controller.signup({
 				email: 'dat@test.com',
 				password: 'pw',
-			} as any);
+			});
 
 			expect(mockAuthService.signup).toHaveBeenCalledWith({
 				email: 'dat@test.com',
@@ -197,7 +197,7 @@ describe('AuthController', () => {
 		it('forwards the emailed selector/token body and returns success', async () => {
 			const body = { selector: 's', token: 't', password: 'pw' };
 
-			const result = await controller.resetPassword(body as any);
+			const result = await controller.resetPassword(body);
 
 			expect(mockAuthService.resetPasswordWithToken).toHaveBeenCalledWith(body);
 			expect(result).toEqual({ message: 'Password reset successfully' });
@@ -283,7 +283,7 @@ describe('AuthController', () => {
 			await controller.sendVerificationEmail({
 				type: VerificationType.PASSWORD_RESET,
 				selector: 's',
-			} as any);
+			});
 
 			expect(mockAuthService.resendResetPasswordEmail).toHaveBeenCalledWith(
 				's',
@@ -295,7 +295,7 @@ describe('AuthController', () => {
 			await controller.sendVerificationEmail({
 				type: VerificationType.PASSWORD_RESET,
 				email: 'dat@test.com',
-			} as any);
+			});
 
 			expect(mockAuthService.sendResetPasswordEmail).toHaveBeenCalledWith(
 				'dat@test.com',
@@ -322,7 +322,7 @@ describe('AuthController', () => {
 			await controller.sendVerificationEmail({
 				type: VerificationType.EMAIL_VERIFY,
 				selector: 's',
-			} as any);
+			});
 
 			expect(mockAuthService.resendVerificationEmail).toHaveBeenCalledWith('s');
 		});

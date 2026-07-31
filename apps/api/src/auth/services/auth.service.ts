@@ -180,7 +180,7 @@ export class AuthService {
 		} catch (error) {
 			// Detail stays server-side: the client is unauthenticated here, so the
 			// response must not describe why verification failed.
-			Logger.debug(`Refresh token verification failed: ${error}`);
+			Logger.debug(`Refresh token verification failed: ${String(error)}`);
 			throw new HttpException('Invalid refresh token', 401);
 		}
 	}

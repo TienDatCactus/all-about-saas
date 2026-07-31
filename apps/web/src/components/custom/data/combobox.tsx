@@ -8,46 +8,46 @@ import {
   ComboboxItem,
   ComboboxLabel,
   ComboboxList,
-} from "@/components/ui/combobox";
-import { cn } from "@/lib/utils";
-import { SpinnerIcon } from "@phosphor-icons/react";
-import { useDebounce } from "ahooks";
-import * as React from "react";
+} from "@/components/ui/combobox"
+import { cn } from "@/lib/utils"
+import { SpinnerIcon } from "@phosphor-icons/react"
+import { useDebounce } from "ahooks"
+import * as React from "react"
 
 export interface DataComboboxOption {
   /** Text written into the input when this option is picked. */
-  value: string;
+  value: string
   /** Secondary line — an email, a hint, a count. */
-  description?: string;
+  description?: string
 }
 
 export interface DataComboboxGroup {
-  label: string;
-  options: DataComboboxOption[];
+  label: string
+  options: DataComboboxOption[]
 }
 
 interface DataComboboxProps {
   /** The input text. This is free-form: it need not match any option. */
-  value: string;
-  onValueChange: (value: string) => void;
+  value: string
+  onValueChange: (value: string) => void
   /** Flat suggestions. Ignored when `groups` is passed. */
-  options?: DataComboboxOption[];
-  groups?: DataComboboxGroup[];
+  options?: DataComboboxOption[]
+  groups?: DataComboboxGroup[]
   /** Called with the trimmed query after `debounceMs` of no typing. */
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string) => void
   /** Fires only when a suggestion is picked — not while typing. */
-  onSelect?: (option: DataComboboxOption) => void;
-  loading?: boolean;
-  placeholder?: string;
-  emptyMessage?: string;
+  onSelect?: (option: DataComboboxOption) => void
+  loading?: boolean
+  placeholder?: string
+  emptyMessage?: string
   /** @default 250 */
-  debounceMs?: number;
-  id?: string;
-  name?: string;
-  onBlur?: () => void;
-  "aria-invalid"?: boolean;
-  disabled?: boolean;
-  className?: string;
+  debounceMs?: number
+  id?: string
+  name?: string
+  onBlur?: () => void
+  "aria-invalid"?: boolean
+  disabled?: boolean
+  className?: string
 }
 
 /*
@@ -84,26 +84,26 @@ export default function DataCombobox({
   // Debounced so typing a name costs one request, not one per keystroke.
   // Keyed on the latest callback via a ref so a new `onSearch` identity each
   // render doesn't restart the timer.
-  const searchRef = React.useRef(onSearch);
-  searchRef.current = onSearch;
+  const searchRef = React.useRef(onSearch)
+  searchRef.current = onSearch
 
   const debouncedSearchValue = useDebounce(value.trim(), {
     wait: debounceMs,
-  });
+  })
 
   React.useEffect(() => {
     if (debouncedSearchValue.length > 0) {
-      searchRef.current?.(debouncedSearchValue);
+      searchRef.current?.(debouncedSearchValue)
     }
-  }, [debouncedSearchValue]);
+  }, [debouncedSearchValue])
   // Base UI groups carry their own `items`; `label` rides along as an extra key.
   const items = React.useMemo(
     () =>
       groups
         ? groups.map((g) => ({ label: g.label, items: g.options }))
         : (options ?? []),
-    [groups, options],
-  );
+    [groups, options]
+  )
 
   const renderItem = (option: DataComboboxOption) => (
     <ComboboxItem key={option.value} value={option}>
@@ -116,7 +116,7 @@ export default function DataCombobox({
         )}
       </span>
     </ComboboxItem>
-  );
+  )
 
   return (
     <Combobox
@@ -127,9 +127,9 @@ export default function DataCombobox({
       inputValue={value}
       onInputValueChange={(text) => onValueChange(text)}
       onValueChange={(selected: DataComboboxOption | null) => {
-        if (!selected) return;
-        onValueChange(selected.value);
-        onSelect?.(selected);
+        if (!selected) return
+        onValueChange(selected.value)
+        onSelect?.(selected)
       }}
       itemToStringLabel={(option: DataComboboxOption) => option.value}
       disabled={disabled}
@@ -168,5 +168,5 @@ export default function DataCombobox({
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
-  );
+  )
 }

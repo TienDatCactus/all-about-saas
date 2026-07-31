@@ -290,9 +290,9 @@ describe('BadmintonService', () => {
 		});
 
 		it('is not readable', async () => {
-			await expect(service.findOneOwned('intruder', 's1')).rejects.toBeInstanceOf(
-				NotFoundException,
-			);
+			await expect(
+				service.findOneOwned('intruder', 's1'),
+			).rejects.toBeInstanceOf(NotFoundException);
 			expect(sessionRepo.findOne).toHaveBeenCalledWith({
 				where: { id: 's1', ownerId: 'intruder' },
 				relations: { participants: true },
@@ -309,9 +309,9 @@ describe('BadmintonService', () => {
 		});
 
 		it('is not deletable', async () => {
-			await expect(service.removeSession('intruder', 's1')).rejects.toBeInstanceOf(
-				NotFoundException,
-			);
+			await expect(
+				service.removeSession('intruder', 's1'),
+			).rejects.toBeInstanceOf(NotFoundException);
 			expect(sessionRepo.softRemove).not.toHaveBeenCalled();
 		});
 	});

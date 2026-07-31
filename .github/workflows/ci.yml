@@ -38,14 +38,33 @@ jobs:
         # silently skipped both apps — the two halves that matter most.
         run: npx turbo run check-types
 
-      - name: Lint
-        run: npx turbo run lint
+      - name: Lint (api)
+        run: npx turbo run lint --filter=@app/api
 
       - name: Build
         run: npx turbo run build
 
       - name: Test
         run: npx turbo run test
+
+  # apps/web carries ~328 pre-existing lint errors (261 auto-fixable) because
+  # lint was never enforced. Blocking on it would mean either a huge unreviewed
+  # `--fix` diff or a permanently red gate, so it reports without blocking —
+  # explicitly, rather than the silent `fail-on-error: false` this repo already
+  # had. Delete this job and fold web into the required lint step once the
+  # backlog is burned down.
+  lint-web-backlog:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx turbo run lint --filter=@app/web
 
   # Verifies the deploy artifacts still build. Separate job: it is slower than
   # the checks above and should not delay their feedback.

@@ -28,9 +28,7 @@ async function bootstrap() {
 	// FRONTEND_URL unset we allow no cross-origin browser traffic at all —
 	// env validation already makes that a hard error in production.
 	app.enableCors({
-		origin: frontendUrl
-			? frontendUrl.split(',').map((o) => o.trim())
-			: false,
+		origin: frontendUrl ? frontendUrl.split(',').map((o) => o.trim()) : false,
 		credentials: true,
 	});
 	app.use(cookieParser());

@@ -9,5 +9,4 @@ export class Role extends BaseEntity {
 
 	@OneToMany(() => User, (user) => user.role)
 	users: User[];
-
 }

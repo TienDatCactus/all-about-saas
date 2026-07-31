@@ -1,9 +1,4 @@
-import {
-	Controller,
-	Get,
-	NotFoundException,
-	Req,
-} from '@nestjs/common';
+import { Controller, Get, NotFoundException, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 

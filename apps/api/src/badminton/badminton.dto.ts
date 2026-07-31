@@ -3,8 +3,6 @@ import { Type } from 'class-transformer';
 import {
 	ArrayMinSize,
 	IsArray,
-	IsBoolean,
-	IsDate,
 	IsDateString,
 	IsInt,
 	IsOptional,

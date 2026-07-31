@@ -1,22 +1,15 @@
 import {
 	Column,
-	CreateDateColumn,
-	DeleteDateColumn,
 	Entity,
 	Index,
 	JoinColumn,
 	ManyToOne,
 	OneToMany,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { BadmintonParticipant } from './badminton-participant.entity';
 import type { ComputedSnapshot } from '@repo/badminton-calc';
-import {
-	BaseEntity,
-	SoftDeleteBaseEntity,
-} from '../../common/entities/base.entity';
+import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
 
 /**
  * A single badminton money-split session, owned by the authenticated organizer.

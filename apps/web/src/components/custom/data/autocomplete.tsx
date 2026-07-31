@@ -117,7 +117,7 @@ export default function DataAutocomplete<TMeta = unknown>({
 
   const flat = React.useMemo(
     () => (groups ? groups.flatMap((g) => g.options) : (options ?? [])),
-    [groups, options],
+    [groups, options]
   )
 
   const query = value.trim()
@@ -131,9 +131,11 @@ export default function DataAutocomplete<TMeta = unknown>({
 
   const createOption = React.useMemo(
     () =>
-      ({ value: query, meta: CREATE_META }) as unknown as
-        DataAutocompleteOption<TMeta>,
-    [query],
+      ({
+        value: query,
+        meta: CREATE_META,
+      }) as unknown as DataAutocompleteOption<TMeta>,
+    [query]
   )
 
   type ItemGroup = { label: string; items: DataAutocompleteOption<TMeta>[] }
