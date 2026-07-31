@@ -1,21 +1,21 @@
 import DataCombobox, {
   type DataComboboxGroup,
-} from "@/components/custom/data/combobox";
-import { useParticipantSuggestions } from "@/services/badminton/queries";
-import * as React from "react";
+} from "@/components/custom/data/combobox"
+import { useParticipantSuggestions } from "@/services/badminton/queries"
+import * as React from "react"
 /** Below this the server match is too broad to be useful. */
-const MIN_QUERY = 2;
+const MIN_QUERY = 2
 
 interface PlayerNameInputProps {
-  value: string;
+  value: string
   /** Free-text edit — clears any linked account, since the name no longer matches it. */
-  onValueChange: (name: string) => void;
+  onValueChange: (name: string) => void
   /** A registered user was picked: link the participant to that account. */
-  onPickUser: (userId: string, name: string) => void;
-  id?: string;
-  name?: string;
-  onBlur?: () => void;
-  "aria-invalid"?: boolean;
+  onPickUser: (userId: string, name: string) => void
+  id?: string
+  name?: string
+  onBlur?: () => void
+  "aria-invalid"?: boolean
 }
 
 /**
@@ -33,33 +33,33 @@ export function PlayerNameInput({
   onBlur,
   "aria-invalid": ariaInvalid,
 }: PlayerNameInputProps) {
-  const [query, setQuery] = React.useState("");
-  const enabled = query.length >= MIN_QUERY;
-  const { data, isFetching } = useParticipantSuggestions(query, enabled);
+  const [query, setQuery] = React.useState("")
+  const enabled = query.length >= MIN_QUERY
+  const { data, isFetching } = useParticipantSuggestions(query, enabled)
 
   // Registered accounts are keyed by userId so picking one can link it; guests
   // are plain names this organizer has used before.
-  const userIds = React.useRef(new Map<string, string>());
+  const userIds = React.useRef(new Map<string, string>())
   const groups = React.useMemo<DataComboboxGroup[]>(() => {
-    userIds.current = new Map();
-    if (!data) return [];
+    userIds.current = new Map()
+    if (!data) return []
 
-    const out: DataComboboxGroup[] = [];
+    const out: DataComboboxGroup[] = []
     if (data.users.length > 0) {
-      for (const u of data.users) userIds.current.set(u.name, u.userId);
+      for (const u of data.users) userIds.current.set(u.name, u.userId)
       out.push({
         label: "Registered players",
         options: data.users.map((u) => ({ value: u.name })),
-      });
+      })
     }
     if (data.guests.length > 0) {
       out.push({
         label: "Previous guests",
         options: data.guests.map((g) => ({ value: g })),
-      });
+      })
     }
-    return out;
-  }, [data]);
+    return out
+  }, [data])
 
   return (
     <DataCombobox
@@ -68,8 +68,8 @@ export function PlayerNameInput({
       value={value}
       onValueChange={onValueChange}
       onSelect={(option) => {
-        const userId = userIds.current.get(option.value);
-        if (userId) onPickUser(userId, option.value);
+        const userId = userIds.current.get(option.value)
+        if (userId) onPickUser(userId, option.value)
       }}
       onSearch={setQuery}
       groups={groups.length > 0 ? groups : undefined}
@@ -81,5 +81,5 @@ export function PlayerNameInput({
       onBlur={onBlur}
       aria-invalid={ariaInvalid}
     />
-  );
+  )
 }

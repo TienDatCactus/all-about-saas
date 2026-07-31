@@ -51,7 +51,10 @@ export function usePagination({
   }, [])
 
   /** Server-side paging: spread straight into the list query's params. */
-  const query = React.useMemo(() => ({ page, limit: pageSize }), [page, pageSize])
+  const query = React.useMemo(
+    () => ({ page, limit: pageSize }),
+    [page, pageSize]
+  )
 
   /** Client-side paging: the slice of `items` belonging to the current page. */
   const slice = React.useCallback(
