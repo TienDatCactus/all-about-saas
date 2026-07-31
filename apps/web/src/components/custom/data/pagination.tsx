@@ -17,69 +17,49 @@ import { cn } from "@/lib/utils"
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import * as React from "react"
 
+const DEFAULT_PAGE_SIZE = 12
+
 interface UsePaginationOptions {
-  total?: number
   pageSize?: number
   initialPage?: number
 }
 
 /**
- * Page state for a list. Deliberately controlled-friendly: everything is
- * derived, so the current page can never point past the end of the data.
+ * Page state only — deliberately NOT the row count.
+ *
+ * Server-side the total arrives in the response, which is fetched *using* this
+ * state, so the hook cannot receive it without a circular dependency: the
+ * query needs `query`, and `total` needs the query. Holding a copy here just
+ * pins it at 0 on every render, which caps pageCount at 1 and freezes the
+ * control on page 1. Pass the total to <DataPagination /> instead — it owns
+ * the page-count maths, where the real number is actually available.
  */
-interface UsePaginationOptions {
-  total?: number
-  pageSize?: number
-  initialPage?: number
-}
-
 export function usePagination({
-  total = 0,
-  pageSize: initialPageSize = 12,
+  pageSize: initialPageSize = DEFAULT_PAGE_SIZE,
   initialPage = 1,
-}: UsePaginationOptions) {
-  const [page, setPage] = React.useState(initialPage)
+}: UsePaginationOptions = {}) {
+  const [page, setRawPage] = React.useState(initialPage)
   const [pageSize, setRawPageSize] = React.useState(initialPageSize)
 
-  const pageCount = Math.max(1, Math.ceil(total / pageSize))
-
-  const safePage = Math.min(page, pageCount)
-
-  React.useEffect(() => {
-    if (page !== safePage) {
-      setPage(safePage)
-    }
-  }, [page, safePage])
+  const setPage = React.useCallback((next: number) => {
+    setRawPage(Math.max(1, next))
+  }, [])
 
   const setPageSize = React.useCallback((size: number) => {
     setRawPageSize(size)
-    setPage(1)
+    setRawPage(1)
   }, [])
 
-  const query = React.useMemo(
-    () => ({
-      page: safePage,
-      limit: pageSize,
-    }),
-    [safePage, pageSize]
-  )
+  /** Server-side paging: spread straight into the list query's params. */
+  const query = React.useMemo(() => ({ page, limit: pageSize }), [page, pageSize])
 
+  /** Client-side paging: the slice of `items` belonging to the current page. */
   const slice = React.useCallback(
-    <T,>(items: T[]) =>
-      items.slice((safePage - 1) * pageSize, safePage * pageSize),
-    [safePage, pageSize]
+    <T,>(items: T[]) => items.slice((page - 1) * pageSize, page * pageSize),
+    [page, pageSize]
   )
 
-  return {
-    page: safePage,
-    pageCount,
-    pageSize,
-    total,
-    setPage,
-    setPageSize,
-    query,
-    slice,
-  }
+  return { page, pageSize, setPage, setPageSize, query, slice }
 }
 export type PaginationState = ReturnType<typeof usePagination>
 
@@ -139,12 +119,19 @@ interface DataPaginationProps extends Pick<
   className?: string
 }
 /*
-Drop under any list — spread the hook straight in:
+Drop under any list — spread the hook in and hand it the total.
 
-    const pagination = usePagination({ total: sessions.length })
+Server-side:
+    const pagination = usePagination()
+    const query = useSessionsQuery(pagination.query)
     ...
-    {pagination.slice(sessions).map(...)}
-    <DataPagination {...pagination} pageSizeOptions={[12, 24, 48]} />
+    {data.data.map(...)}
+    <DataPagination {...pagination} total={data.total} />
+
+Client-side:
+    const pagination = usePagination()
+    {pagination.slice(items).map(...)}
+    <DataPagination {...pagination} total={items.length} />
 */
 
 export default function DataPagination({
@@ -158,8 +145,15 @@ export default function DataPagination({
   hideSummary,
   className,
 }: DataPaginationProps) {
-  // Nothing to page through and no page-size choice to offer.
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
+
+  // Rows can vanish under the user — deleting the last row of the last page,
+  // an undo window committing. Step back so the list never renders empty and
+  // the server query stops asking for a page that no longer exists.
+  React.useEffect(() => {
+    if (page > pageCount) setPage(pageCount)
+  }, [page, pageCount, setPage])
+
   const pages = pageWindow(page, pageCount, siblings)
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1
   const last = Math.min(page * pageSize, total)

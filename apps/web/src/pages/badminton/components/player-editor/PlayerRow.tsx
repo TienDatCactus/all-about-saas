@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { TrashIcon } from "@phosphor-icons/react"
 import type React from "react"
+import { PlayerNameInput } from "./PlayerNameInput"
 
 interface PlayerRowProps {
   form: any
@@ -54,12 +55,24 @@ export function PlayerRow({
     <TableRow key={base}>
       <TableCell>
         <FormField form={form} label="Name" name={`${base}.name`}>
-          {({ inputProps }) => (
-            <Input
+          {({ field, isInvalid }) => (
+            <PlayerNameInput
               id={`${base}-name`}
-              placeholder="Name"
-              autoComplete="off"
-              {...inputProps}
+              name={field.name}
+              value={field.state.value ?? ""}
+              onValueChange={(next) => {
+                field.handleChange(next)
+                // Typing by hand breaks the link to whatever account was
+                // picked before, otherwise a renamed row would still save
+                // against the old userId.
+                form.setFieldValue(`${base}.userId`, undefined)
+              }}
+              onPickUser={(userId, pickedName) => {
+                field.handleChange(pickedName)
+                form.setFieldValue(`${base}.userId`, userId)
+              }}
+              onBlur={field.handleBlur}
+              aria-invalid={isInvalid}
             />
           )}
         </FormField>

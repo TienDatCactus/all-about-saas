@@ -193,7 +193,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			.leftJoin('u.profile', 'profile')
 			.where('u.email ILIKE :term', { term })
 			.orWhere('profile.displayName ILIKE :term', { term })
-			.select(['u.id', 'u.email', 'profile.displayName'])
+			.select(['u.id', 'profile.displayName'])
 			.limit(8)
 			.getMany();
 
