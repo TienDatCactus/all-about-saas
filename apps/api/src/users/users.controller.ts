@@ -1,42 +1,33 @@
 import {
 	Controller,
 	Get,
-	Param,
-	ParseUUIDPipe,
-	Query,
-	UseGuards,
+	NotFoundException,
+	Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CheckPolicies } from '../common/decorator/check-policies.decorator';
-import { RegisterResource } from '../common/decorator/resource.decorator';
-import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
-import { PoliciesGuard } from '../common/guard/policies.guard';
 import { UsersService } from './users.service';
-import { QueryUsersDto } from './users.dto';
 
-@RegisterResource({
-	name: 'User',
-	actions: ['create', 'read', 'update', 'delete'],
-})
+/**
+ * Self-service only. There is no admin user-management surface yet and the web
+ * app never listed users, so exposing a list (and a by-id lookup that had to be
+ * ownership-filtered) was surface with no consumer.
+ *
+ * When an admin screen does appear, add it back behind
+ * `@UseGuards(RolesGuard) @Roles('admin')` rather than a per-object rule engine.
+ */
 @Controller('users')
 @ApiTags('Users')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PoliciesGuard)
 export class UsersController {
-	constructor(private readonly usersService: UsersService) {} // no repo
+	constructor(private readonly usersService: UsersService) {}
 
-	@Get()
-	@CheckPolicies({ action: 'read', resource: 'User' })
-	findAll(@Query() query: QueryUsersDto) {
-		return this.usersService.paginate({
-			...query,
+	/** The caller's own record. The id comes from the verified JWT. */
+	@Get('me')
+	async me(@Req() req) {
+		const user = await this.usersService.findById(req.user.id, {
 			relations: { role: true },
 		});
-	}
-
-	@Get(':id')
-	@CheckPolicies({ action: 'read', resource: 'User' })
-	findOne(@Param('id', ParseUUIDPipe) id: string) {
-		return this.usersService.findById(id, { relations: { role: true } });
+		if (!user) throw new NotFoundException('User not found');
+		return user;
 	}
 }

@@ -2,7 +2,7 @@ import DataEmpty from "@/components/custom/data/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react"
-import { useEffect, useReducer, useRef, useState } from "react"
+import { useEffect, useReducer, useRef } from "react"
 import useImage from "use-image"
 import { imageReducer } from "./reducer"
 

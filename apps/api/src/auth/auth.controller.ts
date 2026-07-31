@@ -1,5 +1,6 @@
 import {
 	BadRequestException,
+	UnauthorizedException,
 	Body,
 	Controller,
 	Get,
@@ -9,6 +10,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
 import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
@@ -18,6 +20,7 @@ import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
 import { OAuthProvider } from '../users/entities/oauth-account.entity';
 import { UsersService } from '../users/users.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendVerificationEmailDto } from './dto/send-verification-email.dto';
 import { LoginDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -32,6 +35,13 @@ export class AuthController {
 		private readonly configService: ConfigService,
 		private readonly usersService: UsersService,
 	) {}
+
+	/**
+	 * Credential-guessing surface: the global limit (10/min) is meant for normal
+	 * traffic, which is far too generous for an endpoint where each request is a
+	 * password attempt. There is no account lockout, so this is the only brake.
+	 */
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Public()
 	@Post('login')
 	async login(
@@ -53,6 +63,7 @@ export class AuthController {
 	}
 
 	@Public()
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Post('signup')
 	async signup(@Body() body: SignUpDto) {
 		await this.authService.signup({
@@ -93,6 +104,8 @@ export class AuthController {
 	}
 
 	@Public()
+	// Each call sends real mail, so this doubles as an outbound-spam brake.
+	@Throttle({ default: { limit: 3, ttl: 60_000 } })
 	@Post('send-verification-email')
 	async sendVerificationEmail(
 		@Body()
@@ -140,35 +153,44 @@ export class AuthController {
 		return { message: 'Logged out successfully' };
 	}
 
+	/**
+	 * Finishes a forgotten-password reset with the emailed selector + token.
+	 * Public by design; the token is the credential, so it needs a rate limit.
+	 */
 	@Public()
-	@Post('change-password')
-	async changePassword(@Body() body: ChangePasswordDto) {
-		await this.authService.changePassword(body);
-		return { message: 'Password changed successfully' };
-	}
-
-	@UseGuards(JwtAuthGuard)
-	@Post('reset-password')
-	async resetPassword(
-		@Body() body: Pick<ChangePasswordDto, 'password'>,
-		@Req() req,
-	) {
-		if (!req.user || !req.user.id) {
-			throw new BadRequestException('User not authenticated');
-		}
-		await this.authService.resetPassword({
-			password: body.password,
-			email: req.user.email,
-		});
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
+	@Post('password/reset')
+	async resetPassword(@Body() body: ResetPasswordDto) {
+		await this.authService.resetPasswordWithToken(body);
 		return { message: 'Password reset successfully' };
 	}
 
+	/** Changes the signed-in user's own password. */
+	@UseGuards(JwtAuthGuard)
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
+	@Post('password/change')
+	async changePassword(@Body() body: ChangePasswordDto, @Req() req) {
+		if (!req.user?.email) {
+			throw new BadRequestException('User not authenticated');
+		}
+		// The account is taken from the verified JWT, not the body.
+		await this.authService.changePassword({
+			password: body.password,
+			email: req.user.email,
+		});
+		return { message: 'Password changed successfully' };
+	}
+
 	@Public()
+	@Throttle({ default: { limit: 20, ttl: 60_000 } })
 	@Post('refresh')
 	async refresh(@Req() req) {
 		const refreshToken = req.cookies['refresh_token'];
 		if (!refreshToken) {
-			throw new Error('Refresh token not found');
+			// A bare Error here became a 500 (and, in production, a generic
+			// "Internal server error"), so a client with no cookie could not tell
+			// it simply needed to log in again.
+			throw new UnauthorizedException('Refresh token not found');
 		}
 		const newAccessToken = await this.authService.refresh(refreshToken);
 		return {
@@ -205,6 +227,9 @@ export class AuthController {
 	githubLogin() {
 		// redirect to GitHub
 	}
+	// A login flow cannot require a JWT to start or finish it. Once
+	// JwtAuthGuard is global, an OAuth route without @Public() 401s.
+	@Public()
 	@Get('github/callback')
 	@UseGuards(GithubAuthGuard)
 	async githubCallback(@Req() req, @Res() res) {
@@ -220,10 +245,12 @@ export class AuthController {
 		const frontendUrl = this.configService.get<string>('frontendUrl')!;
 		return res.redirect(frontendUrl);
 	}
+	@Public()
 	@Get('facebook')
 	@UseGuards(FacebookAuthGuard)
 	facebookLogin() {}
 
+	@Public()
 	@Get('facebook/callback')
 	@UseGuards(FacebookAuthGuard)
 	async facebookCallback(@Req() req, @Res() res) {

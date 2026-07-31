@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "check-types": "tsc --noEmit",
     "build": "tsc",
     "email": "email dev --dir src/emails --port 4000"
   },

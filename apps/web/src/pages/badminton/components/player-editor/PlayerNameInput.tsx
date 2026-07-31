@@ -1,21 +1,25 @@
-import DataCombobox, {
-  type DataComboboxGroup,
-} from "@/components/custom/data/combobox"
-import { useParticipantSuggestions } from "@/services/badminton/queries"
-import * as React from "react"
+import DataAutocomplete, {
+  type DataAutocompleteGroup,
+} from "@/components/custom/data/autocomplete";
+import { useParticipantSuggestions } from "@/services/badminton/queries";
+import * as React from "react";
+
 /** Below this the server match is too broad to be useful. */
-const MIN_QUERY = 2
+const MIN_QUERY = 2;
+
+/** Identity carried on each suggestion — a guest has no account behind it. */
+type Suggestion = { userId?: string };
 
 interface PlayerNameInputProps {
-  value: string
+  value: string;
   /** Free-text edit — clears any linked account, since the name no longer matches it. */
-  onValueChange: (name: string) => void
+  onValueChange: (name: string) => void;
   /** A registered user was picked: link the participant to that account. */
-  onPickUser: (userId: string, name: string) => void
-  id?: string
-  name?: string
-  onBlur?: () => void
-  "aria-invalid"?: boolean
+  onPickUser: (userId: string, name: string) => void;
+  id?: string;
+  name?: string;
+  onBlur?: () => void;
+  "aria-invalid"?: boolean;
 }
 
 /**
@@ -23,7 +27,6 @@ interface PlayerNameInputProps {
  * organizer's own past guests plus registered accounts. Picking an account
  * links the participant to it; typing anything else stays a guest.
  */
-
 export function PlayerNameInput({
   value,
   onValueChange,
@@ -33,53 +36,54 @@ export function PlayerNameInput({
   onBlur,
   "aria-invalid": ariaInvalid,
 }: PlayerNameInputProps) {
-  const [query, setQuery] = React.useState("")
-  const enabled = query.length >= MIN_QUERY
-  const { data, isFetching } = useParticipantSuggestions(query, enabled)
+  const [query, setQuery] = React.useState("");
+  const enabled = query.length >= MIN_QUERY;
+  const { data, isFetching } = useParticipantSuggestions(query, enabled);
 
-  // Registered accounts are keyed by userId so picking one can link it; guests
-  // are plain names this organizer has used before.
-  const userIds = React.useRef(new Map<string, string>())
-  const groups = React.useMemo<DataComboboxGroup[]>(() => {
-    userIds.current = new Map()
-    if (!data) return []
+  const groups = React.useMemo<DataAutocompleteGroup<Suggestion>[]>(() => {
+    if (!data) return [];
+    const out: DataAutocompleteGroup<Suggestion>[] = [];
 
-    const out: DataComboboxGroup[] = []
+    // The account id travels on the option itself. Keying it by display name
+    // would mislink whenever a guest happens to share a name with an account.
     if (data.users.length > 0) {
-      for (const u of data.users) userIds.current.set(u.name, u.userId)
       out.push({
         label: "Registered players",
-        options: data.users.map((u) => ({ value: u.name })),
-      })
+        options: data.users.map((u) => ({
+          value: u.name,
+          meta: { userId: u.userId },
+        })),
+      });
     }
-    if (data.guests.length > 0) {
+    if (data.guests && data.guests.length > 0) {
       out.push({
         label: "Previous guests",
-        options: data.guests.map((g) => ({ value: g })),
-      })
+        options: data.guests.map((g) => ({ value: g, meta: {} })),
+      });
     }
-    return out
-  }, [data])
+    return out;
+  }, [data]);
 
   return (
-    <DataCombobox
+    <DataAutocomplete<Suggestion>
       id={id}
       name={name}
       value={value}
       onValueChange={onValueChange}
       onSelect={(option) => {
-        const userId = userIds.current.get(option.value)
-        if (userId) onPickUser(userId, option.value)
+        const userId = option.meta?.userId;
+        if (userId) onPickUser(userId, option.value);
+        else onValueChange(option.value);
       }}
       onSearch={setQuery}
       groups={groups.length > 0 ? groups : undefined}
-      loading={isFetching}
+      creatable
+      createLabel={(q) => `“${q}” will be saved as a guest`}
+      loading={enabled && isFetching}
       placeholder="Name"
-      emptyMessage={
-        enabled ? "No matches — keep typing to add a guest" : "Type to search"
-      }
+      emptyMessage={enabled ? "No matches" : "Type to search"}
       onBlur={onBlur}
       aria-invalid={ariaInvalid}
     />
-  )
+  );
 }

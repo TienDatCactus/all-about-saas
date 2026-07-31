@@ -43,14 +43,16 @@ export const authApi = {
   ): Promise<void> => {
     return http.post(AUTH.sendVerificationEmail, data)
   },
-  changePassword: async (
+  /** Finish a forgotten-password reset using the emailed selector + token. */
+  resetPassword: async (
     data: Pick<ChangePasswordIn, "selector" | "token" | "password">
   ): Promise<void> => {
-    return http.post(AUTH.changePassword, data)
-  },
-  resetPassword: async (
-    data: Pick<ChangePasswordIn, "selector" | "email" | "password">
-  ): Promise<void> => {
     return http.post(AUTH.resetPassword, data)
+  },
+  /** Change the signed-in user's own password; the account comes from the JWT. */
+  changePassword: async (
+    data: Pick<ChangePasswordIn, "password">
+  ): Promise<void> => {
+    return http.post(AUTH.changePassword, data)
   },
 }

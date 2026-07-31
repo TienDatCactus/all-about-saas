@@ -8,14 +8,14 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import helmet from 'helmet';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { BadmintonModule } from './badminton/badminton.module';
-import { CaslModule } from './casl/casl.module';
 import configuration from './common/config/configuration';
 import database from './common/config/database';
+import { validateEnv } from './common/config/env.validation';
+import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { CustomeThrottlerGuard } from './common/guard/throttler.guard';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { MailModule } from './mail/mail.module';
@@ -26,13 +26,15 @@ import { UsersModule } from './users/users.module';
 	imports: [
 		UsersModule,
 		AuthModule,
-		CaslModule,
 		ConfigModule.forRoot({
 			envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}.local`],
 			isGlobal: true,
 			load: [configuration, database],
 			cache: true,
 			expandVariables: true,
+			// Crash on missing/insecure config instead of booting and signing JWTs
+			// with `undefined`.
+			validate: validateEnv,
 		}),
 		TypeOrmModule.forRootAsync(database.asProvider()),
 		RolesModule,
@@ -55,11 +57,23 @@ import { UsersModule } from './users/users.module';
 			provide: APP_GUARD,
 			useClass: CustomeThrottlerGuard,
 		},
+		{
+			// Default-deny authentication. Previously every controller had to
+			// remember @UseGuards(JwtAuthGuard), and forgetting it left a route
+			// wide open — POST /mail/try was exactly that. Routes opt out with
+			// @Public(), which JwtAuthGuard checks before authenticating.
+			provide: APP_GUARD,
+			useClass: JwtAuthGuard,
+		},
 	],
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(LoggerMiddleware, helmet()).forRoutes(
+		// helmet is applied once, globally, in main.ts. Re-applying it here only
+		// covered POST/PATCH/DELETE — so GET responses (the ones a browser
+		// actually renders) were the only ones missing the second pass, and the
+		// duplicate just set every header twice on writes.
+		consumer.apply(LoggerMiddleware).forRoutes(
 			{
 				path: '*',
 				method: RequestMethod.POST,

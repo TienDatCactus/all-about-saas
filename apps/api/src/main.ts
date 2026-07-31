@@ -23,8 +23,14 @@ async function bootstrap() {
 		}),
 	});
 	const frontendUrl = configuration().frontendUrl;
+	// No `origin: true` fallback: reflecting the caller's origin while
+	// credentials:true is set lets any site read authenticated responses. With
+	// FRONTEND_URL unset we allow no cross-origin browser traffic at all —
+	// env validation already makes that a hard error in production.
 	app.enableCors({
-		origin: frontendUrl ? frontendUrl.split(',').map((o) => o.trim()) : true,
+		origin: frontendUrl
+			? frontendUrl.split(',').map((o) => o.trim())
+			: false,
 		credentials: true,
 	});
 	app.use(cookieParser());
@@ -55,21 +61,41 @@ async function bootstrap() {
 			},
 		}),
 	);
-	app.set('trust proxy', 'loopback');
+	// Exactly one proxy hop (Caddy/nginx) sits in front in production.
+	//
+	// 'loopback' was wrong the moment the proxy moved into its own container:
+	// the peer is then a bridge-network address like 172.18.0.4, not 127.0.0.1,
+	// so Express trusted nothing and req.ip became the PROXY's IP on every
+	// request. That silently broke three things: the throttler keyed every
+	// client into one shared bucket (so the 5/min login limit applied to the
+	// whole internet at once), Session.ipAddress recorded the proxy for every
+	// login, and req.protocol read as http behind TLS.
+	//
+	// `1` trusts the single rightmost X-Forwarded-For entry — the one the proxy
+	// appends itself — so a client-forged header cannot spoof the source IP.
+	app.set('trust proxy', 1);
 	app.useGlobalInterceptors(
 		new TransformInterceptor(),
 		new ClassSerializerInterceptor(app.get(Reflector)),
 	);
 	app.useGlobalFilters(new HttpExceptionFilter());
 
-	const config = new DocumentBuilder()
-		.setTitle('SaaS API')
-		.setDescription('The SaaS API core documentation')
-		.setVersion('1.0')
-		.addBearerAuth()
-		.build();
-	const document = SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup('api', app, document);
+	// `docker stop` sends SIGTERM. Without this Node exits immediately, killing
+	// in-flight requests and dropping the DB pool without closing it.
+	app.enableShutdownHooks();
+
+	// Publishing the full schema — every route, DTO and auth flow — to anonymous
+	// callers is free reconnaissance, so it stays out of production builds.
+	if (process.env.NODE_ENV !== 'production') {
+		const config = new DocumentBuilder()
+			.setTitle('SaaS API')
+			.setDescription('The SaaS API core documentation')
+			.setVersion('1.0')
+			.addBearerAuth()
+			.build();
+		const document = SwaggerModule.createDocument(app, config);
+		SwaggerModule.setup('api', app, document);
+	}
 	await app.listen(configuration().port ?? 8000);
 }
 bootstrap().catch((err) => Logger.error(err));

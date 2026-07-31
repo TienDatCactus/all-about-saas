@@ -54,10 +54,14 @@ export const useSendVerificationEmailMutation = () => {
   })
 }
 
-export const useChangePasswordMutation = () => {
+/**
+ * Completes a forgotten-password reset with the emailed selector + token.
+ * Was `useChangePasswordMutation`, which described the in-session operation.
+ */
+export const useResetPasswordMutation = () => {
   return useMutation({
     mutationFn: (
       data: Pick<ChangePasswordIn, "selector" | "token" | "password">
-    ) => authApi.changePassword(data),
+    ) => authApi.resetPassword(data),
   })
 }

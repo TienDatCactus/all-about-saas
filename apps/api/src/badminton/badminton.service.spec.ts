@@ -280,6 +280,42 @@ describe('BadmintonService', () => {
 		expect(res).toEqual({ id: 's1' });
 	});
 
+	// Ownership is the whole authorization model now that the permission layer is
+	// gone: it lives in the service's query, not in a guard. These three pin that
+	// a session belonging to someone else is indistinguishable from a missing one.
+	describe("another owner's session", () => {
+		beforeEach(() => {
+			// findOneOwned filters on { id, ownerId }, so a foreign row simply misses.
+			sessionRepo.findOne.mockResolvedValue(null);
+		});
+
+		it('is not readable', async () => {
+			await expect(service.findOneOwned('intruder', 's1')).rejects.toBeInstanceOf(
+				NotFoundException,
+			);
+			expect(sessionRepo.findOne).toHaveBeenCalledWith({
+				where: { id: 's1', ownerId: 'intruder' },
+				relations: { participants: true },
+			});
+		});
+
+		it('is not updatable', async () => {
+			manager.findOne.mockResolvedValue(null);
+
+			await expect(
+				service.updateSession('intruder', 's1', { courtCost: 1 }),
+			).rejects.toBeInstanceOf(NotFoundException);
+			expect(manager.save).not.toHaveBeenCalled();
+		});
+
+		it('is not deletable', async () => {
+			await expect(service.removeSession('intruder', 's1')).rejects.toBeInstanceOf(
+				NotFoundException,
+			);
+			expect(sessionRepo.softRemove).not.toHaveBeenCalled();
+		});
+	});
+
 	it('findByShareToken: returns a PII-safe view without owner/userId', async () => {
 		sessionRepo.findOne.mockResolvedValue({
 			id: 's1',

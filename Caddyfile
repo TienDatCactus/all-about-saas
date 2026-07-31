@@ -1,0 +1,52 @@
+# Reverse proxy + automatic TLS for the single-VPS deployment.
+#
+# Caddy obtains and renews Let's Encrypt certificates on its own; the only
+# requirements are that DOMAIN/API_DOMAIN resolve to this host and that ports
+# 80 and 443 reach the container. Certificates live in the caddy_data volume —
+# losing it means re-issuing on every restart and hitting ACME rate limits.
+
+{
+	# Where ACME sends expiry warnings. Set ACME_EMAIL in .env.prod.
+	email {$ACME_EMAIL}
+}
+
+# --- Web app ---
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+
+	header {
+		# The app is served over TLS only; tell browsers to remember that.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		# helmet sets the rest at the app level; don't advertise the proxy.
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# --- API ---
+# A separate hostname keeps cookies and CORS explicit. If you would rather serve
+# the API under the web domain (same-site cookies, no CORS at all), replace this
+# block with a `handle_path /api/*` inside the {$DOMAIN} block above and point
+# FRONTEND_URL/VITE_API_BASE_URL accordingly.
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8000
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

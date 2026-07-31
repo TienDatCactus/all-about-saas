@@ -15,7 +15,10 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null)
+  // STUB: nothing ever sets this, so `user` is permanently null and no consumer
+  // can tell who is signed in. The API now exposes GET /users/me — wiring it
+  // here (via a query hook) is what makes this provider real.
+  const [user] = useState<any>(null)
 
   useEffect(() => {
     if (!user) {

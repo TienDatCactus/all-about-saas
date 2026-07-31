@@ -2,7 +2,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from './mail.service';
-import { MailController } from './mail.controller';
 import * as dns from 'dns';
 @Module({
 	imports: [
@@ -30,7 +29,8 @@ import * as dns from 'dns';
 			}),
 		}),
 	],
+	// No controller: POST /mail/try was an unauthenticated, fixed-recipient test
+	// endpoint that let anyone on the internet make the server send mail.
 	providers: [MailService],
-	controllers: [MailController],
 })
 export class MailModule {}

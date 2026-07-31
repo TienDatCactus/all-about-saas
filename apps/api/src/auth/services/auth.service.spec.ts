@@ -14,7 +14,9 @@ import { TokensService } from './tokens.service';
  * configService.get. Mirror new keys here as the suite grows.
  */
 const CONFIG_VALUES: Record<string, unknown> = {
-	'jwt.refreshExpiresIn': 604800000, // 7 days in ms
+	// SECONDS, matching configuration.ts. The mock previously supplied ms, which
+	// the service's `* 1000` then turned into a session expiring in 2045.
+	'jwt.refreshExpiresIn': 604800, // 7 days in seconds
 	frontendUrl: 'https://app.test',
 };
 

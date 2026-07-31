@@ -185,7 +185,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 	 * Autocomplete for the participant field: registered users (by email / display name)
 	 * plus free-text guest names this owner has used before.
 	 */
-	async suggestParticipants(ownerId: string, q: string) {
+	async suggestParticipants(q: string) {
 		const term = `%${q}%`;
 
 		const users = await this.usersRepo
@@ -197,23 +197,12 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			.limit(8)
 			.getMany();
 
-		const guestRows = await this.participantRepo
-			.createQueryBuilder('p')
-			.innerJoin('p.session', 's')
-			.where('s.ownerId = :ownerId', { ownerId })
-			.andWhere('p.userId IS NULL')
-			.andWhere('p.name ILIKE :term', { term })
-			.select('DISTINCT p.name', 'name')
-			.limit(8)
-			.getRawMany<{ name: string }>();
-
 		return {
 			users: users.map((u) => ({
 				userId: u.id,
 				name: u.profile?.displayName ?? u.email,
 				email: u.email,
 			})),
-			guests: guestRows.map((g) => g.name),
 		};
 	}
 

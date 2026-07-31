@@ -35,7 +35,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "@nestjs/mapped-types": "*",
+    "@nestjs/mapped-types": "^2.1.1",
     "ua-parser-js": "^2.0.10",
     "use-image": "^1.1.4"
   }

@@ -4,7 +4,7 @@ import { Button } from "@/components/custom/stateful-button"
 import { FieldGroup } from "@/components/ui/field"
 import {
   ChangePasswordSchema,
-  useChangePasswordMutation,
+  useResetPasswordMutation,
 } from "@/services/auth"
 import { useForm } from "@tanstack/react-form"
 import { useNavigate, useSearch } from "@tanstack/react-router"
@@ -15,7 +15,9 @@ import { z } from "zod"
 const ChangePasswordForm: React.FC = () => {
   const navigate = useNavigate()
   const { selector, token } = useSearch({ from: "/auth/change-password" })
-  const { mutate, status } = useChangePasswordMutation()
+  // This page is reached from the emailed reset link, so it completes a reset
+  // even though its route is still /auth/change-password.
+  const { mutate, status } = useResetPasswordMutation()
 
   const form = useForm({
     defaultValues: {

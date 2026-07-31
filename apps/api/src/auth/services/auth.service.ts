@@ -9,7 +9,7 @@ import { UAParser } from 'ua-parser-js';
 import { MailService } from '../../mail/mail.service';
 import { User } from '../../users/entities/user.entity';
 import { UsersService } from '../../users/users.service';
-import { ChangePasswordDto } from '../dto/change-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { PayloadDto } from '../dto/jwt-payload.dto';
 import { SignUpDto } from '../dto/sign-up.dto';
 import { Session } from '../entities/session.entity';
@@ -197,17 +197,17 @@ export class AuthService {
 		}
 	}
 
-	async changePassword({
+	/**
+	 * Completes a forgotten-password reset. Unauthenticated by design: the
+	 * emailed selector + token pair is the proof of identity.
+	 *
+	 * (Was named `changePassword`, which read as the in-session operation.)
+	 */
+	async resetPasswordWithToken({
 		selector,
 		token,
 		password,
-	}: Pick<
-		ChangePasswordDto,
-		'selector' | 'token' | 'password'
-	>): Promise<void> {
-		if (!selector || !token || !password) {
-			throw new HttpException('Selector, token and password are required', 400);
-		}
+	}: ResetPasswordDto): Promise<void> {
 		const user = await this.verifyVerificationTokenRecord(
 			selector,
 			token,
@@ -256,10 +256,19 @@ export class AuthService {
 			template: 'passwordReset',
 		});
 	}
-	async resetPassword({
+	/**
+	 * Changes the password of an already-authenticated user. `email` comes from
+	 * the verified JWT, never from the request body.
+	 *
+	 * (Was named `resetPassword`, which read as the forgot-password flow.)
+	 */
+	async changePassword({
 		password,
 		email,
-	}: Pick<ChangePasswordDto, 'password' | 'email'>): Promise<void> {
+	}: {
+		password: string;
+		email: string;
+	}): Promise<void> {
 		const user = await this.usersService.findOne({ email });
 		if (!user) {
 			throw new HttpException('User not found', 404);

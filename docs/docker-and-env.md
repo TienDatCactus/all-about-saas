@@ -149,13 +149,34 @@ Keep `.env.example` up to date whenever you add a new variable, so future-you kn
 
 ---
 
-## Appendix — fixing `apps/api/.Dockerfile` before any production use
+## Appendix — production images (done)
 
-Not needed for local dev, but for the record it currently has:
+`apps/api/.Dockerfile` has been replaced by **`apps/api/Dockerfile`** and a new
+**`apps/web/Dockerfile`**, both keeping its Turborepo `prune --docker` recipe.
+Six bugs were fixed on the way — the first and the sixth were build/runtime
+breakers, not cosmetics:
 
-1. **Wrong start command.** It ends with `CMD node apps/api/dist/index.js`, but NestJS builds to `dist/main.js` (`start:prod` runs `node dist/main`). Should be `CMD ["node", "apps/api/dist/main.js"]`.
-2. **Leftover Express naming** (`expressjs` user/group) — cosmetic, copy-pasted from Vercel's example.
-3. **Odd filename** — a leading-dot `.Dockerfile` isn't auto-detected; you'd need `docker build -f apps/api/.Dockerfile`. Rename to `Dockerfile`.
-4. It relies on the root `.dockerignore` (now added) so `COPY . .` no longer ships `node_modules`/secrets.
+1. **`turbo prune api` did not resolve.** The workspace is named `@app/api`, so
+   the build failed at once with *"Invalid scope. Package with name api in
+   package.json not found"*. Correct scope: `turbo prune @app/api --docker`.
+2. **Wrong start command** — `dist/index.js`; Nest builds `dist/main.js`.
+3. **Leftover `expressjs` user/group** from Vercel's example; the node image
+   already ships a non-root `node` user.
+4. **Leading-dot filename** wasn't auto-detected. Now `Dockerfile`.
+5. **`npm install` → `npm ci`**, so images match the committed lockfile.
+6. **glibc → musl ABI mismatch.** The builder was `slim` (glibc) and the runner
+   `alpine` (musl). `bcrypt` is a *native* module, so its compiled `.node`
+   binary could not load under musl: the image built cleanly and would have
+   crashed on the first login. All stages now share one base. (Alternative:
+   stay on alpine everywhere and add `python3 make g++` to the builder so
+   bcrypt compiles against musl.)
 
-When you're ready to containerize the app for deploy (the "Both" option from earlier), ping me and I'll finish the multi-stage build + a `docker-compose.prod.yml`.
+Also added: **`docker-compose.prod.yml`** (postgres not published, one-shot
+`migrate` service gating the api via `service_completed_successfully`,
+healthchecks everywhere), **`Caddyfile`** for TLS, and
+**`scripts/backup-db.sh`** with a `--verify-latest` restore test.
+
+> **Not yet built or run.** Docker Desktop would not start on the dev machine, so
+> neither image has been built and the stack has never come up. `docker compose
+> -f docker-compose.prod.yml config` validates, and the Dockerfiles are reviewed,
+> but treat them as unproven until `docker build` succeeds once.

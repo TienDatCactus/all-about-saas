@@ -14,9 +14,6 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorator/is-public.decorator';
-import { RegisterResource } from '../common/decorator/resource.decorator';
-import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
-import { PoliciesGuard } from '../common/guard/policies.guard';
 import { BadmintonService } from './badminton.service';
 import {
 	CreateBadmintonSessionDto,
@@ -24,10 +21,6 @@ import {
 	UpdateBadmintonSessionDto,
 } from './badminton.dto';
 
-@RegisterResource({
-	name: 'BadmintonSession',
-	actions: ['create', 'read', 'update', 'delete'],
-})
 @Controller('badminton')
 @ApiTags('Badminton')
 @ApiBearerAuth()
@@ -35,15 +28,11 @@ export class BadmintonController {
 	constructor(private readonly service: BadmintonService) {}
 
 	@Post('/sessions')
-	@UseGuards(JwtAuthGuard)
-	// @CheckPolicies({ action: 'create', resource: 'BadmintonSession' })
 	create(@Req() req, @Body() dto: CreateBadmintonSessionDto) {
 		return this.service.createSession(req.user.id, dto);
 	}
 
 	@Get('/sessions')
-	@UseGuards(JwtAuthGuard)
-	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
 	findAll(@Req() req, @Query() query: QueryBadmintonSessionDto) {
 		return this.service.paginate({
 			page: query.page,
@@ -68,20 +57,16 @@ export class BadmintonController {
 	}
 
 	@Get('/participants/suggest')
-	@UseGuards(JwtAuthGuard)
-	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
-	suggest(@Req() req, @Query('q') q = '') {
-		return this.service.suggestParticipants(req.user.id, q);
+	suggest(@Query('q') q = '') {
+		return this.service.suggestParticipants(q);
 	}
 
 	@Get('/sessions/:id')
-	@UseGuards(JwtAuthGuard, PoliciesGuard)
 	findOne(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
 		return this.service.findOneOwned(req.user.id, id);
 	}
 
 	@Patch('/sessions/:id')
-	@UseGuards(JwtAuthGuard, PoliciesGuard)
 	update(
 		@Req() req,
 		@Param('id', ParseUUIDPipe) id: string,
@@ -91,7 +76,6 @@ export class BadmintonController {
 	}
 
 	@Delete('/sessions/:id')
-	@UseGuards(JwtAuthGuard, PoliciesGuard)
 	remove(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
 		return this.service.removeSession(req.user.id, id);
 	}

@@ -21,7 +21,7 @@ const mockAuthService = {
 	resendVerificationEmail: jest.fn(),
 	logout: jest.fn(),
 	changePassword: jest.fn(),
-	resetPassword: jest.fn(),
+	resetPasswordWithToken: jest.fn(),
 	refresh: jest.fn(),
 	oauthAccess: jest.fn(),
 	setCookie: jest.fn(),
@@ -192,14 +192,15 @@ describe('AuthController', () => {
 		});
 	});
 
-	describe('changePassword', () => {
-		it('forwards the body and returns the success message', async () => {
+	// POST /auth/password/reset — finishing a forgotten-password reset.
+	describe('resetPassword', () => {
+		it('forwards the emailed selector/token body and returns success', async () => {
 			const body = { selector: 's', token: 't', password: 'pw' };
 
-			const result = await controller.changePassword(body as any);
+			const result = await controller.resetPassword(body as any);
 
-			expect(mockAuthService.changePassword).toHaveBeenCalledWith(body);
-			expect(result).toEqual({ message: 'Password changed successfully' });
+			expect(mockAuthService.resetPasswordWithToken).toHaveBeenCalledWith(body);
+			expect(result).toEqual({ message: 'Password reset successfully' });
 		});
 	});
 
@@ -222,7 +223,6 @@ describe('AuthController', () => {
 			expect(mockAuthService.refresh).toHaveBeenCalledWith('refresh-tok');
 			expect(result).toEqual({
 				accessToken: 'new-access-tok',
-				message: 'Token refreshed successfully',
 			});
 		});
 	});
@@ -250,29 +250,31 @@ describe('AuthController', () => {
 		});
 	});
 
-	describe('resetPassword', () => {
+	// POST /auth/password/change — the signed-in user changing their own.
+	describe('changePassword', () => {
 		it('throws when the request has no authenticated user', async () => {
 			const req: any = { user: null };
 
 			await expect(
-				controller.resetPassword({ password: 'pw' } as any, req),
+				controller.changePassword({ password: 'pw' } as any, req),
 			).rejects.toThrow(BadRequestException);
-			expect(mockAuthService.resetPassword).not.toHaveBeenCalled();
+			expect(mockAuthService.changePassword).not.toHaveBeenCalled();
 		});
 
-		it('resets using the authenticated user email', async () => {
+		it('takes the account from the JWT, not the request body', async () => {
 			const req: any = { user: { id: 'u1', email: 'dat@test.com' } };
 
-			const result = await controller.resetPassword(
-				{ password: 'pw' } as any,
+			const result = await controller.changePassword(
+				// An attacker-supplied email must not reach the service.
+				{ password: 'pw', email: 'victim@test.com' } as any,
 				req,
 			);
 
-			expect(mockAuthService.resetPassword).toHaveBeenCalledWith({
+			expect(mockAuthService.changePassword).toHaveBeenCalledWith({
 				password: 'pw',
 				email: 'dat@test.com',
 			});
-			expect(result).toEqual({ message: 'Password reset successfully' });
+			expect(result).toEqual({ message: 'Password changed successfully' });
 		});
 	});
 

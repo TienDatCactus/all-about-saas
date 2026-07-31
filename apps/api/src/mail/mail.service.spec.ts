@@ -1,18 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { MailService } from './mail.service';
+import type { MailerService } from '@nestjs-modules/mailer';
+import type { ConfigService } from '@nestjs/config';
 
+// The scaffold version instantiated the real service with no MailerService or
+// ConfigService, so it failed on DI. Constructing it directly with doubles keeps
+// the smoke test and drops the Nest test module entirely.
 describe('MailService', () => {
-	let service: MailService;
-
-	beforeEach(async () => {
-		const module: TestingModule = await Test.createTestingModule({
-			providers: [MailService],
-		}).compile();
-
-		service = module.get<MailService>(MailService);
-	});
-
-	it('should be defined', () => {
+	it('is constructible with its dependencies', () => {
+		const service = new MailService(
+			{ sendMail: jest.fn() } as unknown as MailerService,
+			{ get: jest.fn() } as unknown as ConfigService,
+		);
 		expect(service).toBeDefined();
 	});
 });
