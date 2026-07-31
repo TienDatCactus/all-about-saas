@@ -1,10 +1,10 @@
-import DataEmpty from "@/components/custom/data/empty"
-import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
 import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react"
 import { useEffect, useReducer, useRef } from "react"
 import useImage from "use-image"
 import { imageReducer } from "./reducer"
+import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
+import DataEmpty from "@/components/custom/data/empty"
 
 // ─── Installation ─────────────────────────────────────────────────────────────
 // npm install use-image
@@ -267,7 +267,7 @@ function ImageLoader({
     fallbackSrc,
     onLoad,
     onError,
-  ]) // eslint-disable-line react-hooks/exhaustive-deps
+  ])
 
   // ── Render ───────────────────────────────────────────────────────────────
 

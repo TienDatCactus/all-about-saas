@@ -67,7 +67,10 @@ const ComputedSnapshotSchema = z.object({
  *
  * Type-level only; nothing here exists at runtime.
  */
-type AssertAssignable<A extends B, B> = [A, B]
+type AssertAssignable<TActual extends TExpected, TExpected> = [
+  TActual,
+  TExpected,
+]
 export type SnapshotMatchesPackage = [
   AssertAssignable<z.infer<typeof ComputedSnapshotSchema>, ComputedSnapshot>,
   AssertAssignable<ComputedSnapshot, z.infer<typeof ComputedSnapshotSchema>>,

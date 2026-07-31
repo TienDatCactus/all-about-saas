@@ -1,18 +1,15 @@
 import React from "react"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
-import {
-  motion,
-  AnimatePresence,
-  useReducedMotion,
-  type Transition,
-} from "motion/react"
-import { statefulButtonMachine } from "./state"
+import { cva } from "class-variance-authority"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { CheckIcon, CircleNotchIcon, XIcon } from "@phosphor-icons/react"
 import { useMachine } from "@xstate/react"
+import { statefulButtonMachine } from "./state"
+import type { Transition } from "motion/react"
+import type { VariantProps } from "class-variance-authority"
 import type { MutationStatus } from "@tanstack/react-query"
+import { cn } from "@/lib/utils"
+import { Progress } from "@/components/ui/progress"
+import { Button, buttonVariants } from "@/components/ui/button"
 
 /**
  * CVA variants for the underlying button element.
@@ -264,21 +261,21 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
     if (buttonType === "progress" && typeof progress === "number") {
       send({ type: "updateProgress", progress })
     }
-    /* eslint-disable-next-line react-hooks/exhaustive-deps --
-     * buttonType is a stable string literal, and send is stable from useMachine
-     **/
+    // buttonType is a stable string literal, and send is stable from useMachine,
+    // so progress is the only dep that should retrigger this.
   }, [progress])
 
   React.useEffect(() => {
-    const activeLoading = mutationState === "pending"
-    if (activeLoading !== undefined) {
-      if (activeLoading) {
-        send({ type: "setLoading" })
-      } else {
-        if (snapshot.matches("loading")) {
-          send({ type: "setIdle" })
-        }
-      }
+    // Only mirror an external mutation when the caller actually supplies one.
+    // This used to test `mutationState === "pending" !== undefined`, which is
+    // always true, so an unmanaged button that had just entered "loading" from
+    // its own click was immediately forced back to idle by this effect.
+    if (mutationState === undefined) return
+
+    if (mutationState === "pending") {
+      send({ type: "setLoading" })
+    } else if (snapshot.matches("loading")) {
+      send({ type: "setIdle" })
     }
   }, [mutationState, send, snapshot])
 

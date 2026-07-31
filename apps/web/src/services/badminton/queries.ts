@@ -6,8 +6,8 @@ import {
 } from "@tanstack/react-query"
 import { badmintonApi } from "./api"
 import type { CreateSessionIn, SessionListItem, UpdateSessionIn } from "./types"
-import { toast } from "@/components/custom/toast"
 import type { PageParams, Paginated } from "../utils"
+import { toast } from "@/components/custom/toast"
 
 export const badmintonKeys = {
   all: ["badminton"] as const,

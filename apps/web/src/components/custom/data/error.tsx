@@ -1,3 +1,5 @@
+import { WarningIcon } from "@phosphor-icons/react"
+import type React from "react"
 import {
   Empty,
   EmptyContent,
@@ -7,8 +9,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
-import { WarningIcon } from "@phosphor-icons/react"
-import type React from "react"
+
 type Media =
   | {
       variant: "icon"

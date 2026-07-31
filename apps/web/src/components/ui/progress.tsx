@@ -1,9 +1,10 @@
 import * as React from "react"
 import { Progress as ProgressPrimitive } from "radix-ui"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cva } from "class-variance-authority"
+import { Field, FieldDescription, FieldLabel } from "./field"
+import type { VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { Field, FieldDescription, FieldLabel } from "./field"
 
 const progressVariants = cva(
   "relative w-full overflow-hidden rounded-full bg-muted transition-transform duration-100 ease-linear",

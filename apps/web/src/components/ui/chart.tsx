@@ -150,11 +150,15 @@ function ChartTooltipContent({
     }
 
     const [item] = payload
-    const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`
+    const key = `${labelKey ?? item.dataKey ?? item.name ?? "value"}`
     const itemConfig = getPayloadConfigFromPayload(config, item, key)
+    // ChartConfig is a Record<string, …>, so a lookup by an arbitrary runtime
+    // label can miss. Widen the result so the optional chain below is honest.
+    const labelConfig: ChartConfig[string] | undefined =
+      typeof label === "string" ? config[label] : undefined
     const value =
       !labelKey && typeof label === "string"
-        ? (config[label]?.label ?? label)
+        ? (labelConfig?.label ?? label)
         : itemConfig?.label
 
     if (labelFormatter) {
@@ -210,7 +214,7 @@ function ChartTooltipContent({
                   indicator === "dot" && "items-center"
                 )}
               >
-                {formatter && item?.value !== undefined && item.name ? (
+                {formatter && item.value !== undefined && item.name ? (
                   formatter(item.value, item.name, item, index, item.payload)
                 ) : (
                   <>
@@ -347,15 +351,13 @@ function getPayloadConfigFromPayload(
     key in payload &&
     typeof payload[key as keyof typeof payload] === "string"
   ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
+    configLabelKey = payload[key as keyof typeof payload]
   } else if (
     payloadPayload &&
     key in payloadPayload &&
     typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
   ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string
+    configLabelKey = payloadPayload[key as keyof typeof payloadPayload]
   }
 
   return configLabelKey in config ? config[configLabelKey] : config[key]

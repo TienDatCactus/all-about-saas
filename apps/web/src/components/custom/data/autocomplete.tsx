@@ -1,3 +1,7 @@
+import { PlusIcon, SpinnerIcon } from "@phosphor-icons/react"
+import { useDebounce } from "ahooks"
+import * as React from "react"
+import { cn } from "@/lib/utils"
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -9,10 +13,6 @@ import {
   AutocompleteItem,
   AutocompleteList,
 } from "@/components/ui/autocomplete"
-import { cn } from "@/lib/utils"
-import { PlusIcon, SpinnerIcon } from "@phosphor-icons/react"
-import { useDebounce } from "ahooks"
-import * as React from "react"
 
 /**
  * A suggestion. `value` is the text committed to the input; `meta` rides along
@@ -28,7 +28,7 @@ export interface DataAutocompleteOption<TMeta = unknown> {
 
 export interface DataAutocompleteGroup<TMeta = unknown> {
   label: string
-  options: DataAutocompleteOption<TMeta>[]
+  options: Array<DataAutocompleteOption<TMeta>>
 }
 
 interface DataAutocompleteProps<TMeta = unknown> {
@@ -39,8 +39,8 @@ interface DataAutocompleteProps<TMeta = unknown> {
   /** Fires only when a suggestion is picked, with its `meta` intact. */
   onSelect?: (option: DataAutocompleteOption<TMeta>) => void
   /** Flat suggestions. Ignored when `groups` is passed. */
-  options?: DataAutocompleteOption<TMeta>[]
-  groups?: DataAutocompleteGroup<TMeta>[]
+  options?: Array<DataAutocompleteOption<TMeta>>
+  groups?: Array<DataAutocompleteGroup<TMeta>>
   /** Called with the trimmed query after `debounceMs` of no typing, "" included. */
   onSearch?: (query: string) => void
   /**
@@ -138,16 +138,19 @@ export default function DataAutocomplete<TMeta = unknown>({
     [query]
   )
 
-  type ItemGroup = { label: string; items: DataAutocompleteOption<TMeta>[] }
+  type ItemGroup = {
+    label: string
+    items: Array<DataAutocompleteOption<TMeta>>
+  }
 
   // `readonly any[]` is the precision the primitive itself declares: it accepts
   // a flat array OR an array of groups and discriminates at runtime, which a
   // single generic parameter can't express. The typed surface is the `options`
   // / `groups` props and renderItem — this is only the handoff.
-  const items = React.useMemo<readonly any[]>(() => {
+  const items = React.useMemo<ReadonlyArray<any>>(() => {
     const createGroup: ItemGroup = { label: "", items: [createOption] }
     if (groups) {
-      const mapped: ItemGroup[] = groups.map((g) => ({
+      const mapped: Array<ItemGroup> = groups.map((g) => ({
         label: g.label,
         items: g.options,
       }))
@@ -234,7 +237,7 @@ export default function DataAutocomplete<TMeta = unknown>({
           {grouped
             ? (group: {
                 label: string
-                items: DataAutocompleteOption<TMeta>[]
+                items: Array<DataAutocompleteOption<TMeta>>
               }) => (
                 <AutocompleteGroup key={group.label} items={group.items}>
                   {group.label && (

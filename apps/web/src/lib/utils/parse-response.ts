@@ -27,11 +27,11 @@ export class ResponseContractError extends Error {
   }
 }
 
-export async function parseResponse<S extends z.ZodType>(
+export async function parseResponse<TSchema extends z.ZodType>(
   endpoint: string,
-  schema: S,
+  schema: TSchema,
   response: Promise<unknown>
-): Promise<z.infer<S>> {
+): Promise<z.infer<TSchema>> {
   const result = schema.safeParse(await response)
   if (result.success) {
     return result.data
@@ -44,7 +44,7 @@ export async function parseResponse<S extends z.ZodType>(
 }
 
 /** `BaseService.paginate()`'s envelope, around any item schema. */
-export const paginatedSchema = <S extends z.ZodType>(item: S) =>
+export const paginatedSchema = <TSchema extends z.ZodType>(item: TSchema) =>
   z.object({
     data: z.array(item),
     total: z.number(),

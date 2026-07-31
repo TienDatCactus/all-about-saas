@@ -1,8 +1,7 @@
-import DataAutocomplete, {
-  type DataAutocompleteGroup,
-} from "@/components/custom/data/autocomplete"
-import { useParticipantSuggestions } from "@/services/badminton/queries"
 import * as React from "react"
+import type { DataAutocompleteGroup } from "@/components/custom/data/autocomplete"
+import DataAutocomplete from "@/components/custom/data/autocomplete"
+import { useParticipantSuggestions } from "@/services/badminton/queries"
 
 /** Below this the server match is too broad to be useful. */
 const MIN_QUERY = 2
@@ -40,9 +39,9 @@ export function PlayerNameInput({
   const enabled = query.length >= MIN_QUERY
   const { data, isFetching } = useParticipantSuggestions(query, enabled)
 
-  const groups = React.useMemo<DataAutocompleteGroup<Suggestion>[]>(() => {
+  const groups = React.useMemo<Array<DataAutocompleteGroup<Suggestion>>>(() => {
     if (!data) return []
-    const out: DataAutocompleteGroup<Suggestion>[] = []
+    const out: Array<DataAutocompleteGroup<Suggestion>> = []
 
     // The account id travels on the option itself. Keying it by display name
     // would mislink whenever a guest happens to share a name with an account.

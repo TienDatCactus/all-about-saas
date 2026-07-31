@@ -1,5 +1,5 @@
-import type { ComputedSnapshot } from "@/services/badminton/types"
 import { formatVnd } from "./format"
+import type { ComputedSnapshot } from "@/services/badminton/types"
 
 /**
  * Plain-text summary for one-click copy into chat apps (Zalo / Messenger).
@@ -10,7 +10,7 @@ export function buildSummaryText(
   meta?: { title?: string | null; playedOn?: string }
 ): string {
   const heading = meta?.title?.trim() || "Badminton split"
-  const lines: string[] = [`🏸 ${heading}`]
+  const lines: Array<string> = [`🏸 ${heading}`]
   if (meta?.playedOn) lines.push(meta.playedOn)
   lines.push("")
 

@@ -1,3 +1,7 @@
+import { SpinnerIcon } from "@phosphor-icons/react"
+import { useDebounce } from "ahooks"
+import * as React from "react"
+import { cn } from "@/lib/utils"
 import {
   Combobox,
   ComboboxCollection,
@@ -9,10 +13,6 @@ import {
   ComboboxLabel,
   ComboboxList,
 } from "@/components/ui/combobox"
-import { cn } from "@/lib/utils"
-import { SpinnerIcon } from "@phosphor-icons/react"
-import { useDebounce } from "ahooks"
-import * as React from "react"
 
 export interface DataComboboxOption {
   /** Text written into the input when this option is picked. */
@@ -23,7 +23,7 @@ export interface DataComboboxOption {
 
 export interface DataComboboxGroup {
   label: string
-  options: DataComboboxOption[]
+  options: Array<DataComboboxOption>
 }
 
 interface DataComboboxProps {
@@ -31,8 +31,8 @@ interface DataComboboxProps {
   value: string
   onValueChange: (value: string) => void
   /** Flat suggestions. Ignored when `groups` is passed. */
-  options?: DataComboboxOption[]
-  groups?: DataComboboxGroup[]
+  options?: Array<DataComboboxOption>
+  groups?: Array<DataComboboxGroup>
   /** Called with the trimmed query after `debounceMs` of no typing. */
   onSearch?: (query: string) => void
   /** Fires only when a suggestion is picked — not while typing. */
@@ -158,7 +158,7 @@ export default function DataCombobox({
         </ComboboxEmpty>
         <ComboboxList>
           {groups
-            ? (group: { label: string; items: DataComboboxOption[] }) => (
+            ? (group: { label: string; items: Array<DataComboboxOption> }) => (
                 <ComboboxGroup key={group.label} items={group.items}>
                   <ComboboxLabel>{group.label}</ComboboxLabel>
                   <ComboboxCollection>{renderItem}</ComboboxCollection>

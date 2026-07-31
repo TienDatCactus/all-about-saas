@@ -1,17 +1,20 @@
-import { authApi } from "@/services/auth"
-import axios, {
-  type AxiosInstance,
-  type AxiosRequestConfig,
-  type AxiosResponse,
-  type InternalAxiosRequestConfig,
-} from "axios"
-import { toast } from "@/components/custom/toast"
+import axios from "axios"
 import { AppConstants } from "./constants"
 import { storage } from "./local-storage"
+import type {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios"
+import { toast } from "@/components/custom/toast"
+import { authApi } from "@/services/auth"
 
 export class HttpClient {
   private axiosInstance!: AxiosInstance
-  private static instance: HttpClient
+  // Undefined until getInstance() first runs — the lazy latch below reads it
+  // before it is assigned, so the type has to admit that.
+  private static instance: HttpClient | undefined
 
   private constructor() {
     this.setupAxios()

@@ -1,10 +1,10 @@
+import { TrashIcon } from "@phosphor-icons/react"
+import { PlayerNameInput } from "./PlayerNameInput"
+import type React from "react"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import { FormField } from "@/components/custom/form-field"
 import { Button } from "@/components/ui/button"
 import { TableCell, TableRow } from "@/components/ui/table"
-import { TrashIcon } from "@phosphor-icons/react"
-import type React from "react"
-import { PlayerNameInput } from "./PlayerNameInput"
 
 interface PlayerRowProps {
   form: any

@@ -1,10 +1,11 @@
 "use client"
 
-import { cn } from "@/lib/utils"
 import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomplete"
 import { CaretUpDownIcon, XIcon } from "@phosphor-icons/react"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cva } from "class-variance-authority"
 import { ScrollArea } from "./scroll-area"
+import type { VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
 
 const inputVariants = cva(
   // Radii are literal, not `style-*:` variants: this project defines no such

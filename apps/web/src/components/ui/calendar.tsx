@@ -1,18 +1,14 @@
 import * as React from "react"
+import { DayPicker, getDefaultClassNames } from "react-day-picker"
 import {
-  DayPicker,
-  getDefaultClassNames,
-  type DayButton,
-  type Locale,
-} from "react-day-picker"
+  CaretDownIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+} from "@phosphor-icons/react"
+import type { DayButton, Locale } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import {
-  CaretLeftIcon,
-  CaretRightIcon,
-  CaretDownIcon,
-} from "@phosphor-icons/react"
 
 function Calendar({
   className,

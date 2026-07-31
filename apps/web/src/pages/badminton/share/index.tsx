@@ -1,9 +1,9 @@
+import { computeSplit } from "@repo/badminton-calc"
+import { BadmintonSummary } from "../components/Summary"
+import type { PublicSession } from "@/services/badminton/types"
 import DataPage from "@/components/custom/data/page"
 import { Skeleton } from "@/components/ui/skeleton"
-import { computeSplit } from "@repo/badminton-calc"
 import { usePublicSessionQuery } from "@/services/badminton/queries"
-import type { PublicSession } from "@/services/badminton/types"
-import { BadmintonSummary } from "../components/Summary"
 
 function toComputed(session: PublicSession) {
   if (session.computed) return session.computed

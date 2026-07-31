@@ -1,3 +1,16 @@
+import {
+  ArrowClockwiseIcon,
+  CaretDownIcon,
+  CheckCircleIcon,
+  InfoIcon,
+  SpinnerIcon,
+  WarningIcon,
+  XCircleIcon,
+  XIcon,
+} from "@phosphor-icons/react"
+import React, { useEffect, useState } from "react"
+import { toast as sonnerToast } from "sonner"
+import type { ToastError } from "./normalize"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
@@ -16,19 +29,6 @@ import {
 } from "@/components/ui/item"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import {
-  ArrowClockwiseIcon,
-  CaretDownIcon,
-  CheckCircleIcon,
-  InfoIcon,
-  SpinnerIcon,
-  WarningIcon,
-  XCircleIcon,
-  XIcon,
-} from "@phosphor-icons/react"
-import React, { useEffect, useState } from "react"
-import { toast as sonnerToast } from "sonner"
-import { type ToastError } from "./normalize"
 
 export type ToastStatus =
   | "success"
@@ -46,7 +46,7 @@ export interface ToastOptions {
   details?: React.ReactNode
   action?: {
     label: string
-    onClick(): void
+    onClick: () => void
   }
   /**
    * Fires once when the toast leaves the screen for any reason (countdown,
@@ -77,7 +77,7 @@ const ICONS = {
 }
 
 function ToastIcon({ status }: { status: ToastStatus }) {
-  const IconComponent = ICONS[status] || InfoIcon
+  const IconComponent = ICONS[status]
   return (
     <IconComponent
       className={cn("size-5", {
@@ -171,7 +171,12 @@ export default function Toast(props: ToastProps) {
       .filter(Boolean)
       .join("\n")
 
-    if (!navigator.clipboard) {
+    // The DOM lib types navigator.clipboard as always present, but it only
+    // exists in secure contexts (https / localhost). Widen so the fallback
+    // below stays reachable.
+    const clipboard = navigator.clipboard as Clipboard | undefined
+
+    if (!clipboard) {
       const textArea = document.createElement("textarea")
       textArea.value = text
       document.body.appendChild(textArea)
@@ -187,10 +192,15 @@ export default function Toast(props: ToastProps) {
       return
     }
 
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    clipboard
+      .writeText(text)
+      .then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+      .catch((err: unknown) => {
+        console.error("Failed to copy text", err)
+      })
   }
 
   const hasExpandableContent = !!(error || details)

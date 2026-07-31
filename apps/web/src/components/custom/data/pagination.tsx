@@ -1,3 +1,5 @@
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
   Pagination,
@@ -14,8 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
-import * as React from "react"
 
 const DEFAULT_PAGE_SIZE = 12
 
@@ -58,7 +58,8 @@ export function usePagination({
 
   /** Client-side paging: the slice of `items` belonging to the current page. */
   const slice = React.useCallback(
-    <T,>(items: T[]) => items.slice((page - 1) * pageSize, page * pageSize),
+    <T,>(items: Array<T>) =>
+      items.slice((page - 1) * pageSize, page * pageSize),
     [page, pageSize]
   )
 
@@ -74,7 +75,7 @@ function pageWindow(
   page: number,
   pageCount: number,
   siblings: number
-): (number | null)[] {
+): Array<number | null> {
   // first + last + current + 2 ellipses + siblings on both sides
   const slots = siblings * 2 + 5
   if (pageCount <= slots) {
@@ -115,8 +116,8 @@ interface DataPaginationProps extends Pick<
 > {
   total: number
   siblings?: number
-  /** Renders a rows-per-page select when provided. */
-  pageSizeOptions?: number[]
+  /** Choices in the rows-per-page select. Defaults to [12, 24, 48]. */
+  pageSizeOptions?: Array<number>
   /** Hides the "N–M of T" summary. */
   hideSummary?: boolean
   className?: string
@@ -178,37 +179,35 @@ export default function DataPagination({
       )}
 
       <div className="flex items-center gap-4">
-        {pageSizeOptions && (
-          <div className="flex items-center gap-2">
-            <span
-              id="rows-per-page-label"
-              className="hidden text-sm text-muted-foreground sm:block"
+        <div className="flex items-center gap-2">
+          <span
+            id="rows-per-page-label"
+            className="hidden text-sm text-muted-foreground sm:block"
+          >
+            Rows
+          </span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => setPageSize(Number(v))}
+          >
+            <SelectTrigger
+              size="sm"
+              className="w-[4.5rem]"
+              aria-labelledby="rows-per-page-label"
             >
-              Rows
-            </span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => setPageSize(Number(v))}
-            >
-              <SelectTrigger
-                size="sm"
-                className="w-[4.5rem]"
-                aria-labelledby="rows-per-page-label"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {pageSizeOptions.map((size) => (
-                    <SelectItem key={size} value={String(size)}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {pageSizeOptions.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
 
         {pageCount > 1 && (
           <Pagination className="mx-0 w-auto justify-end">

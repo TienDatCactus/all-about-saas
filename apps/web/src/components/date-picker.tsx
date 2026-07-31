@@ -1,5 +1,8 @@
 "use client"
 
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/calendar"
 import {
@@ -8,9 +11,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import * as React from "react"
 
 export interface DatePickerProps {
   /** Controlled selected date. Pass this together with `onChange`. */

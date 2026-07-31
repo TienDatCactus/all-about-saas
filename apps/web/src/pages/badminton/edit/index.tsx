@@ -1,9 +1,9 @@
-import DataPage from "@/components/custom/data/page"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useSessionQuery } from "@/services/badminton/queries"
 import { ShareLink } from "../components/ShareLink"
 import { SessionEditor } from "../components/SessionEditor"
 import { sessionToValues } from "../lib/form"
+import DataPage from "@/components/custom/data/page"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSessionQuery } from "@/services/badminton/queries"
 
 export default function EditSessionPage({ sessionId }: { sessionId: string }) {
   const sessionQuery = useSessionQuery(sessionId)

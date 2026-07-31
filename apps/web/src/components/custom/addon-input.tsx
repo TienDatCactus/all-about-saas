@@ -1,7 +1,5 @@
 // addon-input.tsx
-import { cn } from "@/lib/utils"
 import { ExclamationMarkIcon } from "@phosphor-icons/react"
-import type { MutationStatus } from "@tanstack/react-query"
 import * as React from "react"
 import { CheckIcon } from "../ui/check"
 import { EyeIcon } from "../ui/eye"
@@ -13,6 +11,8 @@ import {
   InputGroupInput,
 } from "../ui/input-group"
 import { Spinner } from "../ui/spinner"
+import type { MutationStatus } from "@tanstack/react-query"
+import { cn } from "@/lib/utils"
 
 export interface InputProps extends Omit<
   React.ComponentProps<"input">,

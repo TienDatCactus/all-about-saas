@@ -21,7 +21,7 @@ export interface EditorValues {
   courtCost: number
   shuttleUnitPrice: number
   totalShuttleCount: number
-  players: EditorPlayer[]
+  players: Array<EditorPlayer>
 }
 
 const uid = () =>
@@ -103,8 +103,8 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
   return {
     playedOn: v.playedOn,
     title: v.title.trim() || undefined,
-    courtCost: v.courtCost ?? 0,
-    shuttleUnitPrice: v.shuttleUnitPrice ?? 0,
+    courtCost: v.courtCost,
+    shuttleUnitPrice: v.shuttleUnitPrice,
     totalShuttleCount: wholeShuttles(v.totalShuttleCount),
     participants: v.players.reduce<any>((acc, p) => {
       const name = p.name.trim()
@@ -114,9 +114,9 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
       acc.push({
         userId: p.userId,
         name: name || "Unnamed",
-        courtFraction: clamp01((p.courtPercent ?? 0) / 100),
-        discount: clamp01((p.discountPercent ?? 0) / 100),
-        shuttleFraction: clamp01((p.shuttlePercent ?? 0) / 100),
+        courtFraction: clamp01(p.courtPercent / 100),
+        discount: clamp01(p.discountPercent / 100),
+        shuttleFraction: clamp01(p.shuttlePercent / 100),
       })
 
       return acc

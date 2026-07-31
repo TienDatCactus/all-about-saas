@@ -1,5 +1,6 @@
 import { useReducedMotionConfig } from "motion/react"
 import React from "react"
+
 type MotionPreference = "on" | "off" | "system"
 interface MotionContextValue {
   preference: MotionPreference

@@ -1,7 +1,8 @@
 import React from "react"
 import { toast as sonnerToast } from "sonner"
-import Toast, { type ToastOptions } from "./ui"
+import Toast from "./ui"
 import { normalizeApiError } from "./normalize"
+import type { ToastOptions } from "./ui"
 
 const generateId = () => Math.random().toString(36).substring(2, 9)
 

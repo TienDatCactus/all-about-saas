@@ -1,16 +1,15 @@
+import React from "react"
+import { ReactSVG } from "react-svg"
 import { Button } from "@/components/ui/button"
 import { loadAsset } from "@/lib/utils"
 import { authApi } from "@/services/auth"
-
-import React from "react"
-import { ReactSVG } from "react-svg"
 
 interface Provider {
   name: string
   iconUrl: string
   callback: () => void
 }
-const providers: Provider[] = [
+const providers: Array<Provider> = [
   {
     name: "Google",
     iconUrl: loadAsset("google.svg", "svg"),

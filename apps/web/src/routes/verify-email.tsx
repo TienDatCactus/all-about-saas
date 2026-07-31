@@ -1,16 +1,16 @@
+import { ArrowLeftIcon } from "@phosphor-icons/react"
+import { Link, createFileRoute } from "@tanstack/react-router"
+import { useEffect } from "react"
+import { cn } from "../lib/utils"
 import Logo from "@/components/custom/logo"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
+  VerifyEmailSchema,
   useSendVerificationEmailMutation,
   useVerifyEmailMutation,
-  VerifyEmailSchema,
 } from "@/services/auth"
-import { ArrowLeftIcon } from "@phosphor-icons/react"
-import { createFileRoute, Link } from "@tanstack/react-router"
-import { useEffect } from "react"
 import { toast } from "@/components/custom/toast"
-import { cn } from "../lib/utils"
 
 export const Route = createFileRoute("/verify-email")({
   component: RouteComponent,

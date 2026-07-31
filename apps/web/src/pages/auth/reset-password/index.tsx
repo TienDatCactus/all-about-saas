@@ -1,9 +1,10 @@
-import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
 import React from "react"
 import AuthLayout from "../layouts/auth"
 import ForgotPasswordForm from "./components/Form"
+import { Button } from "@/components/ui/button"
+
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate()
   return (

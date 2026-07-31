@@ -1,6 +1,3 @@
-import { cn } from "@/lib/utils"
-import { PasswordSchema } from "@/services/auth"
-import { validationMessages } from "@/services/auth/message"
 import {
   CheckCircleIcon,
   DotsThreeCircleIcon,
@@ -10,8 +7,12 @@ import { useMemo } from "react"
 import * as z from "zod"
 import { ItemGroup } from "../ui/item"
 import { Progress } from "../ui/progress"
-import { AddonInput as Input, type InputProps } from "./addon-input"
+import { AddonInput as Input } from "./addon-input"
 import DataItem from "./data/item"
+import type { InputProps } from "./addon-input"
+import { validationMessages } from "@/services/auth/message"
+import { PasswordSchema } from "@/services/auth"
+import { cn } from "@/lib/utils"
 
 interface PasswordStrengthProps extends InputProps {}
 // The shared policy, not LoginInSchema — the login field is intentionally
@@ -67,8 +68,7 @@ export default function PasswordStrengthInput(props: PasswordStrengthProps) {
       />
       <div>
         <ItemGroup className="gap-0">
-          {!!checks &&
-            checks.length > 0 &&
+          {checks.length > 0 &&
             checks.map((i, index) => (
               <DataItem
                 className={cn("p-1", index == 0 && "pt-0")}

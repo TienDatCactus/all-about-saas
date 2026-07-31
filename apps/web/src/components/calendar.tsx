@@ -1,7 +1,5 @@
 "use client"
 
-import { Button, buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { differenceInCalendarDays } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import * as React from "react"
@@ -10,8 +8,10 @@ import {
   labelNext,
   labelPrevious,
   useDayPicker,
-  type DayPickerProps,
 } from "react-day-picker"
+import type { DayPickerProps } from "react-day-picker"
+import { cn } from "@/lib/utils"
+import { Button, buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = DayPickerProps & {
   /**

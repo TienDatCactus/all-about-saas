@@ -1,10 +1,10 @@
+import { ArrowClockwiseIcon } from "@phosphor-icons/react"
+import { isValidElement } from "react"
+import type React from "react"
 import DataEmpty from "@/components/custom/data/empty"
 import DataError from "@/components/custom/data/error"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowClockwiseIcon } from "@phosphor-icons/react"
-import { isValidElement } from "react"
-import type React from "react"
 
 type ErrorSlot = Partial<React.ComponentProps<typeof DataError>>
 type EmptySlot = React.ComponentProps<typeof DataEmpty>

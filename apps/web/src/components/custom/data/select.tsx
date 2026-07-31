@@ -9,7 +9,7 @@ import {
 
 interface DataSelect {}
 
-export function DataSelect({}: DataSelect) {
+export function DataSelect() {
   return (
     <Select>
       <SelectTrigger>Open</SelectTrigger>

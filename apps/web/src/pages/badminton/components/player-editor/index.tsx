@@ -1,3 +1,7 @@
+import { PlusIcon } from "@phosphor-icons/react"
+import { newPlayer } from "../../lib/form"
+import { PlayerRow } from "./PlayerRow"
+import type { EditorPlayer } from "../../lib/form"
 import { FormField } from "@/components/custom/form-field"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,9 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { PlusIcon } from "@phosphor-icons/react"
-import { newPlayer, type EditorPlayer } from "../../lib/form"
-import { PlayerRow } from "./PlayerRow"
 
 interface PlayerEditorProps {
   form: any
@@ -19,7 +20,7 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
   return (
     <FormField form={form} name="players">
       {({ field }) => {
-        const players: EditorPlayer[] = field.state.value
+        const players: Array<EditorPlayer> = field.state.value
         return (
           <Table>
             <TableHeader>

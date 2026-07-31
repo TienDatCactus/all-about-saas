@@ -1,11 +1,10 @@
 import * as React from "react"
-import useEmblaCarousel, {
-  type UseEmblaCarouselType,
-} from "embla-carousel-react"
+import useEmblaCarousel from "embla-carousel-react"
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
+import type { UseEmblaCarouselType } from "embla-carousel-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -98,7 +97,7 @@ function Carousel({
     api.on("select", onSelect)
 
     return () => {
-      api?.off("select", onSelect)
+      api.off("select", onSelect)
     }
   }, [api, onSelect])
 
@@ -108,8 +107,9 @@ function Carousel({
         carouselRef,
         api: api,
         opts,
-        orientation:
-          orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
+        // `orientation` defaults to "horizontal", so it is always set; the
+        // embla axis is derived from it above rather than from opts.axis.
+        orientation,
         scrollPrev,
         scrollNext,
         canScrollPrev,

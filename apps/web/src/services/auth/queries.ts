@@ -1,14 +1,14 @@
+import { useMutation } from "@tanstack/react-query"
+import { authApi } from "."
+import type {
+  LoginIn,
+  ResetPasswordIn,
+  SendVerificationEmailIn,
+  SignUpIn,
+  VerifyEmailIn,
+} from "."
 import { AppConstants } from "@/lib/utils/constants"
 import { storage } from "@/lib/utils/local-storage"
-import { useMutation } from "@tanstack/react-query"
-import {
-  authApi,
-  type LoginIn,
-  type ResetPasswordIn,
-  type SendVerificationEmailIn,
-  type SignUpIn,
-  type VerifyEmailIn,
-} from "."
 
 export const useLoginMutation = () => {
   return useMutation({

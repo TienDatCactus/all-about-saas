@@ -1,6 +1,6 @@
+import { createFileRoute } from "@tanstack/react-router"
 import ChangePassword from "@/pages/auth/change-password"
 import { ResetPasswordSchema } from "@/services/auth"
-import { createFileRoute } from "@tanstack/react-router"
 
 // Despite the route name, this page completes a forgotten-password *reset* — the
 // selector/token in the query string are the credential. ChangePasswordSchema is

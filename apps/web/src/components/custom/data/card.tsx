@@ -1,3 +1,4 @@
+import type React from "react"
 import {
   Card,
   CardAction,
@@ -7,7 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import type React from "react"
 
 interface DataCardProp {
   title: string

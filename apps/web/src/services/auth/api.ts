@@ -1,4 +1,3 @@
-import { http } from "@/lib/utils/http"
 import { AUTH } from "../url"
 import type {
   ChangePasswordIn,
@@ -8,6 +7,7 @@ import type {
   SignUpIn,
   VerifyEmailIn,
 } from "./types"
+import { http } from "@/lib/utils/http"
 
 export const authApi = {
   login: async (data: LoginIn): Promise<string> => {

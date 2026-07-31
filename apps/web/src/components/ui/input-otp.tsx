@@ -1,8 +1,9 @@
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
+import { MinusIcon } from "@phosphor-icons/react"
+import type { RenderProps } from "input-otp"
 
 import { cn } from "@/lib/utils"
-import { MinusIcon } from "@phosphor-icons/react"
 
 function InputOTP({
   className,
@@ -46,7 +47,12 @@ function InputOTPSlot({
   index: number
 }) {
   const inputOTPContext = React.useContext(OTPInputContext)
-  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
+  // input-otp seeds this context with a bare `{}` cast to RenderProps, so
+  // `slots` really is absent when a slot renders outside <InputOTP>. The old
+  // `inputOTPContext?.slots[index]` guarded the wrong operand — the context
+  // object is never nullish, so `slots[index]` would still throw.
+  const { slots } = inputOTPContext as Partial<RenderProps>
+  const { char, hasFakeCaret, isActive } = slots?.[index] ?? {}
 
   return (
     <div

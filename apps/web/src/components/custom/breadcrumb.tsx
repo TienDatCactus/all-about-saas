@@ -1,5 +1,6 @@
-import { Fragment, type ReactNode } from "react"
+import { Fragment } from "react"
 import { Link, useRouterState } from "@tanstack/react-router"
+import type { ReactNode } from "react"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -73,14 +74,14 @@ export interface BreadcrumbsProps {
  */
 export function Breadcrumbs({ className, items, separator }: BreadcrumbsProps) {
   const routeCrumbs = useRouterState({
-    select: (state): ResolvedCrumb[] =>
+    select: (state): Array<ResolvedCrumb> =>
       state.matches.flatMap((match) => {
         const crumb = match.staticData.crumb
         if (crumb == null) return []
         const label =
           typeof crumb === "function"
             ? crumb({
-                params: match.params as Record<string, string>,
+                params: match.params,
                 loaderData: match.loaderData,
                 pathname: match.pathname,
               })
@@ -90,7 +91,7 @@ export function Breadcrumbs({ className, items, separator }: BreadcrumbsProps) {
       }),
   })
 
-  const crumbs: ResolvedCrumb[] = items
+  const crumbs: Array<ResolvedCrumb> = items
     ? items.map((item) => ({ label: item.label, pathname: item.to ?? "" }))
     : routeCrumbs
 

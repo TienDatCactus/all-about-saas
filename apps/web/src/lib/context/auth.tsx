@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!user) {
-      //fetch me
+      // fetch me
     }
   }, [user])
 

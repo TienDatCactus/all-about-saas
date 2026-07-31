@@ -1,6 +1,7 @@
-import { PageHeader, PageShell } from "@/components/custom/page-shell"
+import DataState from "./state"
 import type React from "react"
-import DataState, { type DataStateProps } from "./state"
+import type { DataStateProps } from "./state"
+import { PageHeader, PageShell } from "@/components/custom/page-shell"
 
 type HeaderValue<TData> =
   | React.ReactNode

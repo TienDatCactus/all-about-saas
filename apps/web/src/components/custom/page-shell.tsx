@@ -1,8 +1,8 @@
 import { CaretDownIcon } from "@phosphor-icons/react"
-import type { ReactNode } from "react"
 import { Button } from "../ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Breadcrumbs } from "./breadcrumb"
+import type { ReactNode } from "react"
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (

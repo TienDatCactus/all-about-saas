@@ -1,5 +1,8 @@
 {
-  "include": ["**/*.ts", "**/*.tsx"],
+  // eslint.config.js is listed so the type-aware ESLint parser has a project
+  // for it (allowJs is on and checkJs is off, so tsc includes but does not
+  // type-check it).
+  "include": ["**/*.ts", "**/*.tsx", "eslint.config.js"],
   // vite.config.ts is excluded from `tsc --noEmit` on purpose: vite-plus's
   // config type blows TS's instantiation depth limit ("Excessive stack depth"),
   // which is type-checker friction rather than a defect in this repo. Vite

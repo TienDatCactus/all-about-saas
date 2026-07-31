@@ -1,5 +1,3 @@
-import { http } from "@/lib/utils/http"
-import { paginatedSchema, parseResponse } from "@/lib/utils/parse-response"
 import { BADMINTON } from "../url"
 import {
   BadmintonSessionSchema,
@@ -7,10 +5,11 @@ import {
   ParticipantSuggestionSchema,
   PublicSessionSchema,
   SessionListItemSchema,
-  type CreateSessionIn,
-  type UpdateSessionIn,
 } from "./types"
+import type { CreateSessionIn, UpdateSessionIn } from "./types"
 import type { PageParams } from "../utils"
+import { paginatedSchema, parseResponse } from "@/lib/utils/parse-response"
+import { http } from "@/lib/utils/http"
 
 /**
  * Every response goes through its schema, so the return types below are checked

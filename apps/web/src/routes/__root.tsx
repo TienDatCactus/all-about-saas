@@ -1,13 +1,13 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { MotionConfig } from "motion/react"
+import appCss from "../styles.css?url"
 import { ConfirmProvider } from "@/components/custom/confirm"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { MotionProvider, useMotion } from "@/lib/context/animation"
 import { AuthProvider } from "@/lib/context/auth"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { MotionConfig } from "motion/react"
-import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
   staticData: { crumb: "Home" },
