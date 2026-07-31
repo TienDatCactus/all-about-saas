@@ -77,7 +77,7 @@ export class UsersService extends BaseService<User> {
 		provider: string,
 		providerUserId: string,
 		email: string,
-		profileData: any,
+		profileData: Record<string, unknown>,
 	): Promise<User> {
 		const oauthAccount = await this.oauthAccountRepo.findOne({
 			where: { provider: provider as OAuthProvider, providerUserId },

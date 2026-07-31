@@ -17,10 +17,10 @@ export class ChangePasswordDto {
 	// be able to prove ownership in order to move off it.
 	@IsString()
 	@IsNotEmpty()
-	currentPassword: string;
+	currentPassword!: string;
 
 	@IsString()
 	@MinLength(PASSWORD_MIN_LENGTH)
 	@MaxLength(PASSWORD_MAX_LENGTH)
-	newPassword: string;
+	newPassword!: string;
 }

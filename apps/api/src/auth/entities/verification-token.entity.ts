@@ -10,22 +10,22 @@ export enum VerificationType {
 @Entity()
 export class VerificationToken extends BaseEntity {
 	@Column({ unique: true })
-	selector: string; //uuid
+	selector!: string; //uuid
 
 	@ManyToOne(() => User)
-	user: User;
+	user!: User;
 
 	@Column()
-	tokenHash: string;
+	tokenHash!: string;
 
 	@Column({
 		type: 'enum',
 		enum: VerificationType,
 	})
-	type: VerificationType;
+	type!: VerificationType;
 
 	@Column()
-	expiresAt: Date;
+	expiresAt!: Date;
 
 	@Column({ nullable: true })
 	usedAt?: Date;

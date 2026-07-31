@@ -11,7 +11,9 @@ import {
 	Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
+import { requireUser } from '../common/request-user';
 import { BadmintonService } from './badminton.service';
 import {
 	CreateBadmintonSessionDto,
@@ -26,16 +28,17 @@ export class BadmintonController {
 	constructor(private readonly service: BadmintonService) {}
 
 	@Post('/sessions')
-	create(@Req() req, @Body() dto: CreateBadmintonSessionDto) {
-		return this.service.createSession(req.user.id, dto);
+	create(@Req() req: Request, @Body() dto: CreateBadmintonSessionDto) {
+		return this.service.createSession(requireUser(req).id, dto);
 	}
 
 	@Get('/sessions')
-	findAll(@Req() req, @Query() query: QueryBadmintonSessionDto) {
+	findAll(@Req() req: Request, @Query() query: QueryBadmintonSessionDto) {
+		const { id: ownerId } = requireUser(req);
 		return this.service.paginate({
 			page: query.page,
 			limit: query.limit,
-			where: { ownerId: req.user.id },
+			where: { ownerId },
 			order: { playedOn: 'DESC', createdAt: 'DESC' },
 			relations: { participants: true },
 			select: {
@@ -64,22 +67,22 @@ export class BadmintonController {
 	}
 
 	@Get('/sessions/:id')
-	findOne(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
-		return this.service.findOneOwned(req.user.id, id);
+	findOne(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+		return this.service.findOneOwned(requireUser(req).id, id);
 	}
 
 	@Patch('/sessions/:id')
 	update(
-		@Req() req,
+		@Req() req: Request,
 		@Param('id', ParseUUIDPipe) id: string,
 		@Body() dto: UpdateBadmintonSessionDto,
 	) {
-		return this.service.updateSession(req.user.id, id, dto);
+		return this.service.updateSession(requireUser(req).id, id, dto);
 	}
 
 	@Delete('/sessions/:id')
-	remove(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
-		return this.service.removeSession(req.user.id, id);
+	remove(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+		return this.service.removeSession(requireUser(req).id, id);
 	}
 	@Public()
 	@Get('/public/:shareToken')

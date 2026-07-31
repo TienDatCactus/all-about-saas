@@ -11,6 +11,7 @@ import * as crypto from 'crypto';
 import { Request, Response } from 'express';
 import { DataSource, IsNull, LessThan, Not, Repository } from 'typeorm';
 import { UAParser } from 'ua-parser-js';
+import type { RequestUser } from '../../common/request-user';
 import { MailService } from '../../mail/mail.service';
 import { User } from '../../users/entities/user.entity';
 import { UsersService } from '../../users/users.service';
@@ -171,13 +172,31 @@ export class AuthService {
 		});
 	}
 
+	/**
+	 * @param email the address the provider released, which may be absent — see
+	 * the guard below.
+	 */
 	async oauthAccess(
 		provider: string,
 		providerId: string,
-		email: string,
-		profileData: any,
+		email: string | undefined,
+		profileData: RequestUser,
 		sessionInfo: SessionInfo,
 	): Promise<LoginResp> {
+		// `email` was typed `string` while every caller passed `req.user.email` from
+		// an OAuth profile, which is genuinely optional: Facebook releases no address
+		// for an account registered by phone number, and GitHub none for a private
+		// one. `undefined` then reached `findOrCreateOAuthUser` → `findOne({ email })`,
+		// and TypeORM's default `invalidWhereValuesBehavior.undefined` is 'ignore' —
+		// so the condition was dropped from the query, `SELECT … LIMIT 1` matched an
+		// ARBITRARY existing row, and this method minted that user's tokens for
+		// whoever completed the OAuth flow. Full account takeover, no warning.
+		if (!email) {
+			throw new HttpException(
+				`${provider} did not return an email address for this account`,
+				400,
+			);
+		}
 		const { accessToken: _ssoAccessToken, ...profile } = profileData;
 		const user = await this.usersService.findOrCreateOAuthUser(
 			provider,
@@ -363,10 +382,13 @@ export class AuthService {
 		if (!rec) {
 			throw new HttpException('User not found', 404);
 		}
-		const comparison = await this.tokensService.comparePassword(
-			password,
-			rec.password,
-		);
+		// `User.password` is a nullable column, so a row can carry no hash at all —
+		// and `bcrypt.compare(x, undefined)` throws, which would surface as a 500 on
+		// this endpoint rather than a reset. With nothing on record there is also
+		// nothing for the new password to be a duplicate of, so the check is skipped.
+		const comparison = rec.password
+			? await this.tokensService.comparePassword(password, rec.password)
+			: false;
 		if (comparison) {
 			throw new HttpException(
 				'New password cannot be the same as the old password',
@@ -456,10 +478,13 @@ export class AuthService {
 		if (!user) {
 			throw new HttpException('User not found', 404);
 		}
-		const currentMatches = await this.tokensService.comparePassword(
-			currentPassword,
-			user.password,
-		);
+		// Same nullable column as in resetPasswordWithToken, opposite conclusion:
+		// proving you know the current password is impossible when there is no
+		// current password, so this must fail. It falls through to the ordinary
+		// wrong-password response so the caller cannot tell the two apart.
+		const currentMatches = user.password
+			? await this.tokensService.comparePassword(currentPassword, user.password)
+			: false;
 		if (!currentMatches) {
 			throw new UnauthorizedException('Current password is incorrect');
 		}
@@ -528,7 +553,7 @@ export class AuthService {
 		type: VerificationType;
 		subject?: string;
 		template?: EmailTemplate;
-		props?: Record<string, any>;
+		props?: Record<string, unknown>;
 	}) {
 		const { rawToken, selector: newSelector } =
 			await this.createVerificationTokenRecord({

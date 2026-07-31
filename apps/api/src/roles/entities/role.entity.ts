@@ -5,8 +5,8 @@ import { BaseEntity } from '../../common/entities/base.entity';
 @Entity()
 export class Role extends BaseEntity {
 	@Column({ unique: true })
-	name: string; // e.g. "admin", "editor", "viewer"
+	name!: string; // e.g. "admin", "editor", "viewer"
 
 	@OneToMany(() => User, (user) => user.role)
-	users: User[];
+	users!: User[];
 }

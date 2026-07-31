@@ -19,35 +19,35 @@ import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
 export class BadmintonSession extends SoftDeleteBaseEntity {
 	@ManyToOne(() => User, { onDelete: 'CASCADE' })
 	@JoinColumn({ name: 'ownerId' })
-	owner: User;
+	owner!: User;
 
 	@Column('uuid')
 	@Index()
-	ownerId: string;
+	ownerId!: string;
 
 	/** Date the session was played, 'YYYY-MM-DD'. */
 	@Column({ type: 'date' })
-	playedOn: string;
+	playedOn!: string;
 
 	@Column({ nullable: true })
 	title?: string;
 
 	/** Court cost, VND (no decimals). */
 	@Column('int')
-	courtCost: number;
+	courtCost!: number;
 
 	/** Price per shuttle, VND. Total shuttle cost is DERIVED: unitPrice * totalShuttleCount. */
 	@Column('int')
-	shuttleUnitPrice: number;
+	shuttleUnitPrice!: number;
 
 	/** Total shuttles used in the session (shared pot). Drives shuttleCost = unitPrice * this. */
 	@Column('int', { default: 0 })
-	totalShuttleCount: number;
+	totalShuttleCount!: number;
 
 	/** Unguessable token for the public read-only share link. */
 	@Index({ unique: true })
 	@Column()
-	shareToken: string;
+	shareToken!: string;
 
 	/** Frozen split result, recomputed on every save; served to the share link. */
 	@Column({ type: 'jsonb', nullable: true })
@@ -57,5 +57,5 @@ export class BadmintonSession extends SoftDeleteBaseEntity {
 		cascade: true,
 		orphanedRowAction: 'delete',
 	})
-	participants: BadmintonParticipant[];
+	participants!: BadmintonParticipant[];
 }

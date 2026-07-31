@@ -16,9 +16,10 @@ import * as dns from 'dns';
 						user: configService.get('email.user'),
 						pass: configService.get('email.pass'),
 					},
-					lookup: (hostname, options, callback) => {
-						dns.lookup(hostname, options, callback);
-					},
+					// The wrapper existed only to forward all three arguments unchanged,
+					// and its parameters were implicitly `any`. `dns.lookup` needs no
+					// receiver, so it can be handed over directly and keeps its real types.
+					lookup: dns.lookup,
 					tls: {
 						rejectUnauthorized: true,
 					},

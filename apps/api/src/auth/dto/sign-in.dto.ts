@@ -2,7 +2,7 @@ import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginDto {
 	@IsEmail()
-	email: string;
+	email!: string;
 
 	/**
 	 * No length bound on purpose. This is a *submitted* password, not a chosen
@@ -12,5 +12,5 @@ export class LoginDto {
 	 */
 	@IsString()
 	@IsNotEmpty()
-	password: string;
+	password!: string;
 }

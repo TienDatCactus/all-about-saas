@@ -18,11 +18,11 @@ export class BadmintonParticipant extends SoftDeleteBaseEntity {
 		onDelete: 'CASCADE',
 	})
 	@JoinColumn({ name: 'sessionId' })
-	session: BadmintonSession;
+	session!: BadmintonSession;
 
 	@Column('uuid')
 	@Index()
-	sessionId: string;
+	sessionId!: string;
 
 	/** Linked app user, if this participant is a registered account. Optional. */
 	@ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
@@ -35,17 +35,17 @@ export class BadmintonParticipant extends SoftDeleteBaseEntity {
 
 	/** Display name: free-text guest name, or a snapshot of the linked user's name. */
 	@Column()
-	name: string;
+	name!: string;
 
 	/** Played fraction of the session, 0..1. Drives the time-proportional court split; 0 = excluded from court. */
 	@Column('float', { default: 1 })
-	courtFraction: number;
+	courtFraction!: number;
 
 	/** Discount on the whole bill, 0..1 (e.g. 0.15). Redistributed onto other players. */
 	@Column('float', { default: 0 })
-	discount: number;
+	discount!: number;
 
 	/** Weight for the shared shuttle pot, 0..1. Split works like {@link courtFraction}; 0 = excluded from shuttle fee. */
 	@Column('float', { default: 1 })
-	shuttleFraction: number;
+	shuttleFraction!: number;
 }

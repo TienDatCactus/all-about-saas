@@ -1,5 +1,7 @@
 import { Controller, Get, NotFoundException, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { requireUser } from '../common/request-user';
 import { UsersService } from './users.service';
 
 /**
@@ -18,8 +20,8 @@ export class UsersController {
 
 	/** The caller's own record. The id comes from the verified JWT. */
 	@Get('me')
-	async me(@Req() req) {
-		const user = await this.usersService.findById(req.user.id, {
+	async me(@Req() req: Request) {
+		const user = await this.usersService.findById(requireUser(req).id, {
 			relations: { role: true },
 		});
 		if (!user) throw new NotFoundException('User not found');

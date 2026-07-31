@@ -6,6 +6,7 @@ import {
 	ValidationPipe,
 } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
+import type { ValidationError } from 'class-validator';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
@@ -52,13 +53,13 @@ async function bootstrap() {
 			forbidNonWhitelisted: true,
 			exceptionFactory: (validationErrors) => {
 				const validation: Record<string, string[]> = {};
-				const extractErrors = (err: any, prefix = '') => {
+				const extractErrors = (err: ValidationError, prefix = '') => {
 					const key = prefix ? `${prefix}.${err.property}` : err.property;
 					if (err.constraints) {
 						validation[key] = Object.values(err.constraints);
 					}
 					if (err.children && err.children.length > 0) {
-						err.children.forEach((child: any) => extractErrors(child, key));
+						err.children.forEach((child) => extractErrors(child, key));
 					}
 				};
 				validationErrors.forEach((err) => extractErrors(err));

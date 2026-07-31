@@ -11,13 +11,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
 import { ResponseMessage } from '../common/decorator/response-message.decorator';
 import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
 import { GithubAuthGuard } from '../common/guard/github-auth.guard';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
+import { requireUser } from '../common/request-user';
 import { OAuthProvider } from '../users/entities/oauth-account.entity';
 import { UsersService } from '../users/users.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -48,8 +49,8 @@ export class AuthController {
 	@Post('login')
 	async login(
 		@Body() body: LoginDto,
-		@Res({ passthrough: true }) res,
-		@Req() req,
+		@Res({ passthrough: true }) res: Response,
+		@Req() req: Request,
 	) {
 		const sessionInfo = this.authService.getSessionInfo(req);
 		const result = await this.authService.login(
@@ -149,11 +150,11 @@ export class AuthController {
 	@Public()
 	@Post('logout')
 	async logout(
-		@Req() req,
+		@Req() req: Request,
 		@Res({
 			passthrough: true,
 		})
-		res,
+		res: Response,
 	) {
 		const refreshToken = req.cookies['refresh_token'];
 		if (refreshToken) {
@@ -183,7 +184,7 @@ export class AuthController {
 	@UseGuards(JwtAuthGuard)
 	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Post('password/change')
-	async changePassword(@Body() body: ChangePasswordDto, @Req() req) {
+	async changePassword(@Body() body: ChangePasswordDto, @Req() req: Request) {
 		if (!req.user?.id) {
 			throw new BadRequestException('User not authenticated');
 		}
@@ -200,7 +201,10 @@ export class AuthController {
 	@Public()
 	@Throttle({ default: { limit: 20, ttl: 60_000 } })
 	@Post('refresh')
-	async refresh(@Req() req, @Res({ passthrough: true }) res) {
+	async refresh(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+	) {
 		const refreshToken = req.cookies['refresh_token'];
 		if (!refreshToken) {
 			// A bare Error here became a 500 (and, in production, a generic
@@ -232,13 +236,14 @@ export class AuthController {
 	@Public()
 	@UseGuards(GoogleAuthGuard)
 	@Get('google/callback')
-	async googleAuthRedirect(@Req() req, @Res() res: Response) {
+	async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+		const user = requireUser(req);
 		const sessionInfo = this.authService.getSessionInfo(req);
 		const result = await this.authService.oauthAccess(
 			OAuthProvider.GOOGLE,
-			req.user.id,
-			req.user.email,
-			req.user,
+			user.id,
+			user.email,
+			user,
 			sessionInfo,
 		);
 
@@ -261,13 +266,14 @@ export class AuthController {
 	@Public()
 	@Get('github/callback')
 	@UseGuards(GithubAuthGuard)
-	async githubCallback(@Req() req, @Res() res) {
+	async githubCallback(@Req() req: Request, @Res() res: Response) {
+		const user = requireUser(req);
 		const sessionInfo = this.authService.getSessionInfo(req);
 		const result = await this.authService.oauthAccess(
 			OAuthProvider.GITHUB,
-			req.user.id,
-			req.user.email,
-			req.user,
+			user.id,
+			user.email,
+			user,
 			sessionInfo,
 		);
 		this.authService.setCookie(
@@ -286,13 +292,14 @@ export class AuthController {
 	@Public()
 	@Get('facebook/callback')
 	@UseGuards(FacebookAuthGuard)
-	async facebookCallback(@Req() req, @Res() res) {
+	async facebookCallback(@Req() req: Request, @Res() res: Response) {
+		const user = requireUser(req);
 		const sessionInfo = this.authService.getSessionInfo(req);
 		const result = await this.authService.oauthAccess(
 			OAuthProvider.FACEBOOK,
-			req.user.id,
-			req.user.email,
-			req.user,
+			user.id,
+			user.email,
+			user,
 			sessionInfo,
 		);
 		this.authService.setCookie(

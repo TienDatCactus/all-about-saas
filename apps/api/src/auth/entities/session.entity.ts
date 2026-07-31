@@ -13,7 +13,7 @@ export class Session extends BaseEntity {
 		onDelete: 'CASCADE',
 	})
 	@JoinColumn({ name: 'userId' })
-	user: User;
+	user!: User;
 
 	/**
 	 * Explicit FK column so revoke-all queries can filter by owner without
@@ -21,7 +21,7 @@ export class Session extends BaseEntity {
 	 */
 	@Column('uuid')
 	@Index()
-	userId: string;
+	userId!: string;
 
 	/**
 	 * sha256 of the refresh JWT, never the token itself. A dump of this table no
@@ -33,16 +33,16 @@ export class Session extends BaseEntity {
 	 */
 	@Index({ unique: true })
 	@Column({ select: false })
-	refreshTokenHash: string;
+	refreshTokenHash!: string;
 
 	@Column()
-	deviceName: string;
+	deviceName!: string;
 
 	@Column()
-	userAgent: string;
+	userAgent!: string;
 
 	@Column()
-	ipAddress: string;
+	ipAddress!: string;
 
 	@Column({ nullable: true })
 	revokedAt?: Date;
@@ -57,5 +57,5 @@ export class Session extends BaseEntity {
 	rotatedAt?: Date;
 
 	@Column()
-	expiresAt: Date;
+	expiresAt!: Date;
 }

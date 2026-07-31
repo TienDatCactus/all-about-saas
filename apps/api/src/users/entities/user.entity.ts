@@ -32,33 +32,40 @@ const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$/;
 @Entity()
 export class User extends SoftDeleteBaseEntity {
 	@Column({ unique: true })
-	email: string;
+	email!: string;
 
+	/**
+	 * Optional, and for two separate reasons: the column is `nullable`, and
+	 * `select: false` means it is absent from every load that does not ask for it
+	 * by name (see `UsersService.findOneWithPassword`). Typing it as a plain
+	 * `string` claimed a value that most reads of this entity do not have.
+	 */
 	@Column({ nullable: true, select: false })
-	password: string;
+	password?: string;
 
 	@Column({ default: false })
-	isActive: boolean;
+	isActive!: boolean;
 
 	@Column({ default: false })
-	emailVerified: boolean;
+	emailVerified!: boolean;
 
 	@OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
-	oauthAccounts: OAuthAccount[];
+	oauthAccounts!: OAuthAccount[];
 
 	@OneToMany(() => Session, (session) => session.user)
-	sessions: Session[];
+	sessions!: Session[];
 
 	@OneToMany(() => VerificationToken, (token) => token.user)
-	verificationTokens: VerificationToken[];
+	verificationTokens!: VerificationToken[];
 
+	/** Nullable: nothing assigns a role on signup, so most users have none. */
 	@ManyToOne(() => Role, (role) => role.users, { nullable: true })
-	role: Role;
+	role?: Role;
 
 	@OneToOne(() => UserProfile, (profile) => profile.user, {
 		cascade: true,
 	})
-	profile: UserProfile;
+	profile!: UserProfile;
 
 	@BeforeInsert()
 	@BeforeUpdate()

@@ -13,14 +13,14 @@ import {
 export class ResetPasswordDto {
 	@IsString()
 	@IsNotEmpty()
-	selector: string;
+	selector!: string;
 
 	@IsString()
 	@IsNotEmpty()
-	token: string;
+	token!: string;
 
 	@IsString()
 	@MinLength(PASSWORD_MIN_LENGTH)
 	@MaxLength(PASSWORD_MAX_LENGTH)
-	password: string;
+	password!: string;
 }

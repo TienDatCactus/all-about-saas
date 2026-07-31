@@ -13,7 +13,7 @@ export class MailService {
 	async sendEmail(
 		options: ISendMailOptions,
 		template: EmailTemplate,
-		props?: any,
+		props?: Record<string, unknown>,
 	) {
 		const emailHtml = await renderTemplate(template, props);
 		await this.mailerService.sendMail({

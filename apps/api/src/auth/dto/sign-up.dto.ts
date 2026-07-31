@@ -6,10 +6,10 @@ import {
 
 export class SignUpDto {
 	@IsEmail()
-	email: string;
+	email!: string;
 
 	@IsString()
 	@MinLength(PASSWORD_MIN_LENGTH)
 	@MaxLength(PASSWORD_MAX_LENGTH)
-	password: string;
+	password!: string;
 }
