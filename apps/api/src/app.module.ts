@@ -53,11 +53,22 @@ resolveFileSecrets();
 		}),
 		TypeOrmModule.forRootAsync(database.asProvider()),
 		RolesModule,
+		// The global limit is an ABUSE ceiling, not a usage budget. It was 10/min,
+		// which is a login-endpoint number applied to every route — and below
+		// what one honest user generates: the participant autocomplete fires a
+		// request per typed prefix, so entering four player names spends the whole
+		// minute's allowance on its own. It is also per-IP, so an office or a
+		// mobile carrier behind CGNAT shares one bucket between everybody.
+		//
+		// The limits that actually defend anything are the per-route @Throttle
+		// decorators on auth (5/min login and signup, 3/min outbound mail); those
+		// are unchanged. This one only needs to stop a script, and 100/min does
+		// that while leaving normal use alone.
 		ThrottlerModule.forRoot({
 			throttlers: [
 				{
 					ttl: 60000,
-					limit: 10,
+					limit: 100,
 				},
 			],
 		}),

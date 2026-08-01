@@ -15,6 +15,31 @@ import type {
 import { toast } from "@/components/custom/toast"
 import { authApi } from "@/services/auth"
 
+/**
+ * HTTP status out of whatever the response interceptor rejected with, which is
+ * three different shapes depending on where the failure happened:
+ *
+ *   - the API's error envelope (`{ statusCode, code, message, … }`) — the
+ *     common case, because the interceptor rejects with `error.response.data`
+ *   - a raw axios error, when there is no response body at all (network down,
+ *     CORS, timeout)
+ *   - a plain Error (e.g. ResponseContractError) — no status, and no amount of
+ *     retrying will produce one
+ *
+ * Returns undefined when the failure has no HTTP status, which callers should
+ * read as "not a server verdict".
+ */
+export function getErrorStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== "object") return undefined
+  const e = error as {
+    statusCode?: unknown
+    status?: unknown
+    response?: { status?: unknown }
+  }
+  const candidate = e.statusCode ?? e.response?.status ?? e.status
+  return typeof candidate === "number" ? candidate : undefined
+}
+
 export class HttpClient {
   private axiosInstance!: AxiosInstance
   // Undefined until getInstance() first runs — the lazy latch below reads it

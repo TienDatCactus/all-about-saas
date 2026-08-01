@@ -1,6 +1,7 @@
 import * as React from "react"
 import type { DataAutocompleteGroup } from "@/components/custom/data/autocomplete"
 import DataAutocomplete from "@/components/custom/data/autocomplete"
+import { useDebounced } from "@/lib/hooks/use-debounced"
 import { useParticipantSuggestions } from "@/services/badminton/queries"
 
 /** Below this the server match is too broad to be useful. */
@@ -36,8 +37,13 @@ export function PlayerNameInput({
   "aria-invalid": ariaInvalid,
 }: PlayerNameInputProps) {
   const [query, setQuery] = React.useState("")
-  const enabled = query.length >= MIN_QUERY
-  const { data, isFetching } = useParticipantSuggestions(query, enabled)
+  // Debounced, so a request is sent per typing pause rather than per keystroke.
+  // Undebounced, "Nguyen" keyed six separate queries — each one a real round
+  // trip counted against the API's per-IP rate limit, which two players' worth
+  // of typing was enough to exhaust.
+  const debouncedQuery = useDebounced(query, 300)
+  const enabled = debouncedQuery.length >= MIN_QUERY
+  const { data, isFetching } = useParticipantSuggestions(debouncedQuery, enabled)
 
   const groups = React.useMemo<Array<DataAutocompleteGroup<Suggestion>>>(() => {
     if (!data) return []
