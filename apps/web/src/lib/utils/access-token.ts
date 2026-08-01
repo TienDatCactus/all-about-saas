@@ -15,11 +15,37 @@ import { storage } from "./local-storage"
  * request. The refresh cookie is the durable credential; this value is a
  * 15-minute convenience.
  */
+
+/**
+ * This app server-renders, so this module is also evaluated on the server —
+ * where a module-scope variable is shared by EVERY concurrent request. Storing
+ * one visitor's token there would hand it to the next visitor's render.
+ *
+ * Nothing does that today (no route uses `loader`/`beforeLoad`/`createServerFn`,
+ * so every API call happens in the browser), but the day someone adds a
+ * server-side loader that hits an authenticated endpoint, the failure would be
+ * a silent cross-user token leak — the worst possible thing to discover late.
+ * So the store simply refuses to hold anything on the server: reads are always
+ * undefined, writes warn and drop.
+ *
+ * If SSR ever genuinely needs an authenticated fetch, it must read the incoming
+ * request's own cookie — per-request state — not this module.
+ */
+const isBrowser = () => typeof window !== "undefined"
+
 let accessToken: string | undefined
 
-export const getAccessToken = () => accessToken
+export const getAccessToken = () => (isBrowser() ? accessToken : undefined)
 
 export const setAccessToken = (token: string) => {
+  if (!isBrowser()) {
+    console.warn(
+      "[auth] Refusing to store an access token during SSR: module scope is " +
+        "shared across requests, so this would leak between users. Authenticated " +
+        "server-side fetches must use the incoming request's cookie."
+    )
+    return
+  }
   accessToken = token
 }
 
@@ -30,5 +56,8 @@ export const clearAccessToken = () => {
 // One-time migration: users who logged in before this change still have a
 // token sitting in localStorage. It is no longer read, but "no longer read"
 // is not "gone" — purge it so an XSS tomorrow cannot harvest a leftover from
-// last week. Runs on module load; removing an absent key is a no-op.
-storage.remove(AppConstants.tokenKey)
+// last week. Browser-only; `storage` no-ops on the server anyway, but calling
+// it explicitly here documents that this is a browser-side cleanup.
+if (isBrowser()) {
+  storage.remove(AppConstants.tokenKey)
+}
