@@ -16,8 +16,23 @@ import {
 import { formatDong, formatVnd } from "@/pages/badminton/lib/format"
 import { buildSummaryText } from "@/pages/badminton/lib/summary-text"
 
+/**
+ * What this component actually needs, which is looser than `ComputedSnapshot`:
+ * rows whose `participantId` may be absent.
+ *
+ * `computeSplit` always sets it, but `computed` is stored as jsonb and a
+ * snapshot written by an older version of the calc may not carry it — which is
+ * why the response schema types it optional. This component only uses it as a
+ * React key, so demanding it would be a constraint with nothing behind it.
+ */
+export type DisplaySnapshot = Omit<ComputedSnapshot, "rows"> & {
+  rows: Array<Omit<ComputedSnapshot["rows"][number], "participantId"> & {
+    participantId?: string
+  }>
+}
+
 interface SummaryProps {
-  computed: ComputedSnapshot
+  computed: DisplaySnapshot
   meta?: { title?: string | null; playedOn?: string }
 }
 
@@ -67,8 +82,8 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {computed.rows.map((row) => (
-                  <TableRow key={row.participantId}>
+                {computed.rows.map((row, index) => (
+                  <TableRow key={row.participantId ?? `${index}-${row.name}`}>
                     <TableCell className="font-medium">{row.name}</TableCell>
                     <TableCell className="text-right text-muted-foreground tabular-nums">
                       {formatDong(row.court)}

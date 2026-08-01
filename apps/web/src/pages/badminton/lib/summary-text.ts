@@ -1,16 +1,16 @@
 import { formatVnd } from "./format"
-import type { ComputedSnapshot } from "@/services/badminton/types"
+import type { DisplaySnapshot } from "@/pages/badminton/components/Summary"
 
 /**
  * Plain-text summary for one-click copy into chat apps (Zalo / Messenger).
  * Name-and-total, right-aligned amounts, kept simple so it pastes cleanly.
  */
 export function buildSummaryText(
-  computed: ComputedSnapshot,
+  computed: DisplaySnapshot,
   meta?: { title?: string | null; playedOn?: string }
 ): string {
   const heading = meta?.title?.trim() || "Badminton split"
-  const lines: Array<string> = [`🏸 ${heading}`]
+  const lines: Array<string> = [`- ${heading}`]
   if (meta?.playedOn) lines.push(meta.playedOn)
   lines.push("")
 
