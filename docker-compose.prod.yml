@@ -117,6 +117,9 @@ services:
   # One-shot: applies migrations, then exits. `depends_on: service_completed_successfully`
   # on the api means the app never starts against an un-migrated schema.
   migrate:
+    # Same image as the api, so the migrations that run are byte-identical to
+    # the ones the running app expects.
+    image: ${API_IMAGE:-aas-prod-api}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -154,11 +157,22 @@ services:
     logging: *default-logging
 
   api:
+    # `image` + `build` together: `docker compose build` tags locally, and
+    # `docker compose pull` fetches the same tag from the registry. That is what
+    # lets CI build once and the VPS deploy the exact bytes CI produced instead
+    # of rebuilding from source on the box.
+    image: ${API_IMAGE:-aas-prod-api}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
     logging: *default-logging
+    # Loopback ONLY. A bare "8000:8000" binds 0.0.0.0, and Docker writes its own
+    # iptables rules that sit in front of ufw — the port would be open to the
+    # internet and the firewall would still report it closed. The explicit
+    # 127.0.0.1 is what keeps nginx the only way in.
+    ports:
+      - '127.0.0.1:${API_HOST_PORT:-8000}:8000'
     environment:
       NODE_ENV: production
       PORT: 8000
@@ -199,17 +213,23 @@ services:
       start_period: 20s
 
   web:
+    image: ${WEB_IMAGE:-aas-prod-web}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        # Baked in at build time — Vite inlines import.meta.env.
+        # Baked in at build time — Vite inlines import.meta.env. This is why the
+        # CD pipeline must rebuild the web image when the API domain changes; a
+        # restart with a new env var will not move it.
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:?set VITE_API_BASE_URL}
     restart: unless-stopped
     logging: *default-logging
     environment:
       NODE_ENV: production
       PORT: 3000
+    # Loopback only — see the note on the api service.
+    ports:
+      - '127.0.0.1:${WEB_HOST_PORT:-3000}:3000'
     networks: [internal]
     depends_on:
       api:
@@ -227,7 +247,18 @@ services:
       retries: 5
       start_period: 20s
 
+  # OPT-IN. Only starts with `--profile caddy`.
+  #
+  # The deployment target already terminates TLS with nginx + certbot, and two
+  # things cannot both own :80/:443 — without this profile, `docker compose up`
+  # on that host fails to bind, or worse, wins the race and takes the site down.
+  # Use this profile only on a host with no other web server; otherwise the api
+  # and web services publish on 127.0.0.1 for an existing proxy to reach.
+  #
+  # See deploy/nginx/ for the nginx equivalent of the Caddyfile's routing,
+  # headers and CSP.
   caddy:
+    profiles: [caddy]
     image: caddy:2-alpine
     restart: unless-stopped
     logging: *default-logging

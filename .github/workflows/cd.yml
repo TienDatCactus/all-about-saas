@@ -1,0 +1,145 @@
+name: CD
+
+# Deploy on every push to main, once CI has passed on that same commit.
+#
+# The gate is deliberate: `workflow_run` fires after CI completes, and the job
+# below refuses to run unless CI's conclusion was success. Deploying in parallel
+# with the tests would mean shipping first and finding out second.
+on:
+  workflow_run:
+    workflows: ['CI']
+    branches: [main]
+    types: [completed]
+  # Manual re-deploy / rollback: pass any previously built tag.
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (commit SHA). Blank = build this ref.'
+        required: false
+        type: string
+
+concurrency:
+  # Never two deploys at once — the second would race the first's migration.
+  # No cancel-in-progress: killing a deploy midway leaves the stack half-swapped.
+  group: cd-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    # `workflow_run` fires on failure too; without this a red CI would deploy.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # workflow_run checks out the default branch by default, not the commit
+          # CI actually validated. Pin to that exact SHA or we ship something else.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+      - id: meta
+        run: |
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            echo "tag=${{ inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+            echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.event.workflow_run.head_sha || github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "skip_build=false" >> "$GITHUB_OUTPUT"
+          fi
+          # Registry paths must be lowercase; the org/repo name may not be.
+          echo "base=$(echo '${{ env.IMAGE_BASE }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.meta.outputs.skip_build == 'false'
+
+      - uses: docker/login-action@v3
+        if: steps.meta.outputs.skip_build == 'false'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          # Built-in token — no secret to create, scoped by `packages: write` above.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API
+        if: steps.meta.outputs.skip_build == 'false'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.base }}-api:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.base }}-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push web
+        if: steps.meta.outputs.skip_build == 'false'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          # Vite inlines import.meta.env at BUILD time, so the API URL is baked
+          # into the bundle here — it cannot be changed by a runtime env var on
+          # the server. Held as a repository *variable*, not a secret: it ends up
+          # in publicly served JavaScript either way, and pretending otherwise
+          # would just make it harder to read.
+          build-args: |
+            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+          tags: |
+            ${{ steps.meta.outputs.base }}-web:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.base }}-web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Create this environment in repo Settings to gate deploys behind a manual
+    # approval, or leave it ungated for continuous deployment.
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          # Fail the step if any command fails, rather than reporting success
+          # for a deploy that did not happen.
+          script_stops: true
+          # -e so the pull failing does not silently proceed to the deploy.
+          script: |
+            set -e
+            cd ${{ vars.DEPLOY_PATH }}
+            git fetch --all --prune
+            git checkout --force ${{ needs.build.outputs.tag }}
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            IMAGE_TAG=${{ needs.build.outputs.tag }} ./scripts/deploy.sh
+            docker logout ghcr.io
+
+      - name: Smoke test through the public URL
+        # The deploy script already waits on the container healthchecks; this
+        # checks the whole path a user takes — DNS, nginx, TLS, proxy headers —
+        # which container-internal probes cannot see.
+        run: |
+          set -e
+          for url in "https://${{ vars.PUBLIC_WEB_URL }}" "https://${{ vars.PUBLIC_API_URL }}/health/ready"; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$url")
+            echo "$url -> $code"
+            [ "$code" = "200" ] || { echo "Smoke test failed for $url"; exit 1; }
+          done
