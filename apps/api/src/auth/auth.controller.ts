@@ -4,6 +4,7 @@ import {
 	Body,
 	Controller,
 	Get,
+	Logger,
 	Post,
 	Req,
 	Res,
@@ -206,6 +207,7 @@ export class AuthController {
 		@Res({ passthrough: true }) res: Response,
 	) {
 		const refreshToken = req.cookies['refresh_token'];
+		Logger.debug(`Refresh token: ${refreshToken}`);
 		if (!refreshToken) {
 			// A bare Error here became a 500 (and, in production, a generic
 			// "Internal server error"), so a client with no cookie could not tell
