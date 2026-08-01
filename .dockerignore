@@ -20,6 +20,9 @@
 # entire point of using files instead of env vars.
 secrets/
 
+# Database dumps — gigabytes of build-context bloat with no business in an image.
+backups/
+
 **/.vscode
 **/.idea
 **/*.log

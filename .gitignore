@@ -39,6 +39,9 @@ yarn-error.log*
 /secrets/*
 !/secrets/README.md
 
+# Database dumps written by the backup sidecar.
+/backups/
+
 # Misc
 .DS_Store
 *.pem

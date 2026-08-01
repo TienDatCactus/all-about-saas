@@ -1,4 +1,9 @@
 import axios from "axios"
+import {
+  clearAccessToken,
+  getAccessToken,
+  setAccessToken,
+} from "./access-token"
 import { AppConstants } from "./constants"
 import { storage } from "./local-storage"
 import type {
@@ -38,10 +43,13 @@ export class HttpClient {
   private refreshPromise: Promise<string> | null = null
 
   private setupInterceptors(): void {
-    // Request interceptor
+    // Request interceptor. The token comes from module memory, never storage
+    // (see access-token.ts for why). After a reload memory is empty, so the
+    // first protected call goes out without a header, 401s, and the handler
+    // below rehydrates it from the refresh cookie — no boot-time ceremony.
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        const token = storage.get<string>(AppConstants.tokenKey)
+        const token = getAccessToken()
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
@@ -96,19 +104,25 @@ export class HttpClient {
 
           try {
             const token = await this.refreshPromise
-            storage.set(AppConstants.tokenKey, token)
+            setAccessToken(token)
 
             originalRequest._retry = true
             originalRequest.headers.Authorization = `Bearer ${token}`
             return this.axiosInstance(originalRequest)
           } catch (refreshError) {
+            clearAccessToken()
             storage.clear()
             window.location.href = "/auth/login"
-            return Promise.reject(refreshError)
+            return Promise.reject(
+              refreshError instanceof Error
+                ? refreshError
+                : new Error(String(refreshError))
+            )
           }
         }
 
         if (status === 401 && isAuthRequest) {
+          clearAccessToken()
           storage.clear()
           if (requestUrl.includes("/auth/refresh")) {
             window.location.href = "/auth/login"

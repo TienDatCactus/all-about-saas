@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 #
-# Nightly Postgres backup for the single-VPS deployment.
+# Postgres backup + restore-verification for the single-VPS deployment.
 #
-# Install (on the VPS, as the user that owns the compose project):
-#   crontab -e
-#   15 3 * * * cd /srv/all-about-saas && ./scripts/backup-db.sh >> /var/log/aas-backup.log 2>&1
+# The SCHEDULED local dump is handled by the `backup` sidecar in
+# docker-compose.prod.yml — it ships with the stack, so provisioning cannot
+# forget it. This script remains for the two things the sidecar does not do:
 #
-# A backup you have never restored is a hypothesis, not a backup. Test it:
-#   ./scripts/backup-db.sh --verify-latest
+#   1. The offsite leg (BACKUP_REMOTE below). A dump on the same disk as the
+#      database does not survive the failure it exists for. Cron this:
+#        15 4 * * * cd /srv/all-about-saas && ./scripts/backup-db.sh >> /var/log/aas-backup.log 2>&1
+#      (it writes its own dump too, which is harmless redundancy)
+#
+#   2. Restore verification. A backup you have never restored is a hypothesis,
+#      not a backup:
+#        ./scripts/backup-db.sh --verify-latest
 #
 set -euo pipefail
 
