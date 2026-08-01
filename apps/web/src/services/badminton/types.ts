@@ -1,6 +1,6 @@
-import * as z from "zod";
+import * as z from "zod"
 
-export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc";
+export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc"
 
 // ---------------------------------------------------------------------------
 // Requests
@@ -12,9 +12,9 @@ export const ParticipantInputSchema = z.object({
   courtFraction: z.number().min(0).max(1).optional(),
   discount: z.number().min(0).max(1).optional(),
   shuttleFraction: z.number().min(0).max(1).optional(),
-});
+})
 
-export type ParticipantInput = z.infer<typeof ParticipantInputSchema>;
+export type ParticipantInput = z.infer<typeof ParticipantInputSchema>
 
 export const CreateSessionSchema = z.object({
   playedOn: z.string(), // YYYY-MM-DD
@@ -25,10 +25,10 @@ export const CreateSessionSchema = z.object({
   participants: z
     .array(ParticipantInputSchema)
     .min(1, "Add at least one player"),
-});
+})
 
-export type CreateSessionIn = z.infer<typeof CreateSessionSchema>;
-export type UpdateSessionIn = Partial<CreateSessionIn>;
+export type CreateSessionIn = z.infer<typeof CreateSessionSchema>
+export type UpdateSessionIn = Partial<CreateSessionIn>
 
 // ---------------------------------------------------------------------------
 // Responses
@@ -47,7 +47,7 @@ const ComputedRowSchema = z.object({
   court: z.number(),
   shuttle: z.number(),
   total: z.number(),
-});
+})
 
 const ComputedSnapshotSchema = z.object({
   courtCost: z.number(),
@@ -56,7 +56,7 @@ const ComputedSnapshotSchema = z.object({
   rows: z.array(ComputedRowSchema),
   roundingResidual: z.number(),
   computedAt: z.string(),
-});
+})
 
 export const SessionParticipantSchema = z.object({
   id: z.string(),
@@ -66,9 +66,9 @@ export const SessionParticipantSchema = z.object({
   courtFraction: z.number(),
   discount: z.number(),
   shuttleFraction: z.number(),
-});
+})
 
-export type SessionParticipant = z.infer<typeof SessionParticipantSchema>;
+export type SessionParticipant = z.infer<typeof SessionParticipantSchema>
 
 /** A full session: what GET/POST/PATCH of a single session return. */
 export const BadmintonSessionSchema = z.object({
@@ -84,9 +84,9 @@ export const BadmintonSessionSchema = z.object({
   participants: z.array(SessionParticipantSchema).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
-});
+})
 
-export type BadmintonSession = z.infer<typeof BadmintonSessionSchema>;
+export type BadmintonSession = z.infer<typeof BadmintonSessionSchema>
 
 /**
  * A row from `GET /badminton/sessions`, which selects a deliberate subset: no
@@ -104,9 +104,9 @@ export const SessionListItemSchema = z.object({
   computed: ComputedSnapshotSchema.nullish(),
   participants: z.array(z.object({ id: z.string() })).optional(),
   createdAt: z.string(),
-});
+})
 
-export type SessionListItem = z.infer<typeof SessionListItemSchema>;
+export type SessionListItem = z.infer<typeof SessionListItemSchema>
 
 /** PII-safe read of a session via its public share token. */
 export const PublicSessionSchema = z.object({
@@ -117,9 +117,9 @@ export const PublicSessionSchema = z.object({
   totalShuttleCount: z.number(),
   participants: z.array(SessionParticipantSchema.omit({ userId: true })),
   computed: ComputedSnapshotSchema.nullish(),
-});
+})
 
-export type PublicSession = z.infer<typeof PublicSessionSchema>;
+export type PublicSession = z.infer<typeof PublicSessionSchema>
 
 export const ParticipantSuggestionSchema = z.object({
   users: z.array(
@@ -128,12 +128,12 @@ export const ParticipantSuggestionSchema = z.object({
 
       name: z.string().nullish(),
       email: z.string().nullish(),
-    }),
+    })
   ),
   /** Free-text names this organizer has used before; the API omits that query today. */
   guests: z.array(z.string()).optional(),
-});
+})
 
-export type ParticipantSuggestion = z.infer<typeof ParticipantSuggestionSchema>;
+export type ParticipantSuggestion = z.infer<typeof ParticipantSuggestionSchema>
 
-export const DeletedIdSchema = z.object({ id: z.string() });
+export const DeletedIdSchema = z.object({ id: z.string() })

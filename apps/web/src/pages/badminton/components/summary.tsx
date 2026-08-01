@@ -26,9 +26,11 @@ import { buildSummaryText } from "@/pages/badminton/lib/summary-text"
  * React key, so demanding it would be a constraint with nothing behind it.
  */
 export type DisplaySnapshot = Omit<ComputedSnapshot, "rows"> & {
-  rows: Array<Omit<ComputedSnapshot["rows"][number], "participantId"> & {
-    participantId?: string
-  }>
+  rows: Array<
+    Omit<ComputedSnapshot["rows"][number], "participantId"> & {
+      participantId?: string
+    }
+  >
 }
 
 interface SummaryProps {
