@@ -10,23 +10,23 @@
 
 /** One player's rounded share of one session. All amounts are whole VND. */
 export interface ComputedRow {
-  participantId: string;
-  name: string;
-  court: number;
-  shuttle: number;
-  total: number;
+	participantId: string;
+	name: string;
+	court: number;
+	shuttle: number;
+	total: number;
 }
 
 export interface ComputedSnapshot {
-  /** Court cost input, VND. */
-  courtCost: number;
-  /** Derived shuttle cost = shuttleUnitPrice * totalShuttleCount, VND. */
-  shuttleCost: number;
-  /** courtCost + shuttleCost, rounded to the nearest 1,000 VND. */
-  grandTotal: number;
-  rows: ComputedRow[];
-  /** Exact expense minus sum(rounded totals); absorbed by the organizer. */
-  roundingResidual: number;
-  /** ISO timestamp the snapshot was computed. */
-  computedAt: string;
+	/** Court cost input, VND. */
+	courtCost: number;
+	/** Derived shuttle cost = shuttleUnitPrice * totalShuttleCount, VND. */
+	shuttleCost: number;
+	/** courtCost + shuttleCost, rounded to the nearest 1,000 VND. */
+	grandTotal: number;
+	rows: ComputedRow[];
+	/** Exact expense minus sum(rounded totals); absorbed by the organizer. */
+	roundingResidual: number;
+	/** ISO timestamp the snapshot was computed. */
+	computedAt: string;
 }

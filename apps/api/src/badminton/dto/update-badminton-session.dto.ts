@@ -6,5 +6,5 @@ import { CreateBadmintonSessionDto } from './create-badminton-session.dto';
  * from the array is removed (orphanedRowAction: 'delete' on the entity relation).
  */
 export class UpdateBadmintonSessionDto extends PartialType(
-  CreateBadmintonSessionDto,
+	CreateBadmintonSessionDto,
 ) {}
