@@ -15,6 +15,16 @@
 
 name: aas-prod
 
+# Caps container logs so the disk cannot fill silently. Declared BEFORE the
+# services because a YAML alias can only reference an anchor that precedes it —
+# the original version defined this at the bottom of the file and referenced it
+# nowhere, so every service was silently running with unbounded json-file logs.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
 # Mounted at /run/secrets/<name> in the services that list them. Not env vars, so
 # they are absent from `docker inspect`, from /proc/<pid>/environ, from child
 # processes, and from anything that dumps the environment on a crash.
@@ -31,6 +41,7 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_USER: ${DATABASE_USER:?set DATABASE_USER}
       # The official image resolves *_FILE itself.
@@ -87,12 +98,14 @@ services:
       postgres:
         condition: service_healthy
     restart: 'no'
+    logging: *default-logging
 
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
+    logging: *default-logging
     environment:
       NODE_ENV: production
       PORT: 8000
@@ -140,6 +153,7 @@ services:
         # Baked in at build time — Vite inlines import.meta.env.
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:?set VITE_API_BASE_URL}
     restart: unless-stopped
+    logging: *default-logging
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -163,6 +177,7 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - '80:80'
       - '443:443'
@@ -188,10 +203,3 @@ volumes:
 networks:
   internal:
     driver: bridge
-
-# Cap container logs or the disk fills silently.
-x-logging: &default-logging
-  driver: json-file
-  options:
-    max-size: '10m'
-    max-file: '3'
