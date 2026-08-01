@@ -13,7 +13,7 @@ import {
   Section,
   Tailwind,
   Text,
-} from "react-email";
+} from "@react-email/components";
 import { emailTailwindConfig } from "../../theme";
 import { EmailFonts } from "../_styles/fonts";
 import { baseURL } from "../utils";
@@ -69,11 +69,28 @@ export default function EmailLayout({
     <Tailwind config={emailTailwindConfig}>
       <Html>
         <Head>
+          <title>{content.title}</title>
           <EmailFonts />
         </Head>
-        <Body className="bg-canvas font-14 font-inter text-fg m-0 p-0">
+        {/* lang/dir were implicit in react-email@6.6.0's bundled Body; the
+            published @react-email/components does not add them, so they are
+            explicit here. Both inherit, which covers the old markup that also
+            stamped them on the inner td. */}
+        <Body
+          className="bg-canvas font-14 font-inter text-fg m-0 p-0"
+          dir="ltr"
+          lang="en"
+        >
           <Preview>{content.title}</Preview>
-          <Container className="mx-auto max-w-[640px] px-4 pt-16 pb-6">
+          {/* The outer padding must sit on a td (via Row/Column), not on
+              Container: the published components spread className onto the
+              <table>, and Outlook's Word engine ignores padding on tables —
+              the card would lose its outer gutter exactly there. The bundled
+              copy used to put Container padding on its inner td, which is the
+              behaviour this preserves. */}
+          <Container className="mx-auto max-w-[640px]">
+            <Row>
+              <Column className="px-4 pt-16 pb-6">
             <Section className="shadow-collage-card rounded-[8px]">
               <Section className="bg-bg border-stroke rounded-[8px] border overflow-hidden">
                 {image && image.type == "hero" ? (
@@ -136,6 +153,7 @@ export default function EmailLayout({
                                 <Link href={i.href} className="inline-block ">
                                   <Img
                                     src={i.imageSrc}
+                                    alt=""
                                     width={36}
                                     height={36}
                                     className="block border-none"
@@ -160,6 +178,8 @@ export default function EmailLayout({
                 </Section>
               </Section>
             </Section>
+              </Column>
+            </Row>
           </Container>
         </Body>
       </Html>

@@ -1,16 +1,16 @@
+import { ArrowLeftIcon } from "@phosphor-icons/react"
+import { Link, createFileRoute } from "@tanstack/react-router"
+import { useEffect } from "react"
+import { cn } from "../lib/utils"
 import Logo from "@/components/custom/logo"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
+  VerifyEmailSchema,
   useSendVerificationEmailMutation,
   useVerifyEmailMutation,
-  VerifyEmailSchema,
 } from "@/services/auth"
-import { ArrowLeftIcon } from "@phosphor-icons/react"
-import { createFileRoute, Link } from "@tanstack/react-router"
-import { useEffect } from "react"
 import { toast } from "@/components/custom/toast"
-import { cn } from "../lib/utils"
 
 export const Route = createFileRoute("/verify-email")({
   component: RouteComponent,
@@ -33,9 +33,11 @@ function RouteComponent() {
           type,
         },
         {
-          onSuccess: async (_, variables) => {
+          onSuccess: (_, variables) => {
             if (type === "PASSWORD_RESET") {
-              await navigate({
+              // mutate-level callbacks are fire-and-forget in react-query (the
+              // returned promise was never awaited), so don't pretend to await.
+              void navigate({
                 to: "/auth/change-password",
                 search: {
                   selector: variables.selector,
@@ -155,11 +157,11 @@ function RouteComponent() {
               </div>
             </div>
             <Button
-              onClick={() =>
-                navigate({
+              onClick={() => {
+                void navigate({
                   to: "/auth/login",
                 })
-              }
+              }}
               className="w-full"
               variant="outline"
             >

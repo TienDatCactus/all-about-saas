@@ -1,7 +1,8 @@
 import React from "react"
 import { toast as sonnerToast } from "sonner"
-import Toast, { type ToastOptions } from "./ui"
+import Toast from "./ui"
 import { normalizeApiError } from "./normalize"
+import type { ToastOptions } from "./ui"
 
 const generateId = () => Math.random().toString(36).substring(2, 9)
 
@@ -26,6 +27,15 @@ function toast(
 
   const id = mergedOptions.id || generateId()
 
+  // Sonner fires onDismiss for programmatic dismissal and onAutoClose for its
+  // own timer; guard so consumers see exactly one callback either way.
+  let dismissFired = false
+  const handleDismiss = () => {
+    if (dismissFired) return
+    dismissFired = true
+    mergedOptions.onDismiss?.()
+  }
+
   sonnerToast.custom(
     (sonnerId) => (
       <Toast
@@ -37,10 +47,12 @@ function toast(
       />
     ),
     {
+      // The Toast component owns the countdown (including pause), so sonner's
+      // own timer stays off — otherwise it would remove a paused toast anyway.
       id,
-      duration: mergedOptions.persistent
-        ? Infinity
-        : mergedOptions.duration || 10000,
+      duration: Infinity,
+      onDismiss: handleDismiss,
+      onAutoClose: handleDismiss,
     }
   )
 

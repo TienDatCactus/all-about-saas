@@ -1,20 +1,12 @@
-import { WarningIcon } from "@phosphor-icons/react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { computeSplit } from "@/pages/badminton/lib/calc";
-import { usePublicSessionQuery } from "@/services/badminton/queries";
-import type { PublicSession } from "@/services/badminton/types";
-import { PageHeader, PageShell } from "../../../components/custom/page-shell";
-import { BadmintonSummary } from "../components/Summary";
+import { computeSplit } from "@repo/badminton-calc"
+import { BadmintonSummary } from "../components/Summary"
+import type { PublicSession } from "@/services/badminton/types"
+import DataPage from "@/components/custom/data/page"
+import { Skeleton } from "@/components/ui/skeleton"
+import { usePublicSessionQuery } from "@/services/badminton/queries"
 
 function toComputed(session: PublicSession) {
-  if (session.computed) return session.computed;
+  if (session.computed) return session.computed
   // Fallback: recompute from inputs if the stored snapshot is missing.
   return computeSplit({
     courtCost: session.courtCost,
@@ -27,45 +19,36 @@ function toComputed(session: PublicSession) {
       discount: p.discount,
       shuttleFraction: p.shuttleFraction,
     })),
-  });
+  })
 }
 
 export default function BadmintonSummaryPage({
   shareToken,
 }: {
-  shareToken: string;
+  shareToken: string
 }) {
-  const { data, isLoading, isError } = usePublicSessionQuery(shareToken);
+  const publicQuery = usePublicSessionQuery(shareToken)
 
   return (
-    <PageShell>
-      <PageHeader
-        title={data?.title || "Badminton split"}
-        description={data ? data.playedOn : " "}
-      />
-
-      {isLoading ? (
-        <Skeleton className="h-80 w-full rounded-xl" />
-      ) : isError || !data ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <WarningIcon />
-            </EmptyMedia>
-            <EmptyTitle>Split not found</EmptyTitle>
-            <EmptyDescription>
-              This share link is invalid or the session was removed.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      ) : (
+    <DataPage
+      query={publicQuery}
+      title={(session) => session?.title || "Badminton split"}
+      description={(session) => (session ? session.playedOn : " ")}
+      loading={<Skeleton className="h-80 w-full rounded-xl" />}
+      error={{
+        title: "Split not found",
+        description: "This share link is invalid or the session was removed.",
+        content: null,
+      }}
+    >
+      {(session) => (
         <div className="w-full">
           <BadmintonSummary
-            computed={toComputed(data)}
-            meta={{ title: data.title, playedOn: data.playedOn }}
+            computed={toComputed(session)}
+            meta={{ title: session.title, playedOn: session.playedOn }}
           />
         </div>
       )}
-    </PageShell>
-  );
+    </DataPage>
+  )
 }

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 export class OwnershipGuard implements CanActivate {
 	logger = new Logger(OwnershipGuard.name);
-	canActivate(context: ExecutionContext) {
+	canActivate(_context: ExecutionContext) {
 		// NOTICE: ROUTE GUARD
 		this.logger.log('===TRIGGER ROUTE GUARD===');
 		// IMPLEMENT QUERY FLASH-CARD DATA AND CHECK OWNERSHIP

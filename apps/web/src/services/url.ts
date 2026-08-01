@@ -1,4 +1,4 @@
-const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
 export const AUTH = {
   login: "/auth/login",
   signup: "/auth/signup",
@@ -9,13 +9,16 @@ export const AUTH = {
   refresh: "/auth/refresh",
   verifyEmail: "/auth/verify-email",
   sendVerificationEmail: "/auth/send-verification-email",
-  changePassword: "/auth/change-password",
-  resetPassword: "/auth/reset-password",
-};
+  // `resetPassword` finishes a forgotten-password flow with the emailed token;
+  // `changePassword` is the signed-in user changing their own. The old
+  // /auth/change-password and /auth/reset-password paths meant the opposite.
+  resetPassword: "/auth/password/reset",
+  changePassword: "/auth/password/change",
+}
 
 export const BADMINTON = {
   sessions: "/badminton/sessions",
   session: (id: string) => `/badminton/sessions/${id}`,
   suggest: "/badminton/participants/suggest",
   publicSession: (shareToken: string) => `/badminton/public/${shareToken}`,
-};
+}

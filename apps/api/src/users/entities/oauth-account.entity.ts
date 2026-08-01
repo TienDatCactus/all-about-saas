@@ -14,16 +14,16 @@ export class OAuthAccount extends BaseEntity {
 	@ManyToOne(() => User, (user) => user.oauthAccounts, {
 		onDelete: 'CASCADE',
 	})
-	user: User;
+	user!: User;
 
 	@Column({
 		type: 'enum',
 		enum: OAuthProvider,
 	})
-	provider: OAuthProvider;
+	provider!: OAuthProvider;
 
 	@Column()
-	providerUserId: string;
+	providerUserId!: string;
 
 	@Column({
 		nullable: true,
@@ -54,5 +54,5 @@ export class OAuthAccount extends BaseEntity {
 		type: 'jsonb',
 		nullable: true,
 	})
-	profileData?: Record<string, any>;
+	profileData?: Record<string, unknown>;
 }

@@ -2,6 +2,7 @@ import React from "react"
 import AuthLayout from "../layouts/auth"
 import LoginForm from "./components/Form"
 import Providers from "./components/Providers"
+
 const Login: React.FC = () => {
   return (
     <AuthLayout

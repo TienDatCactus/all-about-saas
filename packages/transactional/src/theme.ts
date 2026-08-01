@@ -1,4 +1,4 @@
-import type { TailwindConfig } from "react-email";
+import type { TailwindConfig } from "@react-email/components";
 import plugin from "tailwindcss/plugin";
 const colors = {
   // Core shadcn Luma + Taupe tokens (mapped directly from styles.css)

@@ -1,11 +1,10 @@
-import { toast } from "@/components/custom/toast";
-import { Button } from "@/components/ui/button";
-import { authApi } from "@/services/auth";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router"
+import { Button } from "@/components/ui/button"
+import { authApi } from "@/services/auth"
 
 export const Route = createFileRoute("/")({
   component: App,
-});
+})
 
 function App() {
   return (
@@ -18,12 +17,13 @@ function App() {
         </div>
         <Button
           onClick={() => {
-            authApi.refresh();
+            // Dev scratch button: fire the refresh call and ignore the result.
+            void authApi.refresh()
           }}
         >
           dat
         </Button>
       </div>
     </div>
-  );
+  )
 }

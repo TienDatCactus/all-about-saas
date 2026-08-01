@@ -1,53 +1,37 @@
-import { WarningIcon } from "@phosphor-icons/react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useSessionQuery } from "@/services/badminton/queries";
-import { PageHeader, PageShell } from "../../../components/custom/page-shell";
-import { ShareLink } from "../components/ShareLink";
-import { SessionEditor } from "../components/SessionEditor";
-import { sessionToValues } from "../lib/form";
+import { ShareLink } from "../components/ShareLink"
+import { SessionEditor } from "../components/SessionEditor"
+import { sessionToValues } from "../lib/form"
+import DataPage from "@/components/custom/data/page"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSessionQuery } from "@/services/badminton/queries"
 
 export default function EditSessionPage({ sessionId }: { sessionId: string }) {
-  const { data, isLoading, isError } = useSessionQuery(sessionId);
+  const sessionQuery = useSessionQuery(sessionId)
 
   return (
-    <PageShell>
-      <PageHeader
-        title={data?.title || "Session"}
-        description={data ? data.playedOn : " "}
-      />
-
-      {isLoading ? (
-        <EditorSkeleton />
-      ) : isError || !data ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <WarningIcon />
-            </EmptyMedia>
-            <EmptyTitle>Session not found</EmptyTitle>
-            <EmptyDescription>
-              It may have been deleted, or you don&apos;t have access to it.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      ) : (
+    <DataPage
+      query={sessionQuery}
+      title={(session) => session?.title || "Session"}
+      description={(session) => (session ? session.playedOn : " ")}
+      loading={<EditorSkeleton />}
+      error={{
+        title: "Session not found",
+        description:
+          "It may have been deleted, or you don't have access to it.",
+        content: null,
+      }}
+    >
+      {(session) => (
         <>
-          <ShareLink shareToken={data.shareToken} />
+          <ShareLink shareToken={session.shareToken} />
           <SessionEditor
             sessionId={sessionId}
-            initialValues={sessionToValues(data)}
+            initialValues={sessionToValues(session)}
           />
         </>
       )}
-    </PageShell>
-  );
+    </DataPage>
+  )
 }
 
 function EditorSkeleton() {
@@ -59,5 +43,5 @@ function EditorSkeleton() {
       </div>
       <Skeleton className="h-80 w-full rounded-xl" />
     </div>
-  );
+  )
 }

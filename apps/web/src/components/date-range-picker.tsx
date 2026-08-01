@@ -1,37 +1,37 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import * as React from "react"
+import type { DateRange } from "react-day-picker"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import * as React from "react";
-import { type DateRange } from "react-day-picker";
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 export interface DateRangePickerProps {
   /** Controlled selected range. Pass this together with `onChange`. */
-  value?: DateRange;
+  value?: DateRange
   /** Initial range when used uncontrolled (no `value`/`onChange`). */
-  defaultValue?: DateRange;
+  defaultValue?: DateRange
   /** Fired when the user changes or clears the range. */
-  onChange?: (range: DateRange | undefined) => void;
+  onChange?: (range: DateRange | undefined) => void
   /** Fired when the popover closes — wire to TanStack Form's `field.handleBlur`. */
-  onBlur?: () => void;
+  onBlur?: () => void
   /** date-fns format for the trigger labels. @default "LLL dd, y" */
-  displayFormat?: string;
-  placeholder?: string;
-  numberOfMonths?: number;
-  disabled?: boolean;
+  displayFormat?: string
+  placeholder?: string
+  numberOfMonths?: number
+  disabled?: boolean
   /** Forwarded to the trigger so a `<FieldLabel htmlFor>` can target it. */
-  id?: string;
-  name?: string;
-  "aria-invalid"?: boolean;
-  className?: string;
+  id?: string
+  name?: string
+  "aria-invalid"?: boolean
+  className?: string
 }
 
 export default function DateRangePicker({
@@ -48,26 +48,26 @@ export default function DateRangePicker({
   "aria-invalid": ariaInvalid,
   className,
 }: DateRangePickerProps) {
-  const isControlled = value !== undefined || onChange !== undefined;
+  const isControlled = value !== undefined || onChange !== undefined
   const [internal, setInternal] = React.useState<DateRange | undefined>(
-    defaultValue,
-  );
-  const [open, setOpen] = React.useState(false);
+    defaultValue
+  )
+  const [open, setOpen] = React.useState(false)
 
-  const range = isControlled ? value : internal;
+  const range = isControlled ? value : internal
 
   const handleSelect = (next: DateRange | undefined) => {
-    if (!isControlled) setInternal(next);
-    onChange?.(next);
-  };
+    if (!isControlled) setInternal(next)
+    onChange?.(next)
+  }
 
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover
         open={open}
         onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) onBlur?.();
+          setOpen(next)
+          if (!next) onBlur?.()
         }}
       >
         <PopoverTrigger asChild>
@@ -80,7 +80,7 @@ export default function DateRangePicker({
             aria-invalid={ariaInvalid}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !range && "text-muted-foreground",
+              !range && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -110,5 +110,5 @@ export default function DateRangePicker({
         </PopoverContent>
       </Popover>
     </div>
-  );
+  )
 }

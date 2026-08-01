@@ -2,7 +2,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from './mail.service';
-import { MailController } from './mail.controller';
 import * as dns from 'dns';
 @Module({
 	imports: [
@@ -17,9 +16,10 @@ import * as dns from 'dns';
 						user: configService.get('email.user'),
 						pass: configService.get('email.pass'),
 					},
-					lookup: (hostname, options, callback) => {
-						dns.lookup(hostname, options, callback);
-					},
+					// The wrapper existed only to forward all three arguments unchanged,
+					// and its parameters were implicitly `any`. `dns.lookup` needs no
+					// receiver, so it can be handed over directly and keeps its real types.
+					lookup: dns.lookup,
 					tls: {
 						rejectUnauthorized: true,
 					},
@@ -30,7 +30,8 @@ import * as dns from 'dns';
 			}),
 		}),
 	],
+	// No controller: POST /mail/try was an unauthenticated, fixed-recipient test
+	// endpoint that let anyone on the internet make the server send mail.
 	providers: [MailService],
-	controllers: [MailController],
 })
 export class MailModule {}

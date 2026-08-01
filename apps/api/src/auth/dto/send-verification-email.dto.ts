@@ -11,5 +11,5 @@ export class SendVerificationEmailDto {
 	email?: string;
 
 	@IsNotEmpty()
-	type: VerificationType;
+	type!: VerificationType;
 }

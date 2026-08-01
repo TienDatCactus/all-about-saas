@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "check-types": "tsc --noEmit",
     "build": "tsc",
     "email": "email dev --dir src/emails --port 4000"
   },
@@ -21,10 +22,17 @@
   "dependencies": {
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-email": "6.6.0",
-    "@react-email/render": "2.0.8"
+    "@react-email/components": "1.0.12",
+    "@react-email/render": "2.0.8",
+    "tailwindcss": "4.3.3"
   },
   "devDependencies": {
-    "@react-email/ui": "^6.6.0"
+    "react-email": "6.6.0",
+    "@react-email/ui": "^6.6.0",
+    "@repo/typescript-config": "*",
+    "typescript": "^6.0.3",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
   }
 }

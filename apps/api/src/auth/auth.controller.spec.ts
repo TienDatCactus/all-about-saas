@@ -21,7 +21,7 @@ const mockAuthService = {
 	resendVerificationEmail: jest.fn(),
 	logout: jest.fn(),
 	changePassword: jest.fn(),
-	resetPassword: jest.fn(),
+	resetPasswordWithToken: jest.fn(),
 	refresh: jest.fn(),
 	oauthAccess: jest.fn(),
 	setCookie: jest.fn(),
@@ -72,13 +72,15 @@ describe('AuthController', () => {
 			const res = makeRes();
 			const sessionInfo = { ipAddress: '127.0.0.1', userAgent: 'jest' };
 			mockAuthService.getSessionInfo.mockReturnValue(sessionInfo);
+			const expiresAt = new Date('2026-08-07T00:00:00.000Z');
 			mockAuthService.login.mockResolvedValue({
 				accessToken: 'access-tok',
 				refreshToken: 'refresh-tok',
+				refreshTokenExpiresAt: expiresAt,
 			});
 
 			const result = await controller.login(
-				{ email: 'dat@test.com', password: 'pw' } as any,
+				{ email: 'dat@test.com', password: 'pw' },
 				res,
 				req,
 			);
@@ -89,14 +91,16 @@ describe('AuthController', () => {
 				'pw',
 				sessionInfo,
 			);
+			// The session's absolute expiry rides along, so the cookie cannot outlive
+			// the row that authorises it.
 			expect(mockAuthService.setCookie).toHaveBeenCalledWith(
 				res,
 				'refresh-tok',
+				expiresAt,
 			);
-			expect(result).toEqual({
-				accessToken: 'access-tok',
-				message: 'Login successful',
-			});
+			// Data only — "Login successful" now lives on @ResponseMessage, so the
+			// interceptor no longer has to dig it out of the payload.
+			expect(result).toEqual({ accessToken: 'access-tok' });
 		});
 	});
 
@@ -122,7 +126,7 @@ describe('AuthController', () => {
 				selector: 's',
 				token: 't',
 				type: VerificationType.PASSWORD_RESET,
-			} as any);
+			});
 
 			expect(
 				mockAuthService.verifyVerificationTokenRecord,
@@ -150,7 +154,7 @@ describe('AuthController', () => {
 				selector: 's',
 				token: 't',
 				type: VerificationType.EMAIL_VERIFY,
-			} as any);
+			});
 
 			expect(
 				mockAuthService.verifyVerificationTokenRecord,
@@ -171,35 +175,41 @@ describe('AuthController', () => {
 				selector: 's',
 				token: 't',
 				type: VerificationType.PASSWORD_RESET,
-			} as any);
+			});
 
 			expect(mockUsersService.update).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('signup', () => {
-		it('delegates email/password and returns the success message', async () => {
+		it('delegates email/password and returns a message that reveals nothing', async () => {
 			const result = await controller.signup({
 				email: 'dat@test.com',
 				password: 'pw',
-			} as any);
+			});
 
 			expect(mockAuthService.signup).toHaveBeenCalledWith({
 				email: 'dat@test.com',
 				password: 'pw',
 			});
-			expect(result).toEqual({ message: 'User registered successfully' });
+			// Identical whether or not the address already had an account — the old
+			// "User registered successfully" vs "Email already in use" pair was an
+			// enumeration oracle.
+			expect(result).toEqual({
+				message: 'Check your email to finish signing up.',
+			});
 		});
 	});
 
-	describe('changePassword', () => {
-		it('forwards the body and returns the success message', async () => {
+	// POST /auth/password/reset — finishing a forgotten-password reset.
+	describe('resetPassword', () => {
+		it('forwards the emailed selector/token body and returns success', async () => {
 			const body = { selector: 's', token: 't', password: 'pw' };
 
-			const result = await controller.changePassword(body as any);
+			const result = await controller.resetPassword(body);
 
-			expect(mockAuthService.changePassword).toHaveBeenCalledWith(body);
-			expect(result).toEqual({ message: 'Password changed successfully' });
+			expect(mockAuthService.resetPasswordWithToken).toHaveBeenCalledWith(body);
+			expect(result).toEqual({ message: 'Password reset successfully' });
 		});
 	});
 
@@ -207,23 +217,46 @@ describe('AuthController', () => {
 		it('throws when no refresh_token cookie is present', async () => {
 			const req: any = { cookies: {} };
 
-			await expect(controller.refresh(req)).rejects.toThrow(
+			await expect(controller.refresh(req, makeRes())).rejects.toThrow(
 				'Refresh token not found',
 			);
 			expect(mockAuthService.refresh).not.toHaveBeenCalled();
 		});
 
-		it('returns a new access token when the cookie is present', async () => {
+		it('re-sets the cookie when the token was rotated', async () => {
 			const req: any = { cookies: { refresh_token: 'refresh-tok' } };
-			mockAuthService.refresh.mockResolvedValue('new-access-tok');
+			const res = makeRes();
+			const expiresAt = new Date('2026-08-07T00:00:00.000Z');
+			mockAuthService.refresh.mockResolvedValue({
+				accessToken: 'new-access-tok',
+				refreshToken: 'next-refresh-tok',
+				refreshTokenExpiresAt: expiresAt,
+			});
 
-			const result = await controller.refresh(req);
+			const result = await controller.refresh(req, res);
 
 			expect(mockAuthService.refresh).toHaveBeenCalledWith('refresh-tok');
-			expect(result).toEqual({
+			expect(mockAuthService.setCookie).toHaveBeenCalledWith(
+				res,
+				'next-refresh-tok',
+				expiresAt,
+			);
+			expect(result).toEqual({ accessToken: 'new-access-tok' });
+		});
+
+		it('leaves the cookie alone inside the rotation grace window', async () => {
+			const req: any = { cookies: { refresh_token: 'refresh-tok' } };
+			const res = makeRes();
+			// No refreshToken in the response: a concurrent refresh already rotated,
+			// so the cookie holds a newer token than the one we were handed.
+			mockAuthService.refresh.mockResolvedValue({
 				accessToken: 'new-access-tok',
-				message: 'Token refreshed successfully',
 			});
+
+			const result = await controller.refresh(req, res);
+
+			expect(mockAuthService.setCookie).not.toHaveBeenCalled();
+			expect(result).toEqual({ accessToken: 'new-access-tok' });
 		});
 	});
 
@@ -250,29 +283,44 @@ describe('AuthController', () => {
 		});
 	});
 
-	describe('resetPassword', () => {
+	// POST /auth/password/change — the signed-in user changing their own.
+	describe('changePassword', () => {
 		it('throws when the request has no authenticated user', async () => {
 			const req: any = { user: null };
 
 			await expect(
-				controller.resetPassword({ password: 'pw' } as any, req),
+				controller.changePassword(
+					{ currentPassword: 'old-pw', newPassword: 'new-pw-1234' },
+					req,
+				),
 			).rejects.toThrow(BadRequestException);
-			expect(mockAuthService.resetPassword).not.toHaveBeenCalled();
+			expect(mockAuthService.changePassword).not.toHaveBeenCalled();
 		});
 
-		it('resets using the authenticated user email', async () => {
-			const req: any = { user: { id: 'u1', email: 'dat@test.com' } };
+		it('takes the account from the JWT, not the request body', async () => {
+			const req: any = {
+				user: { id: 'u1', email: 'dat@test.com' },
+				cookies: { refresh_token: 'refresh-tok' },
+			};
 
-			const result = await controller.resetPassword(
-				{ password: 'pw' } as any,
+			const result = await controller.changePassword(
+				// An attacker-supplied userId/email must not reach the service.
+				{
+					currentPassword: 'old-pw',
+					newPassword: 'new-pw-1234',
+					userId: 'victim-id',
+				} as any,
 				req,
 			);
 
-			expect(mockAuthService.resetPassword).toHaveBeenCalledWith({
-				password: 'pw',
-				email: 'dat@test.com',
+			expect(mockAuthService.changePassword).toHaveBeenCalledWith({
+				userId: 'u1',
+				currentPassword: 'old-pw',
+				newPassword: 'new-pw-1234',
+				// The caller's own session is spared the revoke-all.
+				keepRefreshToken: 'refresh-tok',
 			});
-			expect(result).toEqual({ message: 'Password reset successfully' });
+			expect(result).toEqual({ message: 'Password changed successfully' });
 		});
 	});
 
@@ -281,7 +329,7 @@ describe('AuthController', () => {
 			await controller.sendVerificationEmail({
 				type: VerificationType.PASSWORD_RESET,
 				selector: 's',
-			} as any);
+			});
 
 			expect(mockAuthService.resendResetPasswordEmail).toHaveBeenCalledWith(
 				's',
@@ -293,7 +341,7 @@ describe('AuthController', () => {
 			await controller.sendVerificationEmail({
 				type: VerificationType.PASSWORD_RESET,
 				email: 'dat@test.com',
-			} as any);
+			});
 
 			expect(mockAuthService.sendResetPasswordEmail).toHaveBeenCalledWith(
 				'dat@test.com',
@@ -320,7 +368,7 @@ describe('AuthController', () => {
 			await controller.sendVerificationEmail({
 				type: VerificationType.EMAIL_VERIFY,
 				selector: 's',
-			} as any);
+			});
 
 			expect(mockAuthService.resendVerificationEmail).toHaveBeenCalledWith('s');
 		});
@@ -351,8 +399,10 @@ describe('AuthController', () => {
 				};
 				const res = makeRes();
 				mockAuthService.getSessionInfo.mockReturnValue({ userAgent: 'jest' });
+				const expiresAt = new Date('2026-08-07T00:00:00.000Z');
 				mockAuthService.oauthAccess.mockResolvedValue({
 					refreshToken: 'refresh-tok',
+					refreshTokenExpiresAt: expiresAt,
 				});
 
 				await (controller as any)[method](req, res);
@@ -367,6 +417,7 @@ describe('AuthController', () => {
 				expect(mockAuthService.setCookie).toHaveBeenCalledWith(
 					res,
 					'refresh-tok',
+					expiresAt,
 				);
 				expect(res.redirect).toHaveBeenCalledWith('https://app.test');
 			},

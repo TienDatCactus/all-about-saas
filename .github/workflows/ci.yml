@@ -1,0 +1,80 @@
+name: CI
+
+# The repo previously had only two third-party bots (react-compiler with
+# fail-on-error:false, and react-doctor), so nothing actually gated a merge.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push supersedes the previous run on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the ARG NODE_VERSION in the Dockerfiles and the local dev
+          # version, so CI cannot pass on a runtime production never uses.
+          node-version: '24'
+          cache: npm
+
+      # `npm ci` (not install) so the lockfile is authoritative and a drifted
+      # lockfile fails here instead of surprising a deploy.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        # Covers all four workspaces. Until this change only
+        # packages/badminton-calc defined a `check-types` script, so this task
+        # silently skipped both apps — the two halves that matter most.
+        run: npx turbo run check-types
+
+      - name: Lint
+        # Both apps, both blocking. Web joined the required gate once its ~300-error
+        # backlog was burned down to zero — see the lint-web-backlog job this replaced.
+        run: npx turbo run lint --filter=@app/api --filter=@app/web
+
+      - name: Build
+        run: npx turbo run build
+
+      - name: Test
+        run: npx turbo run test
+
+  # Verifies the deploy artifacts still build. Separate job: it is slower than
+  # the checks above and should not delay their feedback.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          build-args: |
+            VITE_API_BASE_URL=https://api.example.invalid
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

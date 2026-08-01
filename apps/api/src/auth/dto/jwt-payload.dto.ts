@@ -2,7 +2,7 @@ import { IsString } from 'class-validator';
 
 export class PayloadDto {
 	@IsString()
-	sub: string;
+	sub!: string;
 	@IsString()
-	email: string;
+	email!: string;
 }

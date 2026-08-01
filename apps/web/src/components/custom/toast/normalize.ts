@@ -6,7 +6,7 @@ export interface ToastError {
   details?: string
   traceId?: string
   path?: string
-  validation?: Record<string, string[]>
+  validation?: Record<string, Array<string>>
 }
 
 export function normalizeApiError(error: unknown): ToastError {
@@ -65,7 +65,8 @@ export function normalizeApiError(error: unknown): ToastError {
   }
 
   // Handle custom object error shapes
-  if (typeof error === "object" && error !== null) {
+  // The `if (!error)` guard above already excludes null.
+  if (typeof error === "object") {
     const errObj = error as any
     if (errObj.message || errObj.title) {
       return {

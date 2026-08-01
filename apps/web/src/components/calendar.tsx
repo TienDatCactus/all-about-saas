@@ -1,7 +1,5 @@
 "use client"
 
-import { Button, buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { differenceInCalendarDays } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import * as React from "react"
@@ -10,8 +8,10 @@ import {
   labelNext,
   labelPrevious,
   useDayPicker,
-  type DayPickerProps,
 } from "react-day-picker"
+import type { DayPickerProps } from "react-day-picker"
+import { cn } from "@/lib/utils"
+import { Button, buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = DayPickerProps & {
   /**
@@ -96,10 +96,8 @@ function Calendar({
     props.weekdayClassName
   )
   const _monthClassName = cn("w-full", props.monthClassName)
-  const _captionClassName = cn(
-    "relative flex items-center justify-center pt-1",
-    props.captionClassName
-  )
+  // react-day-picker v9 removed `caption` from ClassNames (the layout moved to
+  // month_caption), so this class had nowhere left to be applied.
   const _captionLabelClassName = cn(
     "truncate text-sm font-medium",
     props.captionLabelClassName
@@ -178,7 +176,6 @@ function Calendar({
         weekdays: _weekdaysClassName,
         weekday: _weekdayClassName,
         month: _monthClassName,
-        caption: _captionClassName,
         caption_label: _captionLabelClassName,
         button_next: _buttonNextClassName,
         button_previous: _buttonPreviousClassName,
@@ -320,7 +317,15 @@ function Nav({
     }
     goToMonth(previousMonth)
     onPrevClick?.(previousMonth)
-  }, [previousMonth, goToMonth])
+  }, [
+    previousMonth,
+    goToMonth,
+    navView,
+    displayYears.from,
+    displayYears.to,
+    setDisplayYears,
+    onPrevClick,
+  ])
 
   const handleNextClick = React.useCallback(() => {
     if (!nextMonth) return
@@ -340,7 +345,15 @@ function Nav({
     }
     goToMonth(nextMonth)
     onNextClick?.(nextMonth)
-  }, [goToMonth, nextMonth])
+  }, [
+    goToMonth,
+    nextMonth,
+    navView,
+    displayYears.from,
+    displayYears.to,
+    setDisplayYears,
+    onNextClick,
+  ])
   return (
     <nav className={cn("flex items-center", className)}>
       <Button

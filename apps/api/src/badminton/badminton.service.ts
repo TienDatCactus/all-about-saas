@@ -1,17 +1,22 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes, randomUUID } from 'crypto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { computeSplit, type CalcInput } from './badminton.calc';
-import { CreateBadmintonSessionDto } from './dto/create-badminton-session.dto';
-import { ParticipantInputDto } from './dto/participant-input.dto';
-import { UpdateBadmintonSessionDto } from './dto/update-badminton-session.dto';
+import { computeSplit } from '@repo/badminton-calc';
 import { BadmintonParticipant } from './entities/badminton-participant.entity';
 import { BadmintonSession } from './entities/badminton-session.entity';
+import { BaseService } from '../common/services/base.service';
+import {
+	CreateBadmintonSessionDto,
+	UpdateBadmintonSessionDto,
+} from './badminton.dto';
+
+/** Mirrors MIN_QUERY in the web autocomplete; enforced here so it cannot be skipped. */
+const MIN_SUGGEST_QUERY = 2;
 
 @Injectable()
-export class BadmintonService {
+export class BadmintonService extends BaseService<BadmintonSession> {
 	constructor(
 		@InjectRepository(BadmintonSession)
 		private readonly sessionRepo: Repository<BadmintonSession>,
@@ -19,9 +24,12 @@ export class BadmintonService {
 		private readonly participantRepo: Repository<BadmintonParticipant>,
 		@InjectRepository(User)
 		private readonly usersRepo: Repository<User>,
-	) {}
+		private readonly dataSource: DataSource,
+	) {
+		super(sessionRepo);
+	}
 
-	async create(ownerId: string, dto: CreateBadmintonSessionDto) {
+	async createSession(ownerId: string, dto: CreateBadmintonSessionDto) {
 		const session = this.sessionRepo.create({
 			ownerId,
 			playedOn: dto.playedOn,
@@ -31,9 +39,11 @@ export class BadmintonService {
 			totalShuttleCount: dto.totalShuttleCount,
 			shareToken: this.generateShareToken(),
 		});
+
 		const { participants } = dto;
 		// Attach after the session object exists so each child carries the relation
 		// reference — TypeORM then resolves the FK at insert time on both paths.
+
 		session.participants = participants.map((d) =>
 			this.participantRepo.create({
 				id: randomUUID(),
@@ -42,7 +52,7 @@ export class BadmintonService {
 				courtFraction: d.courtFraction ?? 1,
 				discount: d.discount ?? 0,
 				shuttleFraction: d.shuttleFraction ?? 1,
-				session,
+				sessionId: session.id,
 			}),
 		);
 		session.computed = computeSplit(
@@ -63,13 +73,6 @@ export class BadmintonService {
 		return this.sessionRepo.save(session);
 	}
 
-	async findAllByOwner(ownerId: string) {
-		return this.sessionRepo.find({
-			where: { ownerId },
-			order: { playedOn: 'DESC', createdAt: 'DESC' },
-		});
-	}
-
 	async findOneOwned(ownerId: string, id: string) {
 		const session = await this.sessionRepo.findOne({
 			where: { id, ownerId },
@@ -79,56 +82,79 @@ export class BadmintonService {
 		return session;
 	}
 
-	async update(ownerId: string, id: string, dto: UpdateBadmintonSessionDto) {
-		const session = await this.findOneOwned(ownerId, id);
-
+	async updateSession(
+		ownerId: string,
+		id: string,
+		dto: UpdateBadmintonSessionDto,
+	) {
 		const { participants, ...rest } = dto;
 
-		Object.assign(
-			session,
-			Object.fromEntries(
-				Object.entries(rest).filter(([, v]) => v !== undefined),
-			),
-		);
-		Logger.debug(
-			`Updating session ${id} with data: ${JSON.stringify(session)}`,
-		);
-		if (participants !== undefined) {
-			await this.participantRepo
-				.delete({
-					sessionId: session.id,
-				})
-				.then(() => {
-					session.participants = participants.map((p) =>
-						this.participantRepo.create({
-							...p,
-							session,
-							sessionId: session.id,
-						}),
-					);
-				});
-		}
+		// The whole read-modify-write runs in one transaction, and the session row
+		// is locked FOR UPDATE up front. Without the lock, two concurrent updates
+		// both read the old state, then their delete/insert pairs interleave: the
+		// second DELETE runs on a snapshot that predates the first INSERT, so both
+		// participant sets survive while `computed` only describes one of them.
+		return this.dataSource.transaction(async (manager) => {
+			// Locked separately from its relation: Postgres rejects FOR UPDATE on
+			// the nullable side of the outer join that `relations` would generate.
+			const session = await manager.findOne(BadmintonSession, {
+				where: { id, ownerId },
+				lock: { mode: 'pessimistic_write' },
+			});
+			if (!session) throw new NotFoundException('Session not found');
 
-		session.computed = computeSplit(
-			{
-				courtCost: session.courtCost,
-				shuttleUnitPrice: session.shuttleUnitPrice,
-				totalShuttleCount: session.totalShuttleCount,
-				participants: session.participants.map((p) => ({
-					id: p.id,
-					name: p.name,
-					courtFraction: p.courtFraction,
-					discount: p.discount,
-					shuttleFraction: p.shuttleFraction,
-				})),
-			},
-			new Date().toISOString(),
-		);
+			session.participants = await manager.findBy(BadmintonParticipant, {
+				sessionId: id,
+			});
 
-		return this.sessionRepo.save(session);
+			Object.assign(
+				session,
+				Object.fromEntries(
+					Object.entries(rest).filter(([, v]) => v !== undefined),
+				),
+			);
+
+			if (participants !== undefined) {
+				// Same id + default discipline as createSession(): the snapshot is
+				// computed before the INSERT, so rows must reference ids we choose
+				// up front.
+				session.participants = participants.map((p) =>
+					this.participantRepo.create({
+						id: randomUUID(),
+						userId: p.userId,
+						name: p.name,
+						courtFraction: p.courtFraction ?? 1,
+						discount: p.discount ?? 0,
+						shuttleFraction: p.shuttleFraction ?? 1,
+						sessionId: session.id,
+					}),
+				);
+			}
+
+			session.computed = computeSplit(
+				{
+					courtCost: session.courtCost,
+					shuttleUnitPrice: session.shuttleUnitPrice,
+					totalShuttleCount: session.totalShuttleCount,
+					participants: session.participants.map((p) => ({
+						id: p.id,
+						name: p.name,
+						courtFraction: p.courtFraction,
+						discount: p.discount,
+						shuttleFraction: p.shuttleFraction,
+					})),
+				},
+				new Date().toISOString(),
+			);
+
+			if (participants !== undefined) {
+				await manager.delete(BadmintonParticipant, { sessionId: session.id });
+			}
+			return manager.save(session);
+		});
 	}
 
-	async remove(ownerId: string, id: string) {
+	async removeSession(ownerId: string, id: string) {
 		const session = await this.findOneOwned(ownerId, id);
 		await this.sessionRepo.softRemove(session);
 		return { id };
@@ -162,35 +188,39 @@ export class BadmintonService {
 	 * Autocomplete for the participant field: registered users (by email / display name)
 	 * plus free-text guest names this owner has used before.
 	 */
-	async suggestParticipants(ownerId: string, q: string) {
-		const term = `%${q}%`;
+	async suggestParticipants(q: string) {
+		// `%%` matches every user in the table, so an empty or one-character query
+		// turned this into a bulk directory read for any authenticated caller. The
+		// web input already waits for two characters; this makes that a rule rather
+		// than a client-side courtesy.
+		const term = q.trim();
+		if (term.length < MIN_SUGGEST_QUERY) {
+			return { users: [] };
+		}
+		const pattern = `%${term}%`;
 
 		const users = await this.usersRepo
 			.createQueryBuilder('u')
 			.leftJoin('u.profile', 'profile')
-			.where('u.email ILIKE :term', { term })
-			.orWhere('profile.displayName ILIKE :term', { term })
+			.where('u.email ILIKE :pattern', { pattern })
+			.orWhere('profile.displayName ILIKE :pattern', { pattern })
+			// u.email was missing from this list while the mapping below used it as
+			// the fallback label, so a user with no display name came back with
+			// `name: undefined` and the autocomplete rendered a blank, unpickable row.
 			.select(['u.id', 'u.email', 'profile.displayName'])
 			.limit(8)
 			.getMany();
 
-		const guestRows = await this.participantRepo
-			.createQueryBuilder('p')
-			.innerJoin('p.session', 's')
-			.where('s.ownerId = :ownerId', { ownerId })
-			.andWhere('p.userId IS NULL')
-			.andWhere('p.name ILIKE :term', { term })
-			.select('DISTINCT p.name', 'name')
-			.limit(8)
-			.getRawMany<{ name: string }>();
-
 		return {
 			users: users.map((u) => ({
 				userId: u.id,
+				// The email is used as a label of last resort, but is not returned as
+				// its own field — it was always undefined there anyway, and nothing
+				// consumes it. Note this endpoint still reveals an address to any
+				// authenticated caller who guesses part of it; narrowing that to exact
+				// email match is a product decision, not a bug fix.
 				name: u.profile?.displayName ?? u.email,
-				email: u.email,
 			})),
-			guests: guestRows.map((g) => g.name),
 		};
 	}
 

@@ -1,11 +1,13 @@
+import { formOptions, useForm } from "@tanstack/react-form"
+import { useNavigate } from "@tanstack/react-router"
+import React from "react"
+import type { LoginIn } from "@/services/auth"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import { FormField } from "@/components/custom/form-field"
 import { Button } from "@/components/custom/stateful-button"
 import { FieldGroup } from "@/components/ui/field"
-import { LoginInSchema, useLoginMutation, type LoginIn } from "@/services/auth"
-import { formOptions, useForm } from "@tanstack/react-form"
-import { useNavigate } from "@tanstack/react-router"
-import React from "react"
+import { LoginInSchema, useLoginMutation } from "@/services/auth"
+
 const defaultValue: LoginIn = { email: "", password: "" }
 
 const formOpts = formOptions({
@@ -19,10 +21,11 @@ const LoginForm: React.FC = () => {
   const { mutate, status } = useLoginMutation()
   const form = useForm({
     ...formOpts,
-    onSubmit: (form) => {
-      mutate(LoginInSchema.parse(form.value), {
+    onSubmit: (submission) => {
+      mutate(LoginInSchema.parse(submission.value), {
         onSuccess: () => {
-          navigate({
+          // Fire-and-forget: nothing to do after the redirect settles.
+          void navigate({
             to: "/",
           })
         },
@@ -34,7 +37,9 @@ const LoginForm: React.FC = () => {
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        form.handleSubmit()
+        // onSubmit only calls the (sync, fire-and-forget) mutate, so this
+        // promise cannot reject — outcomes surface through mutation status.
+        void form.handleSubmit()
       }}
       method="post"
       className="mt-6 space-y-4"

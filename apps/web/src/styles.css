@@ -128,6 +128,25 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Global hover/state smoothing. Deliberately excludes transform and layout
+     properties — transitioning those globally makes positioned overlays
+     (popovers, dropdowns) slide across the screen and animates layout shifts. */
+  *,
+  ::before,
+  ::after {
+    transition-property:
+      color, background-color, border-color, text-decoration-color, fill,
+      stroke, opacity, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms;
+    }
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -147,4 +166,12 @@
   text-decoration: underline;
   color: var(--color-primary);
   cursor: pointer;
+}
+
+.smooth-transition {
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
 }

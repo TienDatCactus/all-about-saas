@@ -1,18 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { RolesService } from './roles.service';
+import type { Repository } from 'typeorm';
+import type { Role } from './entities/role.entity';
 
+// The scaffold version registered RolesService with no RoleRepository, so it
+// failed on DI. Constructing it directly with a double keeps the smoke test.
 describe('RolesService', () => {
-	let service: RolesService;
-
-	beforeEach(async () => {
-		const module: TestingModule = await Test.createTestingModule({
-			providers: [RolesService],
-		}).compile();
-
-		service = module.get<RolesService>(RolesService);
-	});
-
-	it('should be defined', () => {
+	it('is constructible with its repository', () => {
+		const service = new RolesService({
+			find: jest.fn(),
+			findOne: jest.fn(),
+		} as unknown as Repository<Role>);
 		expect(service).toBeDefined();
 	});
 });

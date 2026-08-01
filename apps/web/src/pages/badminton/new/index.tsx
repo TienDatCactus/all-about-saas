@@ -1,9 +1,9 @@
-import { useNavigate } from "@tanstack/react-router";
-import { SessionEditor } from "../components/SessionEditor";
-import { PageHeader, PageShell } from "../../../components/custom/page-shell";
+import { useNavigate } from "@tanstack/react-router"
+import { SessionEditor } from "../components/SessionEditor"
+import { PageHeader, PageShell } from "../../../components/custom/page-shell"
 
 export default function NewSessionPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   return (
     <PageShell>
@@ -12,13 +12,13 @@ export default function NewSessionPage() {
         description="Enter the costs and players — the split updates live."
       />
       <SessionEditor
-        onSaved={(session) =>
-          navigate({
+        onSaved={(session) => {
+          void navigate({
             to: "/badminton/$sessionId",
             params: { sessionId: session.id },
           })
-        }
+        }}
       />
     </PageShell>
-  );
+  )
 }

@@ -1,0 +1,16 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    // Base sets module/moduleResolution to NodeNext; combined with the
+    // package's "type": "commonjs" that emits CommonJS for the API to require.
+    "outDir": "dist",
+    "rootDir": "src",
+    "lib": ["es2022"],
+    "types": []
+    // noUncheckedIndexedAccess comes from base.json: the algorithm used to
+    // index parallel arrays and opted out, but it now zips one record array
+    // per player, so the checked-index flag holds with no assertions.
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

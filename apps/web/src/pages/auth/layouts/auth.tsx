@@ -1,6 +1,6 @@
+import { Link } from "@tanstack/react-router"
 import Logo from "@/components/custom/logo"
 import { Separator } from "@/components/ui/separator"
-import { Link } from "@tanstack/react-router"
 
 interface AuthLayoutProps {
   title: {
@@ -59,19 +59,19 @@ export default function AuthLayout({
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  {action?.text}
+                  {action.text}
                 </span>
               </div>
             </div>
-            {action?.component}
+            {action.component}
           </>
         )}
         {legend && (
           <p className="mt-4 text-center text-sm text-pretty text-muted-foreground dark:text-muted-foreground">
-            {legend?.text}{" "}
-            {legend?.link && (
-              <Link to={legend?.link} className="link text-primary">
-                {legend?.anchor}
+            {legend.text}{" "}
+            {legend.link && (
+              <Link to={legend.link} className="link text-primary">
+                {legend.anchor}
               </Link>
             )}
             .

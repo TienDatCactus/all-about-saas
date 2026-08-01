@@ -1,13 +1,9 @@
-import DataCard from "@/components/custom/data/card";
-import { toast } from "@/components/custom/toast";
-import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { CalculatorIcon, CopyIcon } from "@phosphor-icons/react"
+import type { ComputedSnapshot } from "@/services/badminton/types"
+import DataCard from "@/components/custom/data/card"
+import DataEmpty from "@/components/custom/data/empty"
+import { toast } from "@/components/custom/toast"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -16,29 +12,44 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { formatVnd } from "@/pages/badminton/lib/format";
-import { buildSummaryText } from "@/pages/badminton/lib/summary-text";
-import type { ComputedSnapshot } from "@/services/badminton/types";
-import { CalculatorIcon, CopyIcon } from "@phosphor-icons/react";
+} from "@/components/ui/table"
+import { formatDong, formatVnd } from "@/pages/badminton/lib/format"
+import { buildSummaryText } from "@/pages/badminton/lib/summary-text"
+
+/**
+ * What this component actually needs, which is looser than `ComputedSnapshot`:
+ * rows whose `participantId` may be absent.
+ *
+ * `computeSplit` always sets it, but `computed` is stored as jsonb and a
+ * snapshot written by an older version of the calc may not carry it — which is
+ * why the response schema types it optional. This component only uses it as a
+ * React key, so demanding it would be a constraint with nothing behind it.
+ */
+export type DisplaySnapshot = Omit<ComputedSnapshot, "rows"> & {
+  rows: Array<
+    Omit<ComputedSnapshot["rows"][number], "participantId"> & {
+      participantId?: string
+    }
+  >
+}
 
 interface SummaryProps {
-  computed: ComputedSnapshot;
-  meta?: { title?: string | null; playedOn?: string };
+  computed: DisplaySnapshot
+  meta?: { title?: string | null; playedOn?: string }
 }
 
 export function BadmintonSummary({ computed, meta }: SummaryProps) {
-  const hasRows = computed.rows.length > 0;
+  const hasRows = computed.rows.length > 0
 
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     try {
-      e.preventDefault();
-      await navigator.clipboard.writeText(buildSummaryText(computed, meta));
-      toast.success("Summary copied to clipboard");
+      e.preventDefault()
+      await navigator.clipboard.writeText(buildSummaryText(computed, meta))
+      toast.success("Summary copied to clipboard")
     } catch {
-      toast.error("Couldn't copy — check clipboard permissions");
+      toast.error("Couldn't copy — check clipboard permissions")
     }
-  };
+  }
   return (
     <DataCard
       title="Split summary"
@@ -49,7 +60,11 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleCopy}
+          // handleCopy resolves its own failure path (error toast), so the
+          // promise is safe to fire and forget.
+          onClick={(e) => {
+            void handleCopy(e)
+          }}
           disabled={!hasRows}
         >
           <CopyIcon data-icon="inline-start" />
@@ -69,17 +84,17 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {computed.rows.map((row) => (
-                  <TableRow key={row.participantId}>
+                {computed.rows.map((row, index) => (
+                  <TableRow key={row.participantId ?? `${index}-${row.name}`}>
                     <TableCell className="font-medium">{row.name}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVnd(row.court)}
+                    <TableCell className="text-right text-muted-foreground tabular-nums">
+                      {formatDong(row.court)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVnd(row.shuttle)}
+                    <TableCell className="text-right text-muted-foreground tabular-nums">
+                      {formatDong(row.shuttle)}
                     </TableCell>
                     <TableCell className="text-right font-semibold tabular-nums">
-                      {formatVnd(row.total)}
+                      {formatDong(row.total)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -87,10 +102,10 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
               <TableFooter>
                 <TableRow>
                   <TableCell>Total collected</TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                  <TableCell className="text-right text-muted-foreground tabular-nums">
                     {formatVnd(computed.courtCost)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                  <TableCell className="text-right text-muted-foreground tabular-nums">
                     {formatVnd(computed.shuttleCost)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -101,19 +116,13 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
             </Table>
           </div>
         ) : (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <CalculatorIcon />
-              </EmptyMedia>
-              <EmptyTitle>Nothing to split yet</EmptyTitle>
-              <EmptyDescription>
-                Add players and costs to see each person&apos;s share.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <DataEmpty
+            media={{ variant: "icon", icon: <CalculatorIcon /> }}
+            title="Nothing to split yet"
+            description="Add players and costs to see each person's share."
+          />
         )
       }
     />
-  );
+  )
 }

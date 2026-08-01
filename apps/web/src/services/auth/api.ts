@@ -1,21 +1,32 @@
-import { http } from "@/lib/utils/http"
+import * as z from "zod"
 import { AUTH } from "../url"
 import type {
   ChangePasswordIn,
   LoginIn,
+  ResetPasswordIn,
   SendVerificationEmailIn,
   SignUpIn,
   VerifyEmailIn,
 } from "./types"
+import { http } from "@/lib/utils/http"
+import { parseResponse } from "@/lib/utils/parse-response"
+
+/**
+ * What login and refresh actually put on the wire. The old
+ * `{ accessToken: string } | string` union plus a typeof check wasn't a
+ * contract — it was two guesses with a runtime coin-flip between them. If the
+ * API drifts, parseResponse fails loudly at the boundary instead of handing a
+ * garbage "token" to the Authorization header.
+ */
+const AccessTokenSchema = z.object({ accessToken: z.string().min(1) })
 
 export const authApi = {
-  login: async (data: LoginIn): Promise<string> => {
-    const res = await http.post<{ accessToken: string } | string>(
-      AUTH.login,
-      data,
-    )
-    return typeof res === "string" ? res : res.accessToken
-  },
+  login: (data: LoginIn): Promise<string> =>
+    parseResponse(
+      "auth.login",
+      AccessTokenSchema,
+      http.post(AUTH.login, data)
+    ).then((r) => r.accessToken),
   logout: async (): Promise<void> => {
     return http.post(AUTH.logout)
   },
@@ -31,10 +42,12 @@ export const authApi = {
   loginWithFacebook: async (): Promise<void> => {
     window.location.href = AUTH.facebookLogin
   },
-  refresh: async (): Promise<string> => {
-    const res = await http.post<{ accessToken: string } | string>(AUTH.refresh)
-    return typeof res === "string" ? res : res.accessToken
-  },
+  refresh: (): Promise<string> =>
+    parseResponse(
+      "auth.refresh",
+      AccessTokenSchema,
+      http.post(AUTH.refresh)
+    ).then((r) => r.accessToken),
   verifyEmail: async (data: VerifyEmailIn) => {
     return http.post(AUTH.verifyEmail, data)
   },
@@ -43,14 +56,20 @@ export const authApi = {
   ): Promise<void> => {
     return http.post(AUTH.sendVerificationEmail, data)
   },
-  changePassword: async (
-    data: Pick<ChangePasswordIn, "selector" | "token" | "password">
-  ): Promise<void> => {
-    return http.post(AUTH.changePassword, data)
-  },
+  /** Finish a forgotten-password reset using the emailed selector + token. */
   resetPassword: async (
-    data: Pick<ChangePasswordIn, "selector" | "email" | "password">
+    data: Pick<ResetPasswordIn, "selector" | "token" | "password">
   ): Promise<void> => {
     return http.post(AUTH.resetPassword, data)
+  },
+  /**
+   * Change the signed-in user's own password. The account comes from the JWT;
+   * `currentPassword` is the second factor, and the server revokes every other
+   * session on success.
+   */
+  changePassword: async (
+    data: Pick<ChangePasswordIn, "currentPassword" | "newPassword">
+  ): Promise<void> => {
+    return http.post(AUTH.changePassword, data)
   },
 }

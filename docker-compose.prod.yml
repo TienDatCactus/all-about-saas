@@ -1,0 +1,258 @@
+# Production stack for a single VPS.
+#
+#   1. Create the secret files once (they are gitignored):
+#        mkdir -p secrets
+#        openssl rand -hex 32 > secrets/jwt_secret
+#        openssl rand -base64 24 > secrets/db_password
+#   2. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# Differences from the dev docker-compose.yml that matter:
+#   - Postgres is NOT published to the host. Only caddy has published ports.
+#   - Schema comes from committed migrations via the one-shot `migrate` service,
+#     never from synchronize.
+#   - Secrets are mounted as files, not passed as environment variables.
+#   - Every service has a healthcheck and restart: unless-stopped.
+
+name: aas-prod
+
+# Caps container logs so the disk cannot fill silently. Declared BEFORE the
+# services because a YAML alias can only reference an anchor that precedes it —
+# the original version defined this at the bottom of the file and referenced it
+# nowhere, so every service was silently running with unbounded json-file logs.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+# Mounted at /run/secrets/<name> in the services that list them. Not env vars, so
+# they are absent from `docker inspect`, from /proc/<pid>/environ, from child
+# processes, and from anything that dumps the environment on a crash.
+#
+# `file:` is the Compose-without-Swarm form. On Swarm or another orchestrator
+# these become external secrets with no change to the services below.
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  jwt_secret:
+    file: ./secrets/jwt_secret
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:?set DATABASE_USER}
+      # The official image resolves *_FILE itself.
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: ${DATABASE_NAME:?set DATABASE_NAME}
+    secrets: [db_password]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No `ports:` — the database is reachable only on the internal network.
+    networks: [internal]
+    healthcheck:
+      # No password needed: pg_isready over the local socket authenticates as the
+      # container's own postgres user.
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Scheduled pg_dump into ./backups. A sidecar rather than the host cron the
+  # backup script's header suggests, because a schedule that ships inside the
+  # stack cannot be forgotten during provisioning — the cron approach exists
+  # only if the operator remembers it.
+  #
+  # Same image as the server so pg_dump's major always matches. Writes to a
+  # .part file and renames only after a size sanity check: a dump that died
+  # mid-write must never be distinguishable-from-real, because the restore that
+  # discovers it comes on the worst day.
+  #
+  # LOCAL-ONLY. A dump on the same disk as the database does not survive the
+  # failure it exists for — scripts/backup-db.sh has the offsite hook
+  # (BACKUP_REMOTE + rclone) and the --verify-latest restore test; run that from
+  # host cron for the offsite leg, or sync ./backups by any other means.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      PGHOST: postgres
+      PGUSER: ${DATABASE_USER}
+      PGDATABASE: ${DATABASE_NAME}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+    secrets: [db_password]
+    volumes:
+      - ./backups:/backups
+    networks: [internal]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # `$$` everywhere: compose interpolates single `$` before the shell sees it.
+    # First dump fires at startup on purpose — a fresh deploy gets a baseline
+    # immediately instead of after the first full interval.
+    entrypoint:
+      - /bin/sh
+      - -ceu
+      - |
+        export PGPASSWORD="$$(tr -d '\r\n' < /run/secrets/db_password)"
+        while true; do
+          stamp="$$(date -u +%Y%m%dT%H%M%SZ)"
+          out="/backups/$${PGDATABASE}-$${stamp}.dump"
+          if pg_dump -Fc -f "$$out.part" && [ "$$(wc -c < "$$out.part")" -gt 1024 ]; then
+            mv "$$out.part" "$$out"
+            echo "backup: wrote $$out ($$(wc -c < "$$out") bytes)"
+          else
+            rm -f "$$out.part"
+            echo "backup: FAILED at $$stamp" >&2
+          fi
+          find /backups -name '*.dump' -type f -mtime +"$$BACKUP_KEEP_DAYS" -delete
+          sleep "$$BACKUP_INTERVAL_SECONDS"
+        done
+
+  # One-shot: applies migrations, then exits. `depends_on: service_completed_successfully`
+  # on the api means the app never starts against an un-migrated schema.
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER}
+      # data-source.ts calls resolveFileSecrets() — the CLI never boots Nest, so
+      # main.ts is not in the picture here.
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      DATABASE_NAME: ${DATABASE_NAME}
+      # Not used by the CLI, but env validation still runs on this image.
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      FRONTEND_URL: ${FRONTEND_URL}
+    secrets: [db_password, jwt_secret]
+    # The image has no dev deps (no ts-node), so this runs the plain `typeorm`
+    # binary against the COMPILED data-source. Its migration globs are
+    # __dirname-relative and match .js, so it finds dist/database/migrations/*.js.
+    #
+    # Via `npm run`, not an absolute path into node_modules. It used to invoke
+    # /app/node_modules/typeorm/cli.js, which only existed while the image copied
+    # the whole dev tree and npm happened to hoist typeorm to the root — with the
+    # production-only install it resolves to apps/api/node_modules instead, and
+    # the migration job died with MODULE_NOT_FOUND before touching the database.
+    # `npm run` puts the local node_modules/.bin on PATH, so hoisting stops
+    # mattering.
+    command: ['npm', 'run', 'migration:run:prod']
+    working_dir: /app/apps/api
+    networks: [internal]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    logging: *default-logging
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      DATABASE_NAME: ${DATABASE_NAME}
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-900}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-604800}
+      FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL for the CORS allowlist}
+      COOKIE_SECURE: 'true'
+      COOKIE_SAME_SITE: lax
+      # Same Docker network, no TLS between api and postgres. Turn on the moment
+      # the database lives anywhere else.
+      DATABASE_SSL: ${DATABASE_SSL:-false}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
+    secrets: [db_password, jwt_secret]
+    networks: [internal]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # Readiness, not liveness: this one fails when the DB is unreachable.
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://127.0.0.1:8000/health/ready',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Baked in at build time — Vite inlines import.meta.env.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?set VITE_API_BASE_URL}
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    networks: [internal]
+    depends_on:
+      api:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # /data holds the ACME account + certificates. Losing it means re-issuing
+      # on every restart, which hits Let's Encrypt rate limits.
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+    networks: [internal]
+    depends_on:
+      - api
+      - web
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge

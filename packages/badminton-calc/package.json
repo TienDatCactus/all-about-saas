@@ -1,0 +1,23 @@
+{
+  "name": "@repo/badminton-calc",
+  "version": "1.0.0",
+  "description": "Canonical badminton money-split algorithm, shared by the API and the web app.",
+  "private": true,
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "typescript": "^6.0.3"
+  }
+}

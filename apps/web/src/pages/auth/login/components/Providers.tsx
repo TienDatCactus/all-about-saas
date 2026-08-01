@@ -1,16 +1,17 @@
+import React from "react"
+import { ReactSVG } from "react-svg"
 import { Button } from "@/components/ui/button"
 import { loadAsset } from "@/lib/utils"
 import { authApi } from "@/services/auth"
 
-import React from "react"
-import { ReactSVG } from "react-svg"
-
 interface Provider {
   name: string
   iconUrl: string
-  callback: () => void
+  // The auth API's OAuth entry points are async (they resolve to a redirect),
+  // so the callback is allowed to return a promise the caller fires and forgets.
+  callback: () => Promise<void>
 }
-const providers: Provider[] = [
+const providers: Array<Provider> = [
   {
     name: "Google",
     iconUrl: loadAsset("google.svg", "svg"),
@@ -36,7 +37,8 @@ const Providers: React.FC = () => {
           variant="outline"
           className="flex w-full items-center justify-center space-x-2 py-2"
           onClick={() => {
-            provider.callback()
+            // Fire-and-forget: the callback just kicks off the OAuth redirect.
+            void provider.callback()
           }}
         >
           <ReactSVG src={provider.iconUrl} aria-hidden={true} />

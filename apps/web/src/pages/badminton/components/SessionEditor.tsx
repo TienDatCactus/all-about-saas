@@ -1,36 +1,36 @@
-import { AddonInput as Input } from "@/components/custom/addon-input";
-import DataCard from "@/components/custom/data/card";
-import { FormField } from "@/components/custom/form-field";
-import { Button as StatefulButton } from "@/components/custom/stateful-button";
-import DatePicker from "@/components/date-picker";
-import { FieldGroup } from "@/components/ui/field";
-import { formatVnd, parseVnd } from "@/pages/badminton/lib/format";
-import {
-  useCreateSessionMutation,
-  useUpdateSessionMutation,
-} from "@/services/badminton/queries";
-import type { BadmintonSession } from "@/services/badminton/types";
 import {
   CoinsIcon,
   CurrencyCircleDollarIcon,
   RacquetIcon,
-} from "@phosphor-icons/react";
-import { useForm } from "@tanstack/react-form";
-import { format, parseISO } from "date-fns";
+} from "@phosphor-icons/react"
+import { useForm } from "@tanstack/react-form"
+import { format, parseISO } from "date-fns"
 import {
   defaultValues,
   hasNamedPlayer,
   valuesToComputed,
   valuesToPayload,
-  type EditorValues,
-} from "../lib/form";
-import { PlayerEditor } from "./player-editor";
-import { BadmintonSummary } from "./Summary";
+} from "../lib/form"
+import { PlayerEditor } from "./player-editor"
+import { BadmintonSummary } from "./Summary"
+import type { BadmintonSession } from "@/services/badminton/types"
+import type { EditorValues } from "../lib/form"
+import { AddonInput as Input } from "@/components/custom/addon-input"
+import DataCard from "@/components/custom/data/card"
+import { FormField } from "@/components/custom/form-field"
+import { Button as StatefulButton } from "@/components/custom/stateful-button"
+import DatePicker from "@/components/date-picker"
+import { FieldGroup } from "@/components/ui/field"
+import { formatVnd, parseVnd } from "@/pages/badminton/lib/format"
+import {
+  useCreateSessionMutation,
+  useUpdateSessionMutation,
+} from "@/services/badminton/queries"
 
 interface SessionEditorProps {
-  sessionId?: string;
-  initialValues?: EditorValues;
-  onSaved?: (session: BadmintonSession) => void;
+  sessionId?: string
+  initialValues?: EditorValues
+  onSaved?: (session: BadmintonSession) => void
 }
 
 export function SessionEditor({
@@ -38,29 +38,32 @@ export function SessionEditor({
   initialValues,
   onSaved,
 }: SessionEditorProps) {
-  const create = useCreateSessionMutation();
-  const update = useUpdateSessionMutation(sessionId ?? "");
-  const status = sessionId ? update.status : create.status;
+  const create = useCreateSessionMutation()
+  const update = useUpdateSessionMutation(sessionId ?? "")
+  const status = sessionId ? update.status : create.status
 
   const form = useForm({
     defaultValues: initialValues ?? defaultValues(),
     onSubmit: async ({ value }: { value: EditorValues }) => {
-      const payload = valuesToPayload(value);
+      const payload = valuesToPayload(value)
       const saved = sessionId
         ? await update.mutateAsync(payload)
-        : await create.mutateAsync(payload);
-      onSaved?.(saved);
+        : await create.mutateAsync(payload)
+      onSaved?.(saved)
     },
-  });
+  })
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
+        e.preventDefault()
+        // handleSubmit rejects when the save mutation fails; the failure is
+        // already surfaced through the mutation status (the save button's
+        // mutationState), so just keep the rejection from floating.
+        form.handleSubmit().catch(() => undefined)
       }}
       className="grid gap-6 lg:grid-cols-5 lg:items-start"
     >
-      <div className="flex min-w-0 col-span-3 flex-col gap-6">
+      <div className="col-span-3 flex min-w-0 flex-col gap-6">
         <DataCard
           title="Session details"
           description="Court and shuttle costs for the day."
@@ -86,7 +89,7 @@ export function SessionEditor({
                       }
                       onChange={(date) =>
                         field.handleChange(
-                          date ? format(date, "yyyy-MM-dd") : "",
+                          date ? format(date, "yyyy-MM-dd") : ""
                         )
                       }
                       onBlur={field.handleBlur}
@@ -162,10 +165,10 @@ export function SessionEditor({
                       startAddon={<RacquetIcon />}
                       value={field.state.value ?? ""}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        const n = e.target.valueAsNumber;
+                        const n = e.target.valueAsNumber
                         field.handleChange(
-                          Number.isNaN(n) ? 0 : Math.max(0, Math.trunc(n)),
-                        );
+                          Number.isNaN(n) ? 0 : Math.max(0, Math.trunc(n))
+                        )
                       }}
                     />
                   )}
@@ -182,7 +185,7 @@ export function SessionEditor({
         />
       </div>
 
-      <div className="flex flex-col gap-4 col-span-2 lg:sticky lg:top-6">
+      <div className="col-span-2 flex flex-col gap-4 lg:sticky lg:top-6">
         <form.Subscribe selector={(s: { values: EditorValues }) => s.values}>
           {(values: EditorValues) => (
             <BadmintonSummary
@@ -210,5 +213,5 @@ export function SessionEditor({
         </form.Subscribe>
       </div>
     </form>
-  );
+  )
 }

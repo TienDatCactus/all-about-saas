@@ -1,25 +1,25 @@
-import { LinkIcon } from "@phosphor-icons/react";
-import { toast } from "@/components/custom/toast";
+import { LinkIcon } from "@phosphor-icons/react"
+import { toast } from "@/components/custom/toast"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "@/components/ui/input-group";
+} from "@/components/ui/input-group"
 
 export function ShareLink({ shareToken }: { shareToken: string }) {
-  const path = `/badminton/s/${shareToken}`;
+  const path = `/badminton/s/${shareToken}`
 
   const handleCopy = async () => {
     const url =
-      typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
+      typeof window !== "undefined" ? `${window.location.origin}${path}` : path
     try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Share link copied");
+      await navigator.clipboard.writeText(url)
+      toast.success("Share link copied")
     } catch {
-      toast.error("Couldn't copy the link");
+      toast.error("Couldn't copy the link")
     }
-  };
+  }
 
   return (
     <InputGroup>
@@ -33,10 +33,17 @@ export function ShareLink({ shareToken }: { shareToken: string }) {
         className="text-muted-foreground"
       />
       <InputGroupAddon align="inline-end">
-        <InputGroupButton type="button" onClick={handleCopy}>
+        <InputGroupButton
+          type="button"
+          // handleCopy resolves its own failure path (error toast), so the
+          // promise is safe to fire and forget.
+          onClick={() => {
+            void handleCopy()
+          }}
+        >
           Copy link
         </InputGroupButton>
       </InputGroupAddon>
     </InputGroup>
-  );
+  )
 }

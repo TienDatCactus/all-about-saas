@@ -1,0 +1,65 @@
+# Reverse proxy + automatic TLS for the single-VPS deployment.
+#
+# Caddy obtains and renews Let's Encrypt certificates on its own; the only
+# requirements are that DOMAIN/API_DOMAIN resolve to this host and that ports
+# 80 and 443 reach the container. Certificates live in the caddy_data volume —
+# losing it means re-issuing on every restart and hitting ACME rate limits.
+
+{
+	# Where ACME sends expiry warnings. Set ACME_EMAIL in .env.prod.
+	email {$ACME_EMAIL}
+}
+
+# --- Web app ---
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+
+	header {
+		# The app is served over TLS only; tell browsers to remember that.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		# Defense-in-depth for the access token now living in JS memory (H1):
+		# an injected script must not be able to ship it anywhere.
+		#
+		# - connect-src pins fetch/XHR to this origin and the API, so exfiltration
+		#   over the network layer fails even if script injection succeeds.
+		# - script-src keeps 'unsafe-inline' because the SSR framework (TanStack
+		#   Start/Nitro) hydrates via inline scripts; the upgrade path is
+		#   nonce-based CSP at the framework level, not deleting the keyword here
+		#   and breaking every page load.
+		# - form-action/base-uri/frame-ancestors close the non-script exfil and
+		#   clickjacking routes; object-src kills plugin containers outright.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		X-Frame-Options DENY
+		# helmet sets the rest at the app level; don't advertise the proxy.
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# --- API ---
+# A separate hostname keeps cookies and CORS explicit. If you would rather serve
+# the API under the web domain (same-site cookies, no CORS at all), replace this
+# block with a `handle_path /api/*` inside the {$DOMAIN} block above and point
+# FRONTEND_URL/VITE_API_BASE_URL accordingly.
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8000
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

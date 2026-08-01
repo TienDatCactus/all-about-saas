@@ -3,28 +3,24 @@ import {
 	Controller,
 	Delete,
 	Get,
-	Logger,
 	Param,
 	ParseUUIDPipe,
 	Patch,
 	Post,
 	Query,
 	Req,
-	UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
-import { RegisterResource } from '../common/decorator/resource.decorator';
-import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
-import { PoliciesGuard } from '../common/guard/policies.guard';
+import { requireUser } from '../common/request-user';
 import { BadmintonService } from './badminton.service';
-import { CreateBadmintonSessionDto } from './dto/create-badminton-session.dto';
-import { UpdateBadmintonSessionDto } from './dto/update-badminton-session.dto';
+import {
+	CreateBadmintonSessionDto,
+	QueryBadmintonSessionDto,
+	UpdateBadmintonSessionDto,
+} from './badminton.dto';
 
-@RegisterResource({
-	name: 'BadmintonSession',
-	actions: ['create', 'read', 'update', 'delete'],
-})
 @Controller('badminton')
 @ApiTags('Badminton')
 @ApiBearerAuth()
@@ -32,48 +28,61 @@ export class BadmintonController {
 	constructor(private readonly service: BadmintonService) {}
 
 	@Post('/sessions')
-	@UseGuards(JwtAuthGuard)
-	// @CheckPolicies({ action: 'create', resource: 'BadmintonSession' })
-	create(@Req() req, @Body() dto: CreateBadmintonSessionDto) {
-		return this.service.create(req.user.id, dto);
+	create(@Req() req: Request, @Body() dto: CreateBadmintonSessionDto) {
+		return this.service.createSession(requireUser(req).id, dto);
 	}
 
 	@Get('/sessions')
-	@UseGuards(JwtAuthGuard)
-	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
-	findAll(@Req() req) {
-		Logger.debug(req.user);
-		return this.service.findAllByOwner(req.user.id);
+	findAll(@Req() req: Request, @Query() query: QueryBadmintonSessionDto) {
+		const { id: ownerId } = requireUser(req);
+		return this.service.paginate({
+			page: query.page,
+			limit: query.limit,
+			where: { ownerId },
+			order: { playedOn: 'DESC', createdAt: 'DESC' },
+			relations: { participants: true },
+			select: {
+				id: true,
+				title: true,
+				playedOn: true,
+				courtCost: true,
+				shuttleUnitPrice: true,
+				totalShuttleCount: true,
+				createdAt: true,
+				participants: { id: true },
+				// The whole jsonb column, not `{ grandTotal: true }`. That projection
+				// asked TypeORM to reach inside a JSON value as if it were an embedded
+				// entity — behaviour that is not part of its select contract — and it
+				// left the list page dereferencing `computed.rows.length` on an object
+				// that may or may not have had `rows`. A few hundred bytes per row is
+				// a fair price for a shape that is the same on every endpoint.
+				computed: true,
+			},
+		});
 	}
 
-	// Declared before ':id' so the static path wins the route match.
 	@Get('/participants/suggest')
-	@UseGuards(JwtAuthGuard)
-	// @CheckPolicies({ action: 'read', resource: 'BadmintonSession' })
-	suggest(@Req() req, @Query('q') q = '') {
-		return this.service.suggestParticipants(req.user.id, q);
+	suggest(@Query('q') q = '') {
+		return this.service.suggestParticipants(q);
 	}
 
 	@Get('/sessions/:id')
-	@UseGuards(JwtAuthGuard, PoliciesGuard)
-	findOne(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
-		return this.service.findOneOwned(req.user.id, id);
+	findOne(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+		return this.service.findOneOwned(requireUser(req).id, id);
 	}
 
 	@Patch('/sessions/:id')
-	@UseGuards(JwtAuthGuard, PoliciesGuard)
 	update(
-		@Req() req,
+		@Req() req: Request,
 		@Param('id', ParseUUIDPipe) id: string,
 		@Body() dto: UpdateBadmintonSessionDto,
 	) {
-		return this.service.update(req.user.id, id, dto);
+		return this.service.updateSession(requireUser(req).id, id, dto);
 	}
 
 	@Delete('/sessions/:id')
-	@UseGuards(JwtAuthGuard, PoliciesGuard)
-	remove(@Req() req, @Param('id', ParseUUIDPipe) id: string) {
-		return this.service.remove(req.user.id, id);
+	remove(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+		return this.service.removeSession(requireUser(req).id, id);
 	}
 	@Public()
 	@Get('/public/:shareToken')

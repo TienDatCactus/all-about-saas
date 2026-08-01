@@ -1,9 +1,10 @@
-import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
 import React from "react"
 import AuthLayout from "../layouts/auth"
 import ForgotPasswordForm from "./components/Form"
+import { Button } from "@/components/ui/button"
+
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate()
   return (
@@ -16,11 +17,11 @@ const ResetPassword: React.FC = () => {
         component: (
           <Button
             variant="outline"
-            onClick={() =>
-              navigate({
+            onClick={() => {
+              void navigate({
                 to: "/auth/login",
               })
-            }
+            }}
             className="flex w-full items-center justify-center space-x-2 py-2"
           >
             <ArrowLeftIcon />

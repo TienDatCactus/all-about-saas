@@ -118,7 +118,7 @@ npm run bootstrap      # npm install → docker:up
 
 You still need to provide the `.env` files first — see Part 4.
 
-> Note: `apps/api/.Dockerfile` is a leftover production image recipe (currently for local dev we don't use it). It has bugs to fix *before* any prod use — see the end of this doc.
+> Note: production images live at `apps/api/Dockerfile` and `apps/web/Dockerfile`; the old `apps/api/.Dockerfile` is gone. See the appendix.
 
 ---
 
@@ -149,13 +149,71 @@ Keep `.env.example` up to date whenever you add a new variable, so future-you kn
 
 ---
 
-## Appendix — fixing `apps/api/.Dockerfile` before any production use
+## Appendix — production images (done)
 
-Not needed for local dev, but for the record it currently has:
+`apps/api/.Dockerfile` has been replaced by **`apps/api/Dockerfile`** and a new
+**`apps/web/Dockerfile`**, both keeping its Turborepo `prune --docker` recipe.
+Six bugs were fixed on the way — the first and the sixth were build/runtime
+breakers, not cosmetics:
 
-1. **Wrong start command.** It ends with `CMD node apps/api/dist/index.js`, but NestJS builds to `dist/main.js` (`start:prod` runs `node dist/main`). Should be `CMD ["node", "apps/api/dist/main.js"]`.
-2. **Leftover Express naming** (`expressjs` user/group) — cosmetic, copy-pasted from Vercel's example.
-3. **Odd filename** — a leading-dot `.Dockerfile` isn't auto-detected; you'd need `docker build -f apps/api/.Dockerfile`. Rename to `Dockerfile`.
-4. It relies on the root `.dockerignore` (now added) so `COPY . .` no longer ships `node_modules`/secrets.
+1. **`turbo prune api` did not resolve.** The workspace is named `@app/api`, so
+   the build failed at once with *"Invalid scope. Package with name api in
+   package.json not found"*. Correct scope: `turbo prune @app/api --docker`.
+2. **Wrong start command** — `dist/index.js`; Nest builds `dist/main.js`.
+3. **Leftover `expressjs` user/group** from Vercel's example; the node image
+   already ships a non-root `node` user.
+4. **Leading-dot filename** wasn't auto-detected. Now `Dockerfile`.
+5. **`npm install` → `npm ci`**, so images match the committed lockfile.
+6. **glibc → musl ABI mismatch.** The builder was `slim` (glibc) and the runner
+   `alpine` (musl). `bcrypt` is a *native* module, so its compiled `.node`
+   binary could not load under musl: the image built cleanly and would have
+   crashed on the first login. All stages now share one base. (Alternative:
+   stay on alpine everywhere and add `python3 make g++` to the builder so
+   bcrypt compiles against musl.)
 
-When you're ready to containerize the app for deploy (the "Both" option from earlier), ping me and I'll finish the multi-stage build + a `docker-compose.prod.yml`.
+Also added: **`docker-compose.prod.yml`** (postgres not published, one-shot
+`migrate` service gating the api via `service_completed_successfully`,
+healthchecks everywhere), **`Caddyfile`** for TLS, and
+**`scripts/backup-db.sh`** with a `--verify-latest` restore test.
+
+### Built and run (2026-08-01)
+
+Both images build and the stack comes up: `postgres`, `migrate`, `api`, `web` all
+healthy, 0 restarts, `/health` and `/health/ready` answering 200 with
+`database: "up"`, and `POST /auth/login` returning 400 rather than 500 — which is
+what proves bcrypt's native binary actually loads (item 6 above).
+
+Six further problems only became visible by running it, none of which fail a
+build or a unit test:
+
+1. **`@repo/typescript-config` was declared by nobody**, though
+   `packages/badminton-calc` and `packages/transactional` both `extends` it. It
+   resolved on the host through workspace hoisting; `turbo prune` never copied it,
+   so `tsc` failed in the image. Same for `@types/react` in `transactional` and
+   `dotenv` in `apps/api` — all phantom dependencies, now declared.
+2. **`vp build` panicked**: vite-plus's Rust binary initialises an HTTP client at
+   startup and `node:24-slim` ships no CA bundle → *"No CA certificates were
+   loaded from the system"*. The web builder now installs `ca-certificates`. Node
+   carries its own CA store, which is why nothing else noticed.
+3. **The API image was 1.44GB** — the runner copied the builder's whole tree,
+   dev dependencies included. A production-only install in the runner brings it to
+   726MB. That also broke the migration job (`typeorm` is no longer hoisted to the
+   root), so it now runs via `npm run migration:run:prod` instead of an absolute
+   path into `node_modules`, and the root `prepare` script is `husky || true`
+   because `--omit=dev` removes husky.
+4. **The initial migration was not self-contained.** Every PK defaults to
+   `uuid_generate_v4()`, and TypeORM's driver had been installing `uuid-ossp`
+   itself on connect — invisible in the migration history, and impossible on
+   managed Postgres where the app role cannot `CREATE EXTENSION`. The migration
+   now creates it, and `installExtensions: false` keeps schema changes inside
+   migrations.
+5. **A trailing carriage return in a secret file** (Git Bash `openssl` writes
+   CRLF) meant Postgres initialised with one password and the API sent another.
+   `resolveFileSecrets` strips any single trailing terminator now; `file-secrets.spec.ts`
+   pins it.
+6. **`/health/ready` killed the process on every poll.** Its `@Res()` form
+   returned the Express Response object, `ClassSerializerInterceptor` tried to
+   serialise it, and the exception filter's write on an already-sent response
+   aborted Node with `ERR_INTERNAL_ASSERTION`. The endpoint returns a plain object
+   now, and the filter bails when `headersSent` — so the next route to do this
+   cannot take the API down with it.

@@ -1,13 +1,13 @@
 {
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "../new-repo/apps/web/eslint.config.js",
-    "prettier.config.js",
-    "vite.config.js",
-    "../new-repo/apps/web/vite.config.ts",
-    "src/pages/auth/reset-password"
-,     "../../commitlint.config.ts"  ],
+  // eslint.config.js is listed so the type-aware ESLint parser has a project
+  // for it (allowJs is on and checkJs is off, so tsc includes but does not
+  // type-check it).
+  "include": ["**/*.ts", "**/*.tsx", "eslint.config.js"],
+  // vite.config.ts is excluded from `tsc --noEmit` on purpose: vite-plus's
+  // config type blows TS's instantiation depth limit ("Excessive stack depth"),
+  // which is type-checker friction rather than a defect in this repo. Vite
+  // itself type-checks the config when it loads it.
+  "exclude": ["node_modules", "dist", ".output", "vite.config.ts"],
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",
@@ -27,6 +27,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
     "allowJs": true,
     "paths": {

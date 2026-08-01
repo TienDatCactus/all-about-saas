@@ -1,3 +1,6 @@
+import { formOptions, useForm } from "@tanstack/react-form"
+import React from "react"
+import { z } from "zod"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import { FormField } from "@/components/custom/form-field"
 import { Button } from "@/components/custom/stateful-button"
@@ -6,10 +9,8 @@ import {
   LoginInSchema,
   useSendVerificationEmailMutation,
 } from "@/services/auth"
-import { formOptions, useForm } from "@tanstack/react-form"
-import React from "react"
 import { toast } from "@/components/custom/toast"
-import { z } from "zod"
+
 const defaultValue = { email: "" }
 
 const formOpts = formOptions({
@@ -25,11 +26,11 @@ const ForgotPasswordForm: React.FC = () => {
 
   const form = useForm({
     ...formOpts,
-    onSubmit: (form) => {
+    onSubmit: (submission) => {
       mutate(
         {
           type: "PASSWORD_RESET",
-          email: form.value.email,
+          email: submission.value.email,
         },
         {
           onSuccess: () => {
@@ -46,7 +47,9 @@ const ForgotPasswordForm: React.FC = () => {
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        form.handleSubmit()
+        // onSubmit only calls the (sync, fire-and-forget) mutate, so this
+        // promise cannot reject — outcomes surface through mutation status.
+        void form.handleSubmit()
       }}
       method="post"
       className="mt-6 space-y-4"

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-github2';
+import { type Profile, Strategy } from 'passport-github2';
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
 	constructor(private readonly configService: ConfigService) {
@@ -17,12 +17,15 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
 			scope: ['user:email'],
 		});
 	}
-	async validate(accessToken: string, refreshToken: string, profile: any) {
+	async validate(accessToken: string, refreshToken: string, profile: Profile) {
 		return {
 			id: profile.id,
 			username: profile.username,
 			displayName: profile.displayName,
-			email: profile.emails[0].value,
+			// Was `profile.emails[0].value`. GitHub omits `emails` entirely when the
+			// account keeps its address private, so that threw inside the strategy
+			// and the callback returned a 500 instead of a usable error.
+			email: profile.emails?.[0]?.value,
 			avatar: profile.photos?.[0]?.value,
 			accessToken,
 		};

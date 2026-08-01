@@ -5,29 +5,26 @@ import {
 	ParseUUIDPipe,
 	UseGuards,
 } from '@nestjs/common';
-import { CheckPolicies } from '../common/decorator/check-policies.decorator';
-import { RegisterResource } from '../common/decorator/resource.decorator';
-import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
-import { PoliciesGuard } from '../common/guard/policies.guard';
+import { Roles } from '../common/decorator/roles.decorator';
+import { RolesGuard } from '../common/guard/roles.guard';
 import { RolesService } from './roles.service';
 
-@RegisterResource({
-	name: 'Role',
-	actions: ['read', 'update'],
-})
+/**
+ * Role lookup, admin-only. Authentication comes from the global JwtAuthGuard, so
+ * this controller only adds the coarse role requirement.
+ */
 @Controller('roles')
-@UseGuards(JwtAuthGuard, PoliciesGuard)
+@UseGuards(RolesGuard)
+@Roles('admin')
 export class RolesController {
 	constructor(private readonly rolesService: RolesService) {}
 
 	@Get()
-	@CheckPolicies({ action: 'read', resource: 'Role' })
 	async findAll() {
 		return await this.rolesService.find();
 	}
 
 	@Get(':id')
-	@CheckPolicies({ action: 'read', resource: 'Role' })
 	async findOne(@Param('id', ParseUUIDPipe) id: string) {
 		return await this.rolesService.findById(id);
 	}

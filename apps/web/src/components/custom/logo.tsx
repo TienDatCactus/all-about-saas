@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
-import { Image, type ImageProps } from "./image"
+import { Image } from "./image"
+import type { ImageProps } from "./image"
 
 import logo from "/logo/logo.svg"
 
@@ -10,7 +11,7 @@ type LogoProps = Omit<ImageProps, "src"> & {
 export default function Logo({ alt, to = "/", ...props }: LogoProps) {
   return (
     <Link to={to} aria-label="Go to homepage">
-      <Image {...props} src={logo} alt={alt ?? "Logo"} />
+      <Image {...props} src={logo} alt={alt} />
     </Link>
   )
 }

@@ -16,6 +16,13 @@
 **/.env.*
 !**/.env.example
 
+# Compose mounts these at runtime. Baking them into a layer would defeat the
+# entire point of using files instead of env vars.
+secrets/
+
+# Database dumps — gigabytes of build-context bloat with no business in an image.
+backups/
+
 **/.vscode
 **/.idea
 **/*.log
