@@ -56,7 +56,10 @@ export function SessionEditor({
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        form.handleSubmit()
+        // handleSubmit rejects when the save mutation fails; the failure is
+        // already surfaced through the mutation status (the save button's
+        // mutationState), so just keep the rejection from floating.
+        form.handleSubmit().catch(() => undefined)
       }}
       className="grid gap-6 lg:grid-cols-5 lg:items-start"
     >

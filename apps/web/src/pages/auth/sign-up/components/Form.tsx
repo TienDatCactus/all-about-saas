@@ -29,7 +29,8 @@ const SignUpForm: React.FC = () => {
           toast.success("Check your inbox", {
             description: "We have sent you an activation email",
           })
-          navigate({
+          // Fire-and-forget: nothing to do after the redirect settles.
+          void navigate({
             to: "/auth/login",
           })
         },
@@ -41,7 +42,9 @@ const SignUpForm: React.FC = () => {
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        form.handleSubmit()
+        // onSubmit only calls the (sync, fire-and-forget) mutate, so this
+        // promise cannot reject — outcomes surface through mutation status.
+        void form.handleSubmit()
       }}
       method="post"
       className="mt-6 space-y-4"

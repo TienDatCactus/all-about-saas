@@ -6,11 +6,10 @@
     "outDir": "dist",
     "rootDir": "src",
     "lib": ["es2022"],
-    "types": [],
-    // The algorithm indexes parallel arrays it just built (fair/base/order all
-    // have participants.length entries), so the checked-index flag would only
-    // buy non-null assertions on every access.
-    "noUncheckedIndexedAccess": false
+    "types": []
+    // noUncheckedIndexedAccess comes from base.json: the algorithm used to
+    // index parallel arrays and opted out, but it now zips one record array
+    // per player, so the checked-index flag holds with no assertions.
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

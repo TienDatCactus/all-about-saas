@@ -108,49 +108,65 @@ export function computeSplit(
 
   // Undiscounted fair share per player, and its court/shuttle breakdown. Both the
   // court pot and the shuttle pot are split by each player's respective weight.
-  const fair = participants.map((p) => {
+  // Each record carries its participant so the steps below can zip through one
+  // array instead of indexing parallel ones.
+  const fair = participants.map((participant) => {
     const court =
-      totalFraction === 0 ? 0 : (courtCost * p.courtFraction) / totalFraction;
+      totalFraction === 0
+        ? 0
+        : (courtCost * participant.courtFraction) / totalFraction;
     const shuttle =
       totalShuttleFraction === 0
         ? 0
-        : (shuttleCost * p.shuttleFraction) / totalShuttleFraction;
-    return { court, shuttle, total: court + shuttle };
+        : (shuttleCost * participant.shuttleFraction) / totalShuttleFraction;
+    return { participant, court, shuttle, total: court + shuttle };
   });
 
   // Whole-bill discount, redistributed by a single rescale so Σ === expense.
-  const eff = participants.map((p, i) => fair[i].total * (1 - p.discount));
-  const totalEff = sum(eff);
+  const eff = fair.map((f) => ({
+    fair: f,
+    value: f.total * (1 - f.participant.discount),
+  }));
+  const totalEff = sum(eff.map((e) => e.value));
   const scale = totalEff === 0 ? 0 : expense / totalEff;
-  const rawTotal = eff.map((e) => e * scale);
 
   // Largest-remainder rounding of the per-player total to 1,000 VND. The target is
-  // what's actually collectable (Σ rawTotal) — equal to round(expense) in every normal
+  // what's actually collectable (Σ raw) — equal to round(expense) in every normal
   // case, but 0 in the degenerate "everyone fully discounted" case, so we don't invent
   // a payment nobody owes.
-  const collectTarget = roundToUnit(sum(rawTotal));
-  const base = rawTotal.map((t) => Math.floor(t / ROUND_UNIT) * ROUND_UNIT);
-  let increments = Math.round((collectTarget - sum(base)) / ROUND_UNIT);
+  const scaled = eff.map((e, i) => {
+    const raw = e.value * scale;
+    const base = Math.floor(raw / ROUND_UNIT) * ROUND_UNIT;
+    return { fair: e.fair, i, raw, base, remainder: raw - base };
+  });
+  const collectTarget = roundToUnit(sum(scaled.map((s) => s.raw)));
+  let increments = Math.round(
+    (collectTarget - sum(scaled.map((s) => s.base))) / ROUND_UNIT,
+  );
   increments = Math.max(0, Math.min(participants.length, increments));
 
-  const order = rawTotal
-    .map((t, i) => ({ i, remainder: t - base[i] }))
-    .sort((a, b) => b.remainder - a.remainder || a.i - b.i);
-
-  const roundedTotal = base.slice();
-  for (let k = 0; k < increments; k++) {
-    roundedTotal[order[k].i] += ROUND_UNIT;
-  }
+  // The `increments` players with the largest remainders round up; everyone
+  // else keeps the floored base. Indices are distinct, so a Set is exact.
+  const roundUp = new Set(
+    [...scaled]
+      .sort((a, b) => b.remainder - a.remainder || a.i - b.i)
+      .slice(0, increments)
+      .map((s) => s.i),
+  );
 
   // Split each rounded total back into court/shuttle for display, preserving the
   // pre-discount court:shuttle ratio. court + shuttle === total per row.
-  const rows: ComputedRow[] = participants.map((p, i) => {
-    const total = roundedTotal[i];
-    const fairTotal = fair[i].total;
-    const court =
-      fairTotal === 0 ? 0 : Math.round((total * fair[i].court) / fairTotal);
+  const rows: ComputedRow[] = scaled.map(({ fair: f, i, base }) => {
+    const total = roundUp.has(i) ? base + ROUND_UNIT : base;
+    const court = f.total === 0 ? 0 : Math.round((total * f.court) / f.total);
     const shuttle = total - court;
-    return { participantId: p.id, name: p.name, court, shuttle, total };
+    return {
+      participantId: f.participant.id,
+      name: f.participant.name,
+      court,
+      shuttle,
+      total,
+    };
   });
 
   return {
@@ -158,7 +174,7 @@ export function computeSplit(
     shuttleCost,
     grandTotal,
     rows,
-    roundingResidual: expense - sum(roundedTotal),
+    roundingResidual: expense - sum(rows.map((r) => r.total)),
     computedAt,
   };
 }

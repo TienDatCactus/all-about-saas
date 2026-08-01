@@ -62,7 +62,9 @@ export const useCreateSessionMutation = () => {
   return useMutation({
     mutationFn: (data: CreateSessionIn) => badmintonApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: badmintonKeys.sessions() })
+      // Deliberately not returned/awaited: awaiting invalidation would keep
+      // the mutation pending until refetches finish, delaying the UI.
+      void queryClient.invalidateQueries({ queryKey: badmintonKeys.sessions() })
     },
   })
 }
@@ -72,7 +74,8 @@ export const useUpdateSessionMutation = (id: string) => {
   return useMutation({
     mutationFn: (data: UpdateSessionIn) => badmintonApi.update(id, data),
     onSuccess: (session) => {
-      queryClient.invalidateQueries({ queryKey: badmintonKeys.sessions() })
+      // Deliberately not returned/awaited — see useCreateSessionMutation.
+      void queryClient.invalidateQueries({ queryKey: badmintonKeys.sessions() })
       queryClient.setQueryData(badmintonKeys.session(id), session)
     },
   })
@@ -83,7 +86,8 @@ export const useDeleteSessionMutation = () => {
   return useMutation({
     mutationFn: (id: string) => badmintonApi.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: badmintonKeys.sessions() })
+      // Deliberately not returned/awaited — see useCreateSessionMutation.
+      void queryClient.invalidateQueries({ queryKey: badmintonKeys.sessions() })
     },
   })
 }
@@ -124,7 +128,9 @@ export function useUndoableDeleteSession() {
         label: "Undo",
         onClick: () => {
           undone = true
-          queryClient.invalidateQueries({
+          // Fire-and-forget: the refetch restores the optimistically
+          // removed row whenever it lands.
+          void queryClient.invalidateQueries({
             queryKey: badmintonKeys.sessions(),
           })
         },
@@ -134,7 +140,8 @@ export function useUndoableDeleteSession() {
         if (undone) return
         commitDelete(session.id, {
           onError: () => {
-            queryClient.invalidateQueries({
+            // Fire-and-forget: refetch puts the row back if the delete failed.
+            void queryClient.invalidateQueries({
               queryKey: badmintonKeys.sessions(),
             })
           },

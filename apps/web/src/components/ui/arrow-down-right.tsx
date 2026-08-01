@@ -58,7 +58,7 @@ const ArrowDownRightIcon = forwardRef<
 
   const handleMouseEnter = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!isControlledRef.current) controls.start("animate")
+      if (!isControlledRef.current) void controls.start("animate")
       onMouseEnter?.(e)
     },
     [controls, onMouseEnter]
@@ -66,7 +66,7 @@ const ArrowDownRightIcon = forwardRef<
 
   const handleMouseLeave = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!isControlledRef.current) controls.start("normal")
+      if (!isControlledRef.current) void controls.start("normal")
       onMouseLeave?.(e)
     },
     [controls, onMouseLeave]

@@ -7,7 +7,9 @@ import { authApi } from "@/services/auth"
 interface Provider {
   name: string
   iconUrl: string
-  callback: () => void
+  // The auth API's OAuth entry points are async (they resolve to a redirect),
+  // so the callback is allowed to return a promise the caller fires and forgets.
+  callback: () => Promise<void>
 }
 const providers: Array<Provider> = [
   {
@@ -35,7 +37,8 @@ const Providers: React.FC = () => {
           variant="outline"
           className="flex w-full items-center justify-center space-x-2 py-2"
           onClick={() => {
-            provider.callback()
+            // Fire-and-forget: the callback just kicks off the OAuth redirect.
+            void provider.callback()
           }}
         >
           <ReactSVG src={provider.iconUrl} aria-hidden={true} />

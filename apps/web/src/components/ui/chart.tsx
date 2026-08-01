@@ -150,6 +150,12 @@ function ChartTooltipContent({
     }
 
     const [item] = payload
+    // The length guard above ensures the first entry exists, but
+    // noUncheckedIndexedAccess types destructured elements as possibly
+    // undefined; bail (unreachably) instead of asserting.
+    if (item === undefined) {
+      return null
+    }
     const key = `${labelKey ?? item.dataKey ?? item.name ?? "value"}`
     const itemConfig = getPayloadConfigFromPayload(config, item, key)
     // ChartConfig is a Record<string, …>, so a lookup by an arbitrary runtime

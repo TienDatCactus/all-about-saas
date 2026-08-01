@@ -33,9 +33,11 @@ function RouteComponent() {
           type,
         },
         {
-          onSuccess: async (_, variables) => {
+          onSuccess: (_, variables) => {
             if (type === "PASSWORD_RESET") {
-              await navigate({
+              // mutate-level callbacks are fire-and-forget in react-query (the
+              // returned promise was never awaited), so don't pretend to await.
+              void navigate({
                 to: "/auth/change-password",
                 search: {
                   selector: variables.selector,
@@ -155,11 +157,11 @@ function RouteComponent() {
               </div>
             </div>
             <Button
-              onClick={() =>
-                navigate({
+              onClick={() => {
+                void navigate({
                   to: "/auth/login",
                 })
-              }
+              }}
               className="w-full"
               variant="outline"
             >

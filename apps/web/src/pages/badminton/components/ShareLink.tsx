@@ -33,7 +33,14 @@ export function ShareLink({ shareToken }: { shareToken: string }) {
         className="text-muted-foreground"
       />
       <InputGroupAddon align="inline-end">
-        <InputGroupButton type="button" onClick={handleCopy}>
+        <InputGroupButton
+          type="button"
+          // handleCopy resolves its own failure path (error toast), so the
+          // promise is safe to fire and forget.
+          onClick={() => {
+            void handleCopy()
+          }}
+        >
           Copy link
         </InputGroupButton>
       </InputGroupAddon>

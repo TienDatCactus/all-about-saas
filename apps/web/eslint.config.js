@@ -1,9 +1,29 @@
 //  @ts-check
 
 import { tanstackConfig } from "@tanstack/eslint-config"
+import reactHooks from "eslint-plugin-react-hooks"
 
 export default [
   ...tanstackConfig,
+  {
+    files: ["**/*.{ts,tsx}"],
+    plugins: {
+      "react-hooks": reactHooks,
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
+    },
+  },
+  {
+    files: ["**/*.{ts,tsx}"],
+    // Type-aware promise-safety rules. The tanstack config already runs the
+    // typescript-eslint parser with project: true, so these are cheap to add.
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
+    },
+  },
   {
     // vite.config.ts is excluded from tsconfig (vite-plus's config type exceeds
     // TS's instantiation depth limit), so the type-aware parser has no project

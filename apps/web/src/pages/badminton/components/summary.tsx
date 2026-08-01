@@ -43,7 +43,11 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleCopy}
+          // handleCopy resolves its own failure path (error toast), so the
+          // promise is safe to fire and forget.
+          onClick={(e) => {
+            void handleCopy(e)
+          }}
           disabled={!hasRows}
         >
           <CopyIcon data-icon="inline-start" />

@@ -42,7 +42,8 @@ const ChangePasswordForm: React.FC = () => {
         {
           onSuccess: () => {
             toast.success("Password changed successfully! You can now log in.")
-            navigate({
+            // Fire-and-forget: nothing to do after the redirect settles.
+            void navigate({
               to: "/auth/login",
             })
           },
@@ -62,7 +63,9 @@ const ChangePasswordForm: React.FC = () => {
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        form.handleSubmit()
+        // onSubmit only calls the (sync, fire-and-forget) mutate, so this
+        // promise cannot reject — outcomes surface through mutation status.
+        void form.handleSubmit()
       }}
       method="post"
       className="mt-6 space-y-4"

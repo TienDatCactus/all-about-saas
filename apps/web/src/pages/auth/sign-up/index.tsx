@@ -17,11 +17,11 @@ const SignUp: React.FC = () => {
         component: (
           <Button
             variant="outline"
-            onClick={() =>
-              navigate({
+            onClick={() => {
+              void navigate({
                 to: "/auth/login",
               })
-            }
+            }}
             className="flex w-full items-center justify-center space-x-2 py-2"
           >
             <ArrowLeftIcon />

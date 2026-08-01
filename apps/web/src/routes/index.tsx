@@ -17,7 +17,8 @@ function App() {
         </div>
         <Button
           onClick={() => {
-            authApi.refresh()
+            // Dev scratch button: fire the refresh call and ignore the result.
+            void authApi.refresh()
           }}
         >
           dat

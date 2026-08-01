@@ -262,7 +262,8 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
       send({ type: "updateProgress", progress })
     }
     // buttonType is a stable string literal, and send is stable from useMachine,
-    // so progress is the only dep that should retrigger this.
+    // so progress is deliberately the only dep that retriggers this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress])
 
   React.useEffect(() => {
@@ -310,15 +311,32 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
    */
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     send({ type: "click" })
+
+    const fail = (error: unknown) => {
+      const err = error instanceof Error ? error : new Error(String(error))
+      onError?.(err)
+      send({ type: "error" })
+    }
+
     try {
-      onClick?.(event)
+      const result: unknown = onClick?.(event)
+      if (result instanceof Promise) {
+        // Async handler: hold the loading state until the promise settles and
+        // route rejections to onError. Previously the promise floated, so
+        // spinner mode "finished" instantly and rejections went unhandled —
+        // the opposite of what this handler's contract documents.
+        result
+          .then(() => {
+            if (buttonType === "spinner") send({ type: "finishLoading" })
+          })
+          .catch(fail)
+        return
+      }
       if (buttonType === "spinner") {
         send({ type: "finishLoading" })
       }
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error))
-      onError?.(err)
-      send({ type: "error" })
+      fail(error)
     }
   }
 

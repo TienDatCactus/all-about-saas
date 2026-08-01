@@ -12,12 +12,12 @@ export default function NewSessionPage() {
         description="Enter the costs and players — the split updates live."
       />
       <SessionEditor
-        onSaved={(session) =>
-          navigate({
+        onSaved={(session) => {
+          void navigate({
             to: "/badminton/$sessionId",
             params: { sessionId: session.id },
           })
-        }
+        }}
       />
     </PageShell>
   )
