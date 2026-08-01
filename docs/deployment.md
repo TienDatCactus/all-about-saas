@@ -118,8 +118,28 @@ never be pasted into a chat, a file, or a commit.
 | `DEPLOY_USER` | SSH user that owns `/srv/all-about-saas` |
 | `DEPLOY_SSH_KEY` | Private key, **full PEM including header/footer lines** |
 | `DEPLOY_PORT` | Only if SSH is not on 22 |
+| `SSH_HOST_FINGERPRINT` | Optional but recommended — see below |
 
-`GITHUB_TOKEN` is built in — GHCR needs no secret of its own.
+That is the whole list. `GITHUB_TOKEN` is built in, so GHCR needs no secret of
+its own: the `deploy` job requests `packages: read` and logs in with the run's
+own short-lived token, which is why there is no long-lived registry credential
+sitting on the VPS.
+
+#### Host key verification
+
+The SSH step does not pin a host key, so the first connection trusts whatever
+answers — fine on a trusted network, a genuine MITM opportunity otherwise. To
+pin it, take the fingerprint on the server:
+
+```bash
+ssh-keyscan -t ed25519 <host> | ssh-keygen -lf - | awk '{print $2}'
+```
+
+store it as `SSH_HOST_FINGERPRINT`, and add to the SSH step in `cd.yml`:
+
+```yaml
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+```
 
 Generate a deploy-only keypair rather than reusing a personal one:
 

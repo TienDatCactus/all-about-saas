@@ -108,6 +108,13 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Required, not inherited. The VPS pulls from GHCR using this run's
+    # GITHUB_TOKEN, and a job without an explicit block gets the repository's
+    # default workflow permissions — read-only on most repos, with no packages
+    # scope at all, so the pull would 403 after CI had already gone green.
+    permissions:
+      contents: read
+      packages: read
     # Create this environment in repo Settings to gate deploys behind a manual
     # approval, or leave it ungated for continuous deployment.
     environment: production
@@ -125,7 +132,12 @@ jobs:
           # -e so the pull failing does not silently proceed to the deploy.
           script: |
             set -e
-            cd ${{ vars.DEPLOY_PATH }}
+            # An unset DEPLOY_PATH interpolates to nothing, and a bare `cd` goes
+            # to $HOME — the deploy would then fail somewhere confusing instead
+            # of here, naming the cause.
+            DEPLOY_PATH='${{ vars.DEPLOY_PATH }}'
+            [ -n "$DEPLOY_PATH" ] || { echo "DEPLOY_PATH repository variable is not set"; exit 1; }
+            cd "$DEPLOY_PATH"
             git fetch --all --prune
             git checkout --force ${{ needs.build.outputs.tag }}
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
