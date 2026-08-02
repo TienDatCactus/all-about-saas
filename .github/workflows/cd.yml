@@ -163,8 +163,8 @@ jobs:
         # which container-internal probes cannot see.
         run: |
           set -e
-          for url in "https://${{ vars.PUBLIC_WEB_URL || 'twinfoundry.org' }}" \
-                     "https://${{ vars.PUBLIC_API_URL || 'api.twinfoundry.org' }}/health/ready"; do
+          for url in "https://${{ vars.PUBLIC_WEB_URL }}" \
+                     "https://${{ vars.PUBLIC_API_URL }}/health/ready"; do
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$url")
             echo "$url -> $code"
             [ "$code" = "200" ] || { echo "Smoke test failed for $url"; exit 1; }
