@@ -17,7 +17,7 @@ export class ParticipantInputDto {
 	/** Display name — a free-text guest name, or a snapshot of the linked user's name. */
 	@IsString()
 	@MaxLength(120)
-	name: string;
+	name!: string;
 
 	/** Played fraction of the session, 0..1 (drives the time-proportional court split). Defaults to 1. */
 	@IsOptional()
