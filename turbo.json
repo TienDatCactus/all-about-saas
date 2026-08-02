@@ -10,7 +10,14 @@
       "dependsOn": ["^lint"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      // `^build`, not just `^check-types`. @transactional/emails publishes its
+      // types from dist/index.d.ts, so apps/api cannot resolve the package until
+      // that package has actually been BUILT — and `check-types` is `tsc
+      // --noEmit`, which by definition emits nothing. On a developer machine
+      // dist/ is left over from an earlier build and everything looks fine; on a
+      // fresh clone (i.e. CI) it does not exist and the API fails with
+      // "Cannot find module '@transactional/emails'".
+      "dependsOn": ["^check-types", "^build"]
     },
     "test": {
       "dependsOn": ["^build"]
