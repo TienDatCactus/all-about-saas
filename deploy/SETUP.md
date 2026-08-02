@@ -2,15 +2,24 @@
 
 Ubuntu 22.04/24.04. Roughly 30 minutes, most of it waiting on DNS.
 
-Run in this order. Each phase is verifiable on its own, so when something breaks
-there is exactly one candidate rather than five.
+**Every command block below is labelled with where it runs.** Three different
+machines are involved and mixing them up is the main way this goes wrong:
+
+| Label | Where | Prompt looks like |
+|---|---|---|
+| 💻 **LOCAL** | your own computer | `you@laptop:~$` |
+| 🖥️ **SERVER (root)** | the VPS, as `root` | `root@instance-…:~#` |
+| 🖥️ **SERVER (deploy)** | the VPS, as the `deploy` user | `deploy@instance-…:~$` |
+| 🌐 **BROWSER** | GitHub / your DNS provider | — |
+
+Run the phases in order. Each is verifiable on its own, so when something breaks
+there is exactly one candidate cause rather than five.
 
 ---
 
-## Phase 0 — DNS first (do this before anything else)
+## Phase 0 — DNS
 
-Both records must point at the new VPS **and have propagated** before certbot
-runs, or ACME validation fails and Let's Encrypt rate-limits repeated attempts.
+🌐 **BROWSER** — at your DNS provider:
 
 | Type | Name | Value |
 |---|---|---|
@@ -18,130 +27,151 @@ runs, or ACME validation fails and Let's Encrypt rate-limits repeated attempts.
 | A | `www` | new VPS IP |
 | A | `api` | new VPS IP |
 
-Verify from your machine, not the server:
+💻 **LOCAL** — confirm they resolve before going further. Certbot fails if they
+do not, and Let's Encrypt rate-limits repeated attempts:
 
 ```bash
 dig +short twinfoundry.org api.twinfoundry.org
 ```
 
-Both must return the new IP. If you moved from an old VPS, wait out the old
-record's TTL.
+Both must return the new IP. Migrating from an old VPS? Wait out the old
+record's TTL first.
 
 ---
 
-## Phase 1 — Host preparation (as root)
+## Phase 1 — Host preparation
+
+💻 **LOCAL** — connect as root (your provider's initial credentials):
 
 ```bash
 ssh root@<vps-ip>
+```
+
+🖥️ **SERVER (root)** — everything from here until Phase 2 runs on the VPS:
+
+```bash
 git clone https://github.com/TienDatCactus/all-about-saas /tmp/aas
-less /tmp/aas/deploy/bootstrap-vps.sh     # read before running
+less /tmp/aas/deploy/bootstrap-vps.sh     # read it before you run it
 bash /tmp/aas/deploy/bootstrap-vps.sh
 ```
 
-Installs and configures: security updates (unattended), swap, a non-root
-`deploy` user, Docker from the official repo, ufw + a DOCKER-USER chain rule,
-fail2ban, journald caps, nginx, certbot. Idempotent — re-run it freely.
+Installs: unattended security updates, chrony, swap, the non-root `deploy`
+user, Docker from the official repo, ufw + a DOCKER-USER chain rule, fail2ban,
+journald caps, nginx, certbot. Idempotent — safe to re-run.
 
-**Verify:**
+🖥️ **SERVER (root)** — verify:
 
 ```bash
-docker compose version     # v2.x
-ufw status verbose         # 22, 80, 443 allowed; default deny incoming
+docker compose version                              # v2.x
+ufw status verbose                                  # 22, 80, 443; default deny in
 systemctl is-active docker nginx fail2ban chrony
 swapon --show
 ```
+
+**Stay logged in as root** for Phase 2 — you will need this session as a
+lifeline.
 
 ---
 
 ## Phase 2 — SSH keys, then lock SSH down
 
-There are **three** SSH relationships here and **two** keypairs, which is the
-usual source of confusion. One rule settles all of it: *the private key lives
-with whoever initiates the connection; the public key goes on whoever accepts
-it.*
+Three SSH relationships, two keypairs. One rule settles all of it: *the private
+key lives with whoever initiates the connection; the public key goes on whoever
+accepts it.*
 
 | Connection | Private key lives | Public key goes |
 |---|---|---|
 | GitHub Actions → VPS | GitHub Secret `DEPLOY_SSH_KEY` | VPS `/home/deploy/.ssh/authorized_keys` |
-| You → VPS | your laptop `~/.ssh/aas_deploy` | the same `authorized_keys` |
-| VPS → GitHub (`git fetch`, Phase 3) | VPS `~/.ssh/id_ed25519` | repo → Deploy keys |
+| You → VPS | 💻 laptop `~/.ssh/aas_deploy` | the same `authorized_keys` |
+| VPS → GitHub (Phase 3) | 🖥️ VPS `~/.ssh/id_ed25519` | repo → Deploy keys |
 
-So `aas_deploy` is used by two clients — you and GitHub Actions — and **neither
-of them is the VPS**. Its private half must never be copied onto the server.
+`aas_deploy` is used by two clients — you and GitHub Actions — and **neither is
+the VPS**. Its private half must never be copied onto the server.
 
-Two separate keypairs on purpose: if the VPS is ever compromised, the attacker
-gets read access to the repository, not the key that grants shell access to the
-VPS.
+Two separate keypairs on purpose: if the VPS is compromised, the attacker gets
+read access to the repository, not the key granting shell access to the VPS.
 
-**On your laptop**, generate a deploy-only keypair — not a reused personal key,
-since this one goes into GitHub Secrets and its blast radius should be one host:
+💻 **LOCAL** — in a *new terminal on your laptop*, not the SSH session:
 
 ```bash
 ssh-keygen -t ed25519 -C "gh-actions-deploy" -f ~/.ssh/aas_deploy -N ""
 
 # sends ONLY the .pub half to the server
 ssh-copy-id -i ~/.ssh/aas_deploy.pub deploy@<vps-ip>
-
-# private half -> GitHub Secrets -> DEPLOY_SSH_KEY, whole file including
-# the -----BEGIN----- / -----END----- lines
-cat ~/.ssh/aas_deploy
 ```
 
-Generate it here rather than on the server: otherwise the private half has to
-travel *off* the VPS to reach GitHub Secrets — through scrollback, shell
-history, a clipboard manager, a server backup — and a key that has travelled is
-one you can no longer reason about.
+Generated on the laptop deliberately: otherwise the private half must travel
+*off* the VPS to reach GitHub Secrets — through scrollback, shell history, a
+clipboard manager, a server backup — and a key that has travelled is one you can
+no longer reason about.
 
-**Verify in a second terminal, keeping your root session open:**
+💻 **LOCAL** — verify the key works **before** disabling passwords:
 
 ```bash
 ssh -i ~/.ssh/aas_deploy deploy@<vps-ip> 'docker ps && echo OK'
 ```
 
-Only after that prints `OK`, harden SSH from the root session:
+Only once that prints `OK`:
+
+🖥️ **SERVER (root)** — back in your still-open root session:
 
 ```bash
-sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/'                      /etc/ssh/sshd_config
-sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/'        /etc/ssh/sshd_config
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/'                           /etc/ssh/sshd_config
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/'             /etc/ssh/sshd_config
 sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
 sshd -t && systemctl reload ssh
 ```
 
-`sshd -t` validates the config before reload. Skipping the verification step
-above is the single most common way to lock yourself out of a VPS.
+`sshd -t` validates before reloading. Skipping the verification step above is
+the single most common way to lock yourself out of a VPS.
+
+💻 **LOCAL** — capture the host fingerprint for GitHub (Phase 7):
+
+```bash
+ssh-keyscan -t ed25519 <vps-ip> | ssh-keygen -lf - | awk '{print $2}'
+```
 
 ---
 
-## Phase 3 — Repository access
+## Phase 3 — Repository access for the server
 
-`scripts/deploy.sh` runs `git fetch` on every deploy, so the server needs read
-access permanently — not just for the first clone.
+`scripts/deploy.sh` runs `git fetch` on **every** deploy, so the server needs
+read access permanently — not just for the first clone.
 
-**If the repo is public:** nothing to do; clone over HTTPS.
+**Public repo:** nothing to do, clone over HTTPS in Phase 4. Skip to Phase 4.
 
-**If private**, add a read-only deploy key. This one **is** generated on the
-VPS — here the VPS is the client, connecting out to GitHub, so its private half
-belongs there and never leaves. Same rule as Phase 2, opposite direction.
+**Private repo** — this key *is* generated on the VPS, because here the VPS is
+the client connecting out to GitHub. Same rule, opposite direction.
+
+💻 **LOCAL** — log in as the deploy user:
 
 ```bash
 ssh -i ~/.ssh/aas_deploy deploy@<vps-ip>
+```
+
+🖥️ **SERVER (deploy)**:
+
+```bash
 ssh-keygen -t ed25519 -C "vps-readonly" -f ~/.ssh/id_ed25519 -N ""
 cat ~/.ssh/id_ed25519.pub
 ```
 
-Paste that into **repo → Settings → Deploy keys → Add**, leave *Allow write
-access* **unchecked**, then confirm:
+🌐 **BROWSER** — repo → Settings → Deploy keys → **Add deploy key**. Paste it.
+Leave *Allow write access* **unchecked**.
+
+🖥️ **SERVER (deploy)** — confirm:
 
 ```bash
-ssh -T git@github.com     # "You've successfully authenticated"
+ssh -T git@github.com      # "You've successfully authenticated"
 ```
 
 ---
 
-## Phase 4 — Clone and configure (as `deploy`)
+## Phase 4 — Clone and configure the app
+
+🖥️ **SERVER (deploy)** — all of Phase 4 runs as the `deploy` user:
 
 ```bash
-ssh -i ~/.ssh/aas_deploy deploy@<vps-ip>
 git clone <repo-url> /srv/all-about-saas
 cd /srv/all-about-saas
 
@@ -152,13 +182,17 @@ chmod 600 secrets/*
 ```
 
 `tr -d '\r\n'` is not optional. A trailing byte means Postgres initialises with
-one password and the API sends another, and the only symptom is
+one password while the API sends another, and the only symptom is
 `password authentication failed` with nothing visibly wrong on either side.
+
+🖥️ **SERVER (deploy)** — still in `/srv/all-about-saas`:
 
 ```bash
 cp .env.prod.example .env.prod
 nano .env.prod
 ```
+
+🖥️ **SERVER (deploy)** — the contents to write into that file:
 
 ```dotenv
 DOMAIN=twinfoundry.org
@@ -168,7 +202,7 @@ DATABASE_USER=aas
 DATABASE_NAME=aas
 FRONTEND_URL=https://twinfoundry.org
 VITE_API_BASE_URL=https://api.twinfoundry.org
-# lowercase — GHCR rejects capitals, and your org name has them
+# lowercase — GHCR rejects capitals, and the org name has them
 API_IMAGE=ghcr.io/tiendatcactus/all-about-saas-api
 WEB_IMAGE=ghcr.io/tiendatcactus/all-about-saas-web
 BACKUP_KEEP_DAYS=14
@@ -179,7 +213,10 @@ BACKUP_INTERVAL_SECONDS=86400
 
 ## Phase 5 — nginx and TLS
 
+🖥️ **SERVER (deploy)** — `sudo` is scoped to nginx reload for this user:
+
 ```bash
+cd /srv/all-about-saas
 sudo certbot --nginx -d twinfoundry.org -d www.twinfoundry.org -d api.twinfoundry.org
 
 sudo mkdir -p /etc/nginx/snippets
@@ -189,11 +226,15 @@ sudo ln -sf /etc/nginx/sites-available/twinfoundry.org /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-**Verify renewal actually works** — a certificate that cannot renew is a 90-day
-timer on an outage:
+> If `certbot` or `cp` is refused, the bootstrap's narrow sudo rule does not
+> cover them. Run these four as **SERVER (root)** instead — they are one-time
+> setup, not part of any deploy.
+
+🖥️ **SERVER (root)** — verify renewal works. A certificate that cannot renew is
+a 90-day timer on an outage:
 
 ```bash
-sudo certbot renew --dry-run
+certbot renew --dry-run
 systemctl list-timers | grep certbot
 ```
 
@@ -203,83 +244,103 @@ systemctl list-timers | grep certbot
 
 Do this before letting CI drive, so a failure has one possible cause.
 
+🌐 **BROWSER** — create a PAT with `read:packages` scope
+(github.com/settings/tokens).
+
+🖥️ **SERVER (deploy)**:
+
 ```bash
 cd /srv/all-about-saas
-echo <github-PAT-with-read:packages> | docker login ghcr.io -u TienDatCactus --password-stdin
+echo <that-PAT> | docker login ghcr.io -u TienDatCactus --password-stdin
 IMAGE_TAG=latest ./scripts/deploy.sh
 ```
 
-**Verify:**
+🖥️ **SERVER (deploy)** — verify:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.prod ps   # all healthy
-curl -s https://api.twinfoundry.org/health/ready                    # database: "up"
-curl -sI https://twinfoundry.org | head -1                          # 200
+docker compose -f docker-compose.prod.yml --env-file .env.prod ps    # all healthy
 ```
 
-Then the check nothing else covers — that `X-Forwarded-For` reaches the API.
-Log in through the site, then:
+💻 **LOCAL** — verify from outside, which is what actually matters:
+
+```bash
+curl -s  https://api.twinfoundry.org/health/ready     # database: "up"
+curl -sI https://twinfoundry.org | head -1            # 200
+```
+
+🌐 **BROWSER** — sign up and log in at `https://twinfoundry.org`. Then the check
+nothing else covers:
+
+🖥️ **SERVER (deploy)**:
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.prod exec postgres \
   psql -U aas -d aas -c 'SELECT "ipAddress" FROM session ORDER BY "createdAt" DESC LIMIT 1;'
 ```
 
-Your real public IP means per-client rate limiting works. `127.0.0.1` or
-`172.x.x.x` means the proxy snippet is not loaded, and the 5/min login limit is
+Your real public IP → per-client rate limiting works. `127.0.0.1` or
+`172.x.x.x` → the proxy snippet is not loaded, and the 5/min login limit is
 currently shared by the entire internet.
 
 ---
 
 ## Phase 7 — Hand over to CI
 
-**Settings → Secrets and variables → Actions**, scoped to the **`AAS`**
-environment (the deploy job declares `environment: AAS`; a mismatch makes every
-secret resolve to an empty string with no warning).
+🌐 **BROWSER** — repo → Settings → Secrets and variables → Actions, scoped to
+the **`AAS`** environment. The deploy job declares `environment: AAS`; a
+mismatch makes every secret resolve to an empty string with no warning.
 
-| Secret | Value |
-|---|---|
-| `DEPLOY_HOST` | VPS IP |
-| `DEPLOY_USER` | `deploy` |
-| `DEPLOY_SSH_KEY` | contents of `~/.ssh/aas_deploy`, including the BEGIN/END lines |
-| `SSH_HOST_FINGERPRINT` | `ssh-keyscan -t ed25519 <ip> \| ssh-keygen -lf - \| awk '{print $2}'` |
+| Secret | Value | Where you got it |
+|---|---|---|
+| `DEPLOY_HOST` | VPS IP | your provider |
+| `DEPLOY_USER` | `deploy` | — |
+| `DEPLOY_SSH_KEY` | 💻 `cat ~/.ssh/aas_deploy` — whole file, BEGIN/END lines included | Phase 2 |
+| `SSH_HOST_FINGERPRINT` | the `SHA256:…` string | Phase 2 |
 
-Variables — required, because the smoke-test step reads them without a default:
+Variables — `PUBLIC_WEB_URL` and `PUBLIC_API_URL` are **required** (the
+smoke-test step reads them with no default):
 
 | Variable | Value |
 |---|---|
 | `PUBLIC_WEB_URL` | `twinfoundry.org` |
 | `PUBLIC_API_URL` | `api.twinfoundry.org` |
-| `DEPLOY_PATH` | `/srv/all-about-saas` (optional; defaults to this) |
-| `VITE_API_BASE_URL` | `https://api.twinfoundry.org` (optional; defaults to this) |
+| `DEPLOY_PATH` | `/srv/all-about-saas` — optional, defaults to this |
+| `VITE_API_BASE_URL` | `https://api.twinfoundry.org` — optional, defaults to this |
 
-Then push to `main` and watch **Actions → CD**.
+💻 **LOCAL** — push and watch Actions → CD:
+
+```bash
+git push origin main
+```
 
 ---
 
 # Making it bullet-proof
 
-The setup above is solid. These are what separate "it works" from "it keeps
-working when something goes wrong at 3am".
+The setup above is solid. These separate "it works" from "it keeps working when
+something goes wrong at 3am".
 
-### 1. Offsite backups — the only one that is non-negotiable
+### 1. Offsite backups — the only non-negotiable one
 
 The `backup` sidecar dumps to `./backups` **on the same disk as the database**.
 That protects against `DROP TABLE`, not against the disk failing — which is the
 failure it exists for.
 
+🖥️ **SERVER (deploy)**:
+
 ```bash
 sudo apt-get install -y rclone
-rclone config          # add an S3 / B2 / Drive remote named e.g. "offsite"
+rclone config                    # add an S3 / B2 / Drive remote, e.g. "offsite"
 echo 'BACKUP_REMOTE=offsite:aas-backups/postgres' >> /srv/all-about-saas/.env.prod
 crontab -e
 #  15 4 * * * cd /srv/all-about-saas && ./scripts/backup-db.sh >> /var/log/aas-backup.log 2>&1
 ```
 
-**Then prove a restore works**, because an untested backup is a hypothesis:
+🖥️ **SERVER (deploy)** — then **prove a restore works**, because an untested
+backup is a hypothesis:
 
 ```bash
-./scripts/backup-db.sh --verify-latest
+cd /srv/all-about-saas && ./scripts/backup-db.sh --verify-latest
 ```
 
 Put a monthly reminder on that. Backups rot silently — a schema change, a
@@ -287,19 +348,19 @@ Postgres major upgrade, a full disk mid-dump.
 
 ### 2. External uptime monitoring
 
-The one thing the server cannot do for itself is notice it is down. Point a free
-monitor (UptimeRobot, Betterstack, Healthchecks.io) at
+🌐 **BROWSER** — the one thing a server cannot do is notice it is down. Point a
+free monitor (UptimeRobot, Betterstack, Healthchecks.io) at
 `https://api.twinfoundry.org/health/ready` every 5 minutes. That endpoint fails
-when Postgres is unreachable, so it catches a dead database, not just a dead
-process.
-
-Add a second check on `https://twinfoundry.org`.
+when Postgres is unreachable, so it catches a dead *database*, not just a dead
+process. Add a second check on `https://twinfoundry.org`.
 
 ### 3. Auto-restart on *unhealthy*, not just on exit
 
-`restart: unless-stopped` restarts a container that **exits**. A container that
-is running but failing its healthcheck — wedged event loop, exhausted pool —
-stays up forever. Docker has no built-in fix:
+`restart: unless-stopped` restarts a container that **exits**. One that is
+running but failing its healthcheck — wedged event loop, exhausted pool — stays
+broken forever. Docker has no built-in answer.
+
+🖥️ **SERVER (deploy)**:
 
 ```bash
 docker run -d --name autoheal --restart unless-stopped \
@@ -308,56 +369,65 @@ docker run -d --name autoheal --restart unless-stopped \
   willfarrell/autoheal
 ```
 
-Trade-off worth knowing: it mounts the Docker socket, which is root-equivalent.
-Acceptable for a single-tenant VPS you control; not something to run casually.
+Trade-off: it mounts the Docker socket, which is root-equivalent. Fine on a
+single-tenant VPS you control; not something to run casually.
 
-### 4. Disk space alerting
+### 4. Disk alerting
 
 Postgres and Docker images fill disks quietly, and Postgres does not fail
 gracefully when it runs out.
 
+🖥️ **SERVER (root)**:
+
 ```bash
-sudo tee /etc/cron.daily/disk-alert >/dev/null <<'EOF'
+tee /etc/cron.daily/disk-alert >/dev/null <<'EOF'
 #!/bin/sh
 USE=$(df / --output=pcent | tr -dc '0-9')
 [ "$USE" -lt 85 ] || echo "Disk at ${USE}% on $(hostname)" | \
   mail -s "DISK WARNING $(hostname)" you@example.com
 EOF
-sudo chmod +x /etc/cron.daily/disk-alert
-docker system prune -af --filter "until=720h"   # monthly, keeps recent rollback images
+chmod +x /etc/cron.daily/disk-alert
 ```
 
-### 5. Know your rollback before you need it
+🖥️ **SERVER (deploy)** — monthly, keeps recent images for rollback:
 
 ```bash
-# From CI: Actions → CD → Run workflow → image_tag = <older sha>
-# On the box:
+docker system prune -af --filter "until=720h"
+```
+
+### 5. Rehearse the rollback before you need it
+
+🌐 **BROWSER**: Actions → CD → Run workflow → `image_tag` = an older SHA.
+
+🖥️ **SERVER (deploy)**:
+
+```bash
 cd /srv/all-about-saas && IMAGE_TAG=<older-sha> ./scripts/deploy.sh
 ```
 
-Do this once, deliberately, while nothing is wrong. A rollback path you have
-never exercised is not a rollback path.
+Do it once, deliberately, while nothing is wrong. A rollback path you have never
+exercised is not a rollback path.
 
-Remember migrations do **not** roll back automatically, and that is intentional:
-an expand/contract migration is written to be compatible with the previous app
-version, so reverting the app is safe where reverting committed schema can
-destroy data the old code cannot reconstruct.
+Migrations do **not** roll back automatically, by design: an expand/contract
+migration is written to stay compatible with the previous app version, so
+reverting the app is safe where reverting committed schema can destroy data the
+old code cannot reconstruct.
 
 ### 6. Postgres major upgrades
 
-`postgres:16-alpine` is pinned. Bumping to 17 will **not** work by simply
-changing the tag — the data directory format differs and the container will
-refuse to start. That is a planned migration: dump, upgrade, restore, verify.
-Pinning is what stops it happening by accident.
+`postgres:16-alpine` is pinned. Changing the tag to 17 will **not** work — the
+data directory format differs and the container refuses to start. That is a
+planned migration: dump, upgrade, restore, verify. The pin is what stops it
+happening by accident.
 
 ### 7. Rotate the JWT secret only deliberately
 
 Replacing `secrets/jwt_secret` invalidates every access and refresh token in
-circulation and logs out every user at once. That is the right lever after a
-suspected compromise, and the wrong thing to do casually.
+circulation and signs out every user at once. Right lever after a suspected
+compromise; wrong thing to do casually.
 
-### 8. Snapshots
+### 8. Provider snapshots
 
-Most providers offer automatic volume snapshots for a few dollars a month.
-Enable them. They recover from the mistakes no application-level backup
-covers — `rm -rf` in the wrong directory, a bad `docker compose down -v`.
+🌐 **BROWSER** — most providers offer automatic volume snapshots for a few
+dollars a month. Enable them. They cover the mistakes no application-level
+backup does: `rm -rf` in the wrong directory, a stray `docker compose down -v`.
