@@ -55,13 +55,42 @@ swapon --show
 
 ## Phase 2 — SSH keys, then lock SSH down
 
-Generate a **deploy-only** keypair on your laptop. Not a reused personal key:
-this one lives in GitHub Secrets, and its blast radius should be one server.
+There are **three** SSH relationships here and **two** keypairs, which is the
+usual source of confusion. One rule settles all of it: *the private key lives
+with whoever initiates the connection; the public key goes on whoever accepts
+it.*
+
+| Connection | Private key lives | Public key goes |
+|---|---|---|
+| GitHub Actions → VPS | GitHub Secret `DEPLOY_SSH_KEY` | VPS `/home/deploy/.ssh/authorized_keys` |
+| You → VPS | your laptop `~/.ssh/aas_deploy` | the same `authorized_keys` |
+| VPS → GitHub (`git fetch`, Phase 3) | VPS `~/.ssh/id_ed25519` | repo → Deploy keys |
+
+So `aas_deploy` is used by two clients — you and GitHub Actions — and **neither
+of them is the VPS**. Its private half must never be copied onto the server.
+
+Two separate keypairs on purpose: if the VPS is ever compromised, the attacker
+gets read access to the repository, not the key that grants shell access to the
+VPS.
+
+**On your laptop**, generate a deploy-only keypair — not a reused personal key,
+since this one goes into GitHub Secrets and its blast radius should be one host:
 
 ```bash
 ssh-keygen -t ed25519 -C "gh-actions-deploy" -f ~/.ssh/aas_deploy -N ""
+
+# sends ONLY the .pub half to the server
 ssh-copy-id -i ~/.ssh/aas_deploy.pub deploy@<vps-ip>
+
+# private half -> GitHub Secrets -> DEPLOY_SSH_KEY, whole file including
+# the -----BEGIN----- / -----END----- lines
+cat ~/.ssh/aas_deploy
 ```
+
+Generate it here rather than on the server: otherwise the private half has to
+travel *off* the VPS to reach GitHub Secrets — through scrollback, shell
+history, a clipboard manager, a server backup — and a key that has travelled is
+one you can no longer reason about.
 
 **Verify in a second terminal, keeping your root session open:**
 
@@ -90,7 +119,9 @@ access permanently — not just for the first clone.
 
 **If the repo is public:** nothing to do; clone over HTTPS.
 
-**If private**, add a read-only deploy key:
+**If private**, add a read-only deploy key. This one **is** generated on the
+VPS — here the VPS is the client, connecting out to GitHub, so its private half
+belongs there and never leaves. Same rule as Phase 2, opposite direction.
 
 ```bash
 ssh -i ~/.ssh/aas_deploy deploy@<vps-ip>
