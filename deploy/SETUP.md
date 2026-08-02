@@ -55,6 +55,14 @@ less /tmp/aas/deploy/bootstrap-vps.sh     # read it before you run it
 bash /tmp/aas/deploy/bootstrap-vps.sh
 ```
 
+**Shortcut worth taking:** generate your deploy key first (Phase 2's first
+command), then pass the public half here — it saves a step and avoids the
+`ssh-copy-id` trap described in Phase 2:
+
+```bash
+DEPLOY_PUBKEY="<paste contents of ~/.ssh/aas_deploy.pub>" bash /tmp/aas/deploy/bootstrap-vps.sh
+```
+
 Installs: unattended security updates, chrony, swap, the non-root `deploy`
 user, Docker from the official repo, ufw + a DOCKER-USER chain rule, fail2ban,
 journald caps, nginx, certbot. Idempotent — safe to re-run.
@@ -95,15 +103,37 @@ read access to the repository, not the key granting shell access to the VPS.
 
 ```bash
 ssh-keygen -t ed25519 -C "gh-actions-deploy" -f ~/.ssh/aas_deploy -N ""
-
-# sends ONLY the .pub half to the server
-ssh-copy-id -i ~/.ssh/aas_deploy.pub deploy@<vps-ip>
 ```
 
 Generated on the laptop deliberately: otherwise the private half must travel
 *off* the VPS to reach GitHub Secrets — through scrollback, shell history, a
 clipboard manager, a server backup — and a key that has travelled is one you can
 no longer reason about.
+
+💻 **LOCAL** — install the public half **through root**, not with
+`ssh-copy-id`:
+
+```bash
+cat ~/.ssh/aas_deploy.pub | ssh root@<vps-ip> \
+  'install -d -m700 -o deploy -g deploy /home/deploy/.ssh \
+   && cat >> /home/deploy/.ssh/authorized_keys \
+   && chown deploy:deploy /home/deploy/.ssh/authorized_keys \
+   && chmod 600 /home/deploy/.ssh/authorized_keys \
+   && echo INSTALLED'
+```
+
+> **Why not `ssh-copy-id`?** The bootstrap creates `deploy` with
+> `--disabled-password`, so the account has no password and never will.
+> `ssh-copy-id` has to log in *as that user* to append the key — but the key is
+> the only credential it would have, and it is not installed yet. It fails with
+> an unanswerable password prompt. Root is the way in until the key exists.
+>
+> Cleaner still: pass the key to the bootstrap script and skip this entirely —
+> `DEPLOY_PUBKEY="$(cat ~/.ssh/aas_deploy.pub)" bash bootstrap-vps.sh`.
+
+Only `chmod 600` and a `700` `.ssh` directory will do: sshd silently ignores an
+`authorized_keys` that is group- or world-writable, and tells the client nothing
+beyond `Permission denied`.
 
 💻 **LOCAL** — verify the key works **before** disabling passwords:
 

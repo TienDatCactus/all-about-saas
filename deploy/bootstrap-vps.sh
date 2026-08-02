@@ -17,6 +17,18 @@ DEPLOY_USER="${DEPLOY_USER:-deploy}"
 APP_DIR="${APP_DIR:-/srv/all-about-saas}"
 SWAP_GB="${SWAP_GB:-2}"
 
+# Public key to install for the deploy user. Strongly recommended:
+#
+#   DEPLOY_PUBKEY="$(cat ~/.ssh/aas_deploy.pub)" bash bootstrap-vps.sh
+#
+# The user is created with --disabled-password, so it has no password and never
+# will. That means `ssh-copy-id` CANNOT be used to add the key afterwards —
+# ssh-copy-id has to log in as that user to append it, and there is no
+# credential to log in with. Installing the key here, while we are already root,
+# is the only step that closes that loop. Left unset, the script prints the
+# recovery command instead.
+DEPLOY_PUBKEY="${DEPLOY_PUBKEY:-}"
+
 [ "$(id -u)" -eq 0 ] || { echo "Run as root."; exit 1; }
 
 step() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
@@ -79,9 +91,27 @@ EOF
 chmod 440 /etc/sudoers.d/90-"$DEPLOY_USER"
 
 install -d -m 700 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "/home/$DEPLOY_USER/.ssh"
-touch "/home/$DEPLOY_USER/.ssh/authorized_keys"
-chown "$DEPLOY_USER:$DEPLOY_USER" "/home/$DEPLOY_USER/.ssh/authorized_keys"
-chmod 600 "/home/$DEPLOY_USER/.ssh/authorized_keys"
+AUTH_KEYS="/home/$DEPLOY_USER/.ssh/authorized_keys"
+touch "$AUTH_KEYS"
+chown "$DEPLOY_USER:$DEPLOY_USER" "$AUTH_KEYS"
+# sshd silently ignores authorized_keys if it is group- or world-writable, and
+# reports nothing more useful than "Permission denied" to the client.
+chmod 600 "$AUTH_KEYS"
+
+if [ -n "$DEPLOY_PUBKEY" ]; then
+	# Appended, not overwritten — re-running must not evict a key that already
+	# works. grep -qF makes it idempotent.
+	if grep -qF "$DEPLOY_PUBKEY" "$AUTH_KEYS" 2>/dev/null; then
+		note "public key already present"
+	else
+		printf '%s\n' "$DEPLOY_PUBKEY" >>"$AUTH_KEYS"
+		note "installed public key for $DEPLOY_USER"
+	fi
+	KEY_INSTALLED=yes
+else
+	KEY_INSTALLED=no
+	note "DEPLOY_PUBKEY not set — no key installed (recovery command printed at the end)"
+fi
 
 # ---------------------------------------------------------------------------
 step "4/10  Docker (official repo)"
@@ -211,9 +241,30 @@ cat <<EOF
 Host prepared. NOTHING is deployed yet, and password SSH is still enabled.
 
 NEXT, in order — do not skip the verification step:
+EOF
 
- 1. Install your public key for the deploy user:
-      ssh-copy-id -i ~/.ssh/aas_deploy.pub $DEPLOY_USER@<this-host>
+if [ "$KEY_INSTALLED" = no ]; then
+	cat <<EOF
+
+ 1. Install your public key. NOTE: ssh-copy-id will NOT work — $DEPLOY_USER was
+    created with --disabled-password, so it has no credential to authenticate
+    with, and ssh-copy-id needs to log in as that user to append the key.
+    Push it through root instead, FROM YOUR LAPTOP:
+
+      cat ~/.ssh/aas_deploy.pub | ssh root@<this-host> \\
+        'cat >> /home/$DEPLOY_USER/.ssh/authorized_keys'
+
+    Or re-run this script with the key:
+      DEPLOY_PUBKEY="\$(cat ~/.ssh/aas_deploy.pub)" bash bootstrap-vps.sh
+EOF
+else
+	cat <<EOF
+
+ 1. Public key already installed for $DEPLOY_USER. (Skip.)
+EOF
+fi
+
+cat <<EOF
 
  2. VERIFY it works, in a SECOND terminal, keeping this session open:
       ssh -i ~/.ssh/aas_deploy $DEPLOY_USER@<this-host> 'docker ps'
