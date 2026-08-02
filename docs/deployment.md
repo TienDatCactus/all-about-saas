@@ -149,14 +149,31 @@ ssh-copy-id -i ~/.ssh/aas_deploy.pub <user>@<host>
 # private half (~/.ssh/aas_deploy) → DEPLOY_SSH_KEY
 ```
 
-### Variables (not secrets — these are public by nature)
+### Scope the secrets to the right environment
 
-| Name | Value |
+The deploy job declares `environment: AAS`. **Environment** secrets are injected
+only into jobs naming that exact environment — put them under a different
+environment name and every `secrets.*` resolves to an empty string, the run
+still starts, and ssh-action fails with `missing server host` while the secrets
+sit plainly visible in the UI. Repository-level secrets work regardless of
+environment. Either is fine; they just have to agree with the workflow.
+
+### Variables — all optional
+
+| Name | Default if unset |
 |---|---|
 | `DEPLOY_PATH` | `/srv/all-about-saas` |
 | `VITE_API_BASE_URL` | `https://api.twinfoundry.org` |
 | `PUBLIC_WEB_URL` | `twinfoundry.org` |
 | `PUBLIC_API_URL` | `api.twinfoundry.org` |
+
+These are not secrets — the domain is already in `deploy/nginx/`, and
+`VITE_API_BASE_URL` is compiled into public JavaScript. They are defaulted in
+the workflow rather than required, because an unset variable interpolates to an
+empty string and fails far from its cause. `VITE_API_BASE_URL` is the dangerous
+one: empty, the build still succeeds and ships an image whose every API call
+resolves against the web origin — a broken app that passes every automated
+check. Set these only to override.
 
 `VITE_API_BASE_URL` is a variable on purpose: Vite inlines it into the shipped
 JavaScript, so it is public the moment anyone loads the page. Marking it secret

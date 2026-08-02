@@ -96,8 +96,13 @@ jobs:
           # the server. Held as a repository *variable*, not a secret: it ends up
           # in publicly served JavaScript either way, and pretending otherwise
           # would just make it harder to read.
+          #
+          # Defaulted, because an empty value here is the worst outcome: the
+          # build succeeds, the image ships, and every API call in the browser
+          # resolves against the web origin instead — a broken app that passes
+          # every check we have. Set the repository variable to override.
           build-args: |
-            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL || 'https://api.twinfoundry.org' }}
           tags: |
             ${{ steps.meta.outputs.base }}-web:${{ steps.meta.outputs.tag }}
             ${{ steps.meta.outputs.base }}-web:latest
@@ -115,8 +120,11 @@ jobs:
     permissions:
       contents: read
       packages: read
-    # Create this environment in repo Settings to gate deploys behind a manual
-    # approval, or leave it ungated for continuous deployment.
+    # MUST match the environment the secrets are scoped to. Environment secrets
+    # are injected only into jobs naming that exact environment — with a
+    # mismatch every `secrets.*` silently resolves to an empty string and
+    # ssh-action fails with "missing server host" while the secrets plainly
+    # exist in the UI.
     environment: AAS
     steps:
       - name: Deploy over SSH
@@ -126,17 +134,22 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
+          # Pins the server's identity. Without it the first connection trusts
+          # whatever answers, which is a real MITM window. Optional: unset, the
+          # action falls back to accepting the presented key.
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
           # Fail the step if any command fails, rather than reporting success
           # for a deploy that did not happen.
           script_stops: true
           # -e so the pull failing does not silently proceed to the deploy.
           script: |
             set -e
-            # An unset DEPLOY_PATH interpolates to nothing, and a bare `cd` goes
-            # to $HOME — the deploy would then fail somewhere confusing instead
-            # of here, naming the cause.
-            DEPLOY_PATH='${{ vars.DEPLOY_PATH }}'
-            [ -n "$DEPLOY_PATH" ] || { echo "DEPLOY_PATH repository variable is not set"; exit 1; }
+            # Defaulted rather than required. These are not secrets — the domain
+            # is in deploy/nginx/ and the API URL is baked into public
+            # JavaScript — and an unset variable interpolates to an empty string,
+            # which fails somewhere far from the cause. Set the repository
+            # variable only to override.
+            DEPLOY_PATH='${{ vars.DEPLOY_PATH || '/srv/all-about-saas' }}'
             cd "$DEPLOY_PATH"
             git fetch --all --prune
             git checkout --force ${{ needs.build.outputs.tag }}
@@ -150,7 +163,8 @@ jobs:
         # which container-internal probes cannot see.
         run: |
           set -e
-          for url in "https://${{ vars.PUBLIC_WEB_URL }}" "https://${{ vars.PUBLIC_API_URL }}/health/ready"; do
+          for url in "https://${{ vars.PUBLIC_WEB_URL || 'twinfoundry.org' }}" \
+                     "https://${{ vars.PUBLIC_API_URL || 'api.twinfoundry.org' }}/health/ready"; do
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$url")
             echo "$url -> $code"
             [ "$code" = "200" ] || { echo "Smoke test failed for $url"; exit 1; }
