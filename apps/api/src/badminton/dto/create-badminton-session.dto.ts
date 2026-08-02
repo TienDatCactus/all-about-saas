@@ -15,7 +15,7 @@ import { ParticipantInputDto } from './participant-input.dto';
 export class CreateBadmintonSessionDto {
 	/** Date the session was played, 'YYYY-MM-DD'. */
 	@IsDateString()
-	playedOn: string;
+	playedOn!: string;
 
 	@IsOptional()
 	@IsString()
@@ -25,21 +25,21 @@ export class CreateBadmintonSessionDto {
 	/** Court cost, VND (whole number). */
 	@IsInt()
 	@Min(0)
-	courtCost: number;
+	courtCost!: number;
 
 	/** Price per shuttle, VND (whole number). Total shuttle cost = unitPrice × totalShuttleCount. */
 	@IsInt()
 	@Min(0)
-	shuttleUnitPrice: number;
+	shuttleUnitPrice!: number;
 
 	/** Total shuttles used in the session (shared pot). Defaults to 0. */
 	@IsInt()
 	@Min(0)
-	totalShuttleCount: number;
+	totalShuttleCount!: number;
 
 	@IsArray()
 	@ArrayMinSize(1)
 	@ValidateNested({ each: true })
 	@Type(() => ParticipantInputDto)
-	participants: ParticipantInputDto[];
+	participants!: ParticipantInputDto[];
 }
