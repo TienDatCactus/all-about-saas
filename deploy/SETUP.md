@@ -502,10 +502,17 @@ smoke-test step reads them with no default):
 | `VITE_API_BASE_URL` | `https://twinfoundry.org/api` | `https://api.twinfoundry.org` |
 | `DEPLOY_PATH` | `/srv/all-about-saas` | `/srv/all-about-saas` |
 
-`VITE_API_BASE_URL` **must** be set for single domain — the workflow's default is
-the two-domain value, so leaving it unset ships a bundle that calls a host you do
-not have. The smoke test would not catch it: the API answers on `/api` either
-way, and only a browser actually loading the page would fail.
+`VITE_API_BASE_URL` is **required** — the workflow fails the build if it is unset,
+on purpose. Vite welds it into the bundle at build time, and unset means the
+app's own `|| "http://localhost:8000"` fallback ships instead. That produces an
+image which builds, pushes, deploys, goes healthy and **passes the smoke test**,
+while every request from a real browser goes to localhost. The API answers on
+`/api` regardless, so nothing automated notices; the first symptom is a CSP
+violation in someone's console.
+
+Changing it later requires a **rebuild**, not a redeploy. Re-running CD against
+an existing `image_tag` skips the build entirely and reuses the old bundle. Push
+a commit, or run the workflow with `image_tag` blank.
 
 💻 **LOCAL** — push and watch Actions → CD:
 

@@ -84,6 +84,27 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Required, and deliberately NOT defaulted.
+      #
+      # Vite inlines import.meta.env at BUILD time, so this value is welded into
+      # the bundle — no runtime env var on the server can change it. Unset, the
+      # app's own fallback (`|| "http://localhost:8000"`) is what ships, and the
+      # result is an image that builds, pushes, deploys, goes healthy and passes
+      # the smoke test while every request from a real browser goes to localhost.
+      # That exact failure reached production here.
+      #
+      # A default is not the fix: whichever value we pick is wrong for the other
+      # layout, and wrong-but-plausible is harder to diagnose than missing. Fail
+      # the build instead — the one outcome that cannot ship a broken bundle.
+      - name: Require VITE_API_BASE_URL
+        if: steps.meta.outputs.skip_build == 'false'
+        run: |
+          if [ -z "${{ vars.VITE_API_BASE_URL }}" ]; then
+            echo "::error title=VITE_API_BASE_URL is not set::Set the repository variable (Settings -> Secrets and variables -> Actions -> Variables). Single domain: https://twinfoundry.org/api — two domains: https://api.twinfoundry.org. Vite bakes this into the bundle at build time, so an empty value ships the localhost fallback and the deployed app cannot reach its API."
+            exit 1
+          fi
+          echo "VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}"
+
       - name: Build and push web
         if: steps.meta.outputs.skip_build == 'false'
         uses: docker/build-push-action@v6
@@ -91,18 +112,11 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: true
-          # Vite inlines import.meta.env at BUILD time, so the API URL is baked
-          # into the bundle here — it cannot be changed by a runtime env var on
-          # the server. Held as a repository *variable*, not a secret: it ends up
-          # in publicly served JavaScript either way, and pretending otherwise
-          # would just make it harder to read.
-          #
-          # Defaulted, because an empty value here is the worst outcome: the
-          # build succeeds, the image ships, and every API call in the browser
-          # resolves against the web origin instead — a broken app that passes
-          # every check we have. Set the repository variable to override.
+          # Held as a repository *variable*, not a secret: it ends up in publicly
+          # served JavaScript either way, and pretending otherwise would only make
+          # it harder to read.
           build-args: |
-            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL || 'https://api.twinfoundry.org' }}
+            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
           tags: |
             ${{ steps.meta.outputs.base }}-web:${{ steps.meta.outputs.tag }}
             ${{ steps.meta.outputs.base }}-web:latest
