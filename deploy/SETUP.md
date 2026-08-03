@@ -17,25 +17,56 @@ there is exactly one candidate cause rather than five.
 
 ---
 
+## Choose a layout first
+
+Two supported shapes. **Single domain is recommended** — pick it unless you have
+a reason to split.
+
+| | Single domain (recommended) | Two domains |
+|---|---|---|
+| Web | `twinfoundry.org` | `twinfoundry.org` |
+| API | `twinfoundry.org/api` | `api.twinfoundry.org` |
+| nginx file | `twinfoundry.org-single-domain.conf` | `twinfoundry.org.conf` |
+| DNS records | apex + `www` | apex + `www` + `api` |
+| CORS | **none** — same origin | required, and a real source of bugs |
+| CSP `connect-src` | `'self'` | `'self' https://api.…` |
+
+Single domain removes an entire class of failure: no CORS preflights, no
+`SameSite=None` cookie questions, one certificate, one DNS record. The only
+thing you give up is repointing the API to a different host purely via DNS.
+
+> Note: owning `twinfoundry.org` **already includes every subdomain** —
+> `api.twinfoundry.org` is a free DNS record you create, not a separate
+> purchase. So the two-domain option is available to you either way; single
+> domain is just the better default.
+
+Everything below marks where the two paths differ. Pick one and stay on it.
+
+---
+
 ## Phase 0 — DNS
 
 🌐 **BROWSER** — at your DNS provider:
 
-| Type | Name | Value |
-|---|---|---|
-| A | `twinfoundry.org` | new VPS IP |
-| A | `www` | new VPS IP |
-| A | `api` | new VPS IP |
+| Type | Name | Value | Needed for |
+|---|---|---|---|
+| A | `twinfoundry.org` | new VPS IP | both layouts |
+| A | `www` | new VPS IP | both layouts |
+| A | `api` | new VPS IP | **two-domain only** |
 
 💻 **LOCAL** — confirm they resolve before going further. Certbot fails if they
 do not, and Let's Encrypt rate-limits repeated attempts:
 
 ```bash
-dig +short twinfoundry.org api.twinfoundry.org
+# single domain
+dig +short twinfoundry.org www.twinfoundry.org
+
+# two domains — add this
+dig +short api.twinfoundry.org
 ```
 
-Both must return the new IP. Migrating from an old VPS? Wait out the old
-record's TTL first.
+All must return the new IP. Migrating from an old VPS? Wait out the old record's
+TTL first.
 
 ---
 
@@ -57,7 +88,9 @@ bash /tmp/aas/deploy/bootstrap-vps.sh
 
 **Shortcut worth taking:** generate your deploy key first (Phase 2's first
 command), then pass the public half here — it saves a step and avoids the
-`ssh-copy-id` trap described in Phase 2:
+`ssh-copy-id` trap described in Phase 2.
+
+🖥️ **SERVER (root)**:
 
 ```bash
 DEPLOY_PUBKEY="<paste contents of ~/.ssh/aas_deploy.pub>" bash /tmp/aas/deploy/bootstrap-vps.sh
@@ -160,6 +193,7 @@ the single most common way to lock yourself out of a VPS.
 ```bash
 ssh-keyscan -t ed25519 <vps-ip> | ssh-keygen -lf - | awk '{print $2}'
 ```
+SHA256:2xLx4ktHvLNCweF0IlxDWaD0q9ecwRmIuLshiLrPtr4
 
 ---
 
@@ -185,6 +219,7 @@ ssh -i ~/.ssh/aas_deploy deploy@<vps-ip>
 ssh-keygen -t ed25519 -C "vps-readonly" -f ~/.ssh/id_ed25519 -N ""
 cat ~/.ssh/id_ed25519.pub
 ```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvnl1S9n0yBVn4HL2q70humpCN+Ie0HYpsd8PGbVQ9F vps-readonly
 
 🌐 **BROWSER** — repo → Settings → Deploy keys → **Add deploy key**. Paste it.
 Leave *Allow write access* **unchecked**.
@@ -224,14 +259,15 @@ nano .env.prod
 
 🖥️ **SERVER (deploy)** — the contents to write into that file:
 
+**Single domain** (recommended):
+
 ```dotenv
 DOMAIN=twinfoundry.org
-API_DOMAIN=api.twinfoundry.org
 ACME_EMAIL=you@example.com
 DATABASE_USER=aas
 DATABASE_NAME=aas
 FRONTEND_URL=https://twinfoundry.org
-VITE_API_BASE_URL=https://api.twinfoundry.org
+VITE_API_BASE_URL=https://twinfoundry.org/api
 # lowercase — GHCR rejects capitals, and the org name has them
 API_IMAGE=ghcr.io/tiendatcactus/all-about-saas-api
 WEB_IMAGE=ghcr.io/tiendatcactus/all-about-saas-web
@@ -239,22 +275,59 @@ BACKUP_KEEP_DAYS=14
 BACKUP_INTERVAL_SECONDS=86400
 ```
 
+**Two domains** — same as above but with these two lines instead:
+
+```dotenv
+API_DOMAIN=api.twinfoundry.org
+VITE_API_BASE_URL=https://api.twinfoundry.org
+```
+
+`VITE_API_BASE_URL` is compiled into the browser bundle at **image build time**,
+not read at runtime — so changing it here does nothing on its own. CI reads the
+GitHub variable of the same name when it builds the web image (Phase 7); this
+entry only matters if you ever build images on the server.
+
 ---
 
 ## Phase 5 — nginx and TLS
 
-🖥️ **SERVER (deploy)** — `sudo` is scoped to nginx reload for this user:
+🖥️ **SERVER (root)** — **single domain** (recommended):
 
 ```bash
 cd /srv/all-about-saas
-sudo certbot --nginx -d twinfoundry.org -d www.twinfoundry.org -d api.twinfoundry.org
+certbot --nginx -d twinfoundry.org -d www.twinfoundry.org
 
-sudo mkdir -p /etc/nginx/snippets
-sudo cp deploy/nginx/aas-proxy.conf       /etc/nginx/snippets/
-sudo cp deploy/nginx/twinfoundry.org.conf /etc/nginx/sites-available/twinfoundry.org
-sudo ln -sf /etc/nginx/sites-available/twinfoundry.org /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
+mkdir -p /etc/nginx/snippets
+cp deploy/nginx/aas-proxy.conf /etc/nginx/snippets/
+cp deploy/nginx/twinfoundry.org-single-domain.conf \
+   /etc/nginx/sites-available/twinfoundry.org
+ln -sf /etc/nginx/sites-available/twinfoundry.org /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && systemctl reload nginx
 ```
+
+🖥️ **SERVER (root)** — **two domains** instead:
+
+```bash
+cd /srv/all-about-saas
+certbot --nginx -d twinfoundry.org -d www.twinfoundry.org -d api.twinfoundry.org
+
+mkdir -p /etc/nginx/snippets
+cp deploy/nginx/aas-proxy.conf       /etc/nginx/snippets/
+cp deploy/nginx/twinfoundry.org.conf /etc/nginx/sites-available/twinfoundry.org
+ln -sf /etc/nginx/sites-available/twinfoundry.org /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && systemctl reload nginx
+```
+
+Enable **one** of the two — both declare `server_name twinfoundry.org` and nginx
+will refuse or silently pick one.
+
+> Run these as root rather than `deploy`: the bootstrap's sudo rule is
+> deliberately narrow (`systemctl reload nginx` and `nginx -t` only), so
+> `certbot` and writes into `/etc/nginx/` are not covered. Widening it would give
+> the deploy key more power than a deploy needs — and this is one-time setup, not
+> part of any deploy.
 
 > If `certbot` or `cp` is refused, the bootstrap's narrow sudo rule does not
 > cover them. Run these four as **SERVER (root)** instead — they are one-time
@@ -294,7 +367,13 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod ps    # all healt
 💻 **LOCAL** — verify from outside, which is what actually matters:
 
 ```bash
+# single domain
+curl -s  https://twinfoundry.org/api/health/ready     # database: "up"
+
+# two domains
 curl -s  https://api.twinfoundry.org/health/ready     # database: "up"
+
+# both
 curl -sI https://twinfoundry.org | head -1            # 200
 ```
 
@@ -330,12 +409,17 @@ mismatch makes every secret resolve to an empty string with no warning.
 Variables — `PUBLIC_WEB_URL` and `PUBLIC_API_URL` are **required** (the
 smoke-test step reads them with no default):
 
-| Variable | Value |
-|---|---|
-| `PUBLIC_WEB_URL` | `twinfoundry.org` |
-| `PUBLIC_API_URL` | `api.twinfoundry.org` |
-| `DEPLOY_PATH` | `/srv/all-about-saas` — optional, defaults to this |
-| `VITE_API_BASE_URL` | `https://api.twinfoundry.org` — optional, defaults to this |
+| Variable | Single domain | Two domains |
+|---|---|---|
+| `PUBLIC_WEB_URL` | `twinfoundry.org` | `twinfoundry.org` |
+| `PUBLIC_API_URL` | `twinfoundry.org/api` | `api.twinfoundry.org` |
+| `VITE_API_BASE_URL` | `https://twinfoundry.org/api` | `https://api.twinfoundry.org` |
+| `DEPLOY_PATH` | `/srv/all-about-saas` | `/srv/all-about-saas` |
+
+`VITE_API_BASE_URL` **must** be set for single domain — the workflow's default is
+the two-domain value, so leaving it unset ships a bundle that calls a host you do
+not have. The smoke test would not catch it: the API answers on `/api` either
+way, and only a browser actually loading the page would fail.
 
 💻 **LOCAL** — push and watch Actions → CD:
 
