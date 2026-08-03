@@ -221,7 +221,16 @@ services:
         # Baked in at build time — Vite inlines import.meta.env. This is why the
         # CD pipeline must rebuild the web image when the API domain changes; a
         # restart with a new env var will not move it.
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?set VITE_API_BASE_URL}
+        #
+        # Defaulted rather than `:?`-required for the same reason as Caddy's
+        # variables below: Compose evaluates build args even when only pulling,
+        # so a required value here blocks `docker compose pull` on a host that
+        # never builds. CI passes its own --build-arg and does not read this.
+        #
+        # If you DO build on the server, set this explicitly — a wrong value
+        # produces an image that starts fine and whose every API call goes to
+        # the wrong origin.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://twinfoundry.org/api}
     restart: unless-stopped
     logging: *default-logging
     environment:
@@ -272,8 +281,21 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     environment:
-      DOMAIN: ${DOMAIN:?set DOMAIN}
-      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+      # Defaulted, NOT `:?`-required — and that is not laziness.
+      #
+      # Compose interpolates every variable in the whole file BEFORE it applies
+      # profile filtering, so a `${API_DOMAIN:?}` here aborts `docker compose
+      # pull` on a host that will never start Caddy. The profile keeps the
+      # service from running; it does not keep its variables from being
+      # evaluated. A deployment fronted by nginx was failing with
+      # "required variable API_DOMAIN is missing a value" for a container it
+      # does not use.
+      #
+      # Anyone enabling `--profile caddy` is following the Caddy path and will
+      # set these; the placeholders make that obvious if they forget, because
+      # ACME will fail loudly on a domain that cannot resolve.
+      DOMAIN: ${DOMAIN:-caddy-profile-requires-DOMAIN.invalid}
+      API_DOMAIN: ${API_DOMAIN:-caddy-profile-requires-API_DOMAIN.invalid}
     networks: [internal]
     depends_on:
       - api

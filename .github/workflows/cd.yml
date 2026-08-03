@@ -154,7 +154,12 @@ jobs:
             git fetch --all --prune
             git checkout --force ${{ needs.build.outputs.tag }}
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            IMAGE_TAG=${{ needs.build.outputs.tag }} ./scripts/deploy.sh
+            # `bash <script>`, not `./<script>`: invoking it directly depends on
+            # the exec bit surviving into the checkout, and git stores that as
+            # file mode. One commit that lands the script as 100644 — which is
+            # exactly what happened — breaks every deploy with "Permission
+            # denied". bash does not consult the mode.
+            IMAGE_TAG=${{ needs.build.outputs.tag }} bash ./scripts/deploy.sh
             docker logout ghcr.io
 
       - name: Smoke test through the public URL

@@ -35,9 +35,20 @@ log "Deploying $IMAGE_TAG (previous: ${PREVIOUS_TAG:-none})"
 log "Pulling images"
 compose pull api web
 
+# --- database ---------------------------------------------------------------
+# Explicitly, and waited on. The migration job declares
+# `depends_on: postgres: service_healthy`, but the previous version of this
+# script ran it with `--no-deps` — which switches that gate off — so postgres
+# was never started and the migration died on `getaddrinfo ENOTFOUND postgres`.
+# `--wait` blocks until the healthcheck passes, so what follows cannot race it.
+log "Starting database"
+compose up -d --wait postgres
+
 # --- migrate ----------------------------------------------------------------
-# One-shot, before the new api starts. `up` (not `run`) so the service's
-# depends_on/service_healthy gate on postgres applies.
+# `run --rm`, not `up`: `up --exit-code-from migrate` implies
+# --abort-on-container-exit, which tears down every other service the moment the
+# one-shot finishes — including the postgres just started. `run` returns the
+# one-shot's exit code and leaves the rest alone.
 #
 # NOT rolled back automatically on a later failure: an expand/contract migration
 # is designed to be compatible with the previous app version, and blindly
@@ -45,7 +56,7 @@ compose pull api web
 # restore. If the health check below fails, the app rolls back and the schema
 # stays forward — which is the safe direction.
 log "Running migrations"
-compose up --no-deps --exit-code-from migrate migrate
+compose run --rm migrate
 
 # --- swap -------------------------------------------------------------------
 log "Starting api and web"
@@ -88,7 +99,10 @@ if [ "$healthy" != true ]; then
 		log "Rolling back to $PREVIOUS_TAG"
 		# Re-exec rather than duplicating the swap: the rollback path is then the
 		# same code as the deploy path, so it cannot rot from disuse.
-		SKIP_ROLLBACK=1 IMAGE_TAG="$PREVIOUS_TAG" "$0" ||
+		# `bash "$0"`, not `"$0"`: re-executing directly needs the exec bit, and
+		# git stores that as file mode. A checkout where it is missing would fail
+		# the rollback at the exact moment it is needed.
+		SKIP_ROLLBACK=1 IMAGE_TAG="$PREVIOUS_TAG" bash "$0" ||
 			log "ROLLBACK FAILED — manual intervention required"
 	else
 		log "No distinct previous tag recorded; nothing to roll back to."
