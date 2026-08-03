@@ -12,6 +12,15 @@ machines are involved and mixing them up is the main way this goes wrong:
 | 🖥️ **SERVER (deploy)** | the VPS, as the `deploy` user | `deploy@instance-…:~$` |
 | 🌐 **BROWSER** | GitHub / your DNS provider | — |
 
+**`deploy` effectively cannot use `sudo`.** The bootstrap creates it with
+`--disabled-password`, so any `sudo` password prompt is unanswerable, and the
+sudoers rule it installs permits exactly two commands (`nginx -t` and
+`systemctl reload nginx`). Anything needing root — `apt-get`, writes under
+`/etc` — is labelled **SERVER (root)**. If you find yourself typing a password
+for `deploy`, you are on the wrong line: there is no password to type.
+
+Switch between them with `su - deploy` (from root) and `exit` (back to root).
+
 Run the phases in order. Each is verifiable on its own, so when something breaks
 there is exactly one candidate cause rather than five.
 
@@ -479,15 +488,33 @@ The `backup` sidecar dumps to `./backups` **on the same disk as the database**.
 That protects against `DROP TABLE`, not against the disk failing — which is the
 failure it exists for.
 
-🖥️ **SERVER (deploy)**:
+🖥️ **SERVER (root)** — install the package. `deploy` cannot: it has no password
+(`--disabled-password`), so its `sudo` prompt is unanswerable, and the sudoers
+rule the bootstrap writes deliberately covers only `nginx -t` and
+`systemctl reload nginx`:
 
 ```bash
-sudo apt-get install -y rclone
-rclone config                    # add an S3 / B2 / Drive remote, e.g. "offsite"
+apt-get install -y rclone
+```
+
+🖥️ **SERVER (deploy)** — configure and schedule as the user that owns the
+checkout and is in the `docker` group. No `sudo` anywhere here:
+
+```bash
+rclone config                    # create a remote named e.g. "offsite"
 echo 'BACKUP_REMOTE=offsite:aas-backups/postgres' >> /srv/all-about-saas/.env.prod
 crontab -e
-#  15 4 * * * cd /srv/all-about-saas && ./scripts/backup-db.sh >> /var/log/aas-backup.log 2>&1
+#  15 4 * * * cd /srv/all-about-saas && ./scripts/backup-db.sh >> /home/deploy/aas-backup.log 2>&1
 ```
+
+The log goes to the home directory, not `/var/log/` — that is root-owned, and
+the redirect would fail silently every night, leaving a cron job that appears to
+run and records nothing.
+
+Cron matters more than it looks: `rclone` reads its config from
+`$HOME/.config/rclone/`, so the crontab must belong to the **same user** that ran
+`rclone config`. A root crontab calling this script finds no remote and quietly
+skips the upload, having reported success.
 
 🖥️ **SERVER (deploy)** — then **prove a restore works**, because an untested
 backup is a hypothesis:
