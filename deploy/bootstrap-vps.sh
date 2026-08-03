@@ -226,6 +226,30 @@ systemctl enable --now nginx >/dev/null 2>&1 || true
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 
+# Reload nginx after every successful renewal.
+#
+# Certificates are obtained with `certonly`, so no certbot *installer* manages
+# the nginx config — which also means nothing reloads nginx when the certificate
+# is replaced. The renewal timer would quietly succeed every 60 days while nginx
+# kept serving the certificate it loaded at startup, until it expired: a silent
+# 90-day fuse that looks like nothing is wrong right up to the outage.
+mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+cat >/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh <<'EOF'
+#!/bin/sh
+# Runs only after a certificate is actually renewed, not on every timer tick.
+systemctl reload nginx
+EOF
+chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+
+# certbot's nginx plugin normally drops this in during install. With certonly
+# that never happens, and a config referencing it fails nginx -t.
+if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
+	curl -fsSL \
+		https://raw.githubusercontent.com/certbot/certbot/main/certbot/certbot/ssl-dhparams.pem \
+		-o /etc/letsencrypt/ssl-dhparams.pem 2>/dev/null ||
+		note "could not fetch ssl-dhparams.pem — remove the ssl_dhparam line if nginx -t complains"
+fi
+
 # ---------------------------------------------------------------------------
 step "9/10  Application directory"
 install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" "$APP_DIR"

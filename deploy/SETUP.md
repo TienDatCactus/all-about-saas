@@ -291,11 +291,21 @@ entry only matters if you ever build images on the server.
 
 ## Phase 5 — nginx and TLS
 
+**Use `certonly`, not `--nginx`.** The `--nginx` *installer* edits an existing
+server block to add TLS — but there is no such block yet, so it fails with
+*"Could not automatically find a matching server block"*. More importantly we do
+not want it editing the config: the files below already declare the certificate
+paths. Certbot's only job here is issuance.
+
+If you already ran `certbot --nginx` and saw that error: the certificate was
+still **issued successfully**, which is all that was needed. Skip to the config
+step and do **not** run `certbot install`.
+
 🖥️ **SERVER (root)** — **single domain** (recommended):
 
 ```bash
 cd /srv/all-about-saas
-certbot --nginx -d twinfoundry.org -d www.twinfoundry.org
+certbot certonly --nginx -d twinfoundry.org -d www.twinfoundry.org
 
 mkdir -p /etc/nginx/snippets
 cp deploy/nginx/aas-proxy.conf /etc/nginx/snippets/
@@ -310,7 +320,7 @@ nginx -t && systemctl reload nginx
 
 ```bash
 cd /srv/all-about-saas
-certbot --nginx -d twinfoundry.org -d www.twinfoundry.org -d api.twinfoundry.org
+certbot certonly --nginx -d twinfoundry.org -d www.twinfoundry.org -d api.twinfoundry.org
 
 mkdir -p /etc/nginx/snippets
 cp deploy/nginx/aas-proxy.conf       /etc/nginx/snippets/
@@ -323,6 +333,18 @@ nginx -t && systemctl reload nginx
 Enable **one** of the two — both declare `server_name twinfoundry.org` and nginx
 will refuse or silently pick one.
 
+`nginx -t` fails if a referenced file is absent. If it names
+`/etc/letsencrypt/ssl-dhparams.pem`, certbot never wrote it — the nginx plugin
+normally does that during install, which `certonly` skips.
+
+🖥️ **SERVER (root)** — only if `nginx -t` complains about it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/certbot/certbot/main/certbot/certbot/ssl-dhparams.pem \
+  -o /etc/letsencrypt/ssl-dhparams.pem
+nginx -t && systemctl reload nginx
+```
+
 > Run these as root rather than `deploy`: the bootstrap's sudo rule is
 > deliberately narrow (`systemctl reload nginx` and `nginx -t` only), so
 > `certbot` and writes into `/etc/nginx/` are not covered. Widening it would give
@@ -333,8 +355,25 @@ will refuse or silently pick one.
 > cover them. Run these four as **SERVER (root)** instead — they are one-time
 > setup, not part of any deploy.
 
-🖥️ **SERVER (root)** — verify renewal works. A certificate that cannot renew is
-a 90-day timer on an outage:
+🖥️ **SERVER (root)** — a reload hook, which `certonly` makes **mandatory**:
+
+```bash
+mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+printf '#!/bin/sh\nsystemctl reload nginx\n' \
+  > /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+```
+
+With no certbot *installer* managing the config, **nothing reloads nginx when
+the certificate is replaced**. The renewal timer would succeed every 60 days
+while nginx kept serving the certificate it loaded at boot — a silent 90-day
+fuse that looks perfectly healthy right up to the outage. Hooks under
+`renewal-hooks/deploy/` run only after an actual renewal, not on every tick.
+
+(The bootstrap script writes this hook too; this is here for hosts prepared
+before that was added, and it is idempotent either way.)
+
+🖥️ **SERVER (root)** — verify renewal works end to end:
 
 ```bash
 certbot renew --dry-run
