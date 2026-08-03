@@ -256,8 +256,16 @@ install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" "$APP_DIR"
 note "$APP_DIR owned by $DEPLOY_USER"
 
 # ---------------------------------------------------------------------------
-step "10/10  Host key fingerprint (for SSH_HOST_FINGERPRINT)"
-ssh-keyscan -t ed25519 localhost 2>/dev/null | ssh-keygen -lf - | awk '{print "    " $2}'
+step "10/10  Host key fingerprints (for SSH_HOST_FINGERPRINT)"
+# All of them, not just ed25519. The GitHub Action verifies whichever host key
+# the handshake actually negotiates, and Go's SSH client — which drone-ssh uses —
+# generally prefers ECDSA when the server offers it. Pinning the ed25519
+# fingerprint then fails with "host key fingerprint mismatch" even though the
+# value was copied correctly. Use the ECDSA line unless it proves otherwise.
+ssh-keyscan localhost 2>/dev/null | ssh-keygen -lf - |
+	sed "s/localhost/$(hostname -I 2>/dev/null | awk '{print $1}')/" |
+	sed 's/^/    /'
+note "^ set the ECDSA one as SSH_HOST_FINGERPRINT (the SHA256:... token only)"
 
 cat <<EOF
 

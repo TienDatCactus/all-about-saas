@@ -197,11 +197,24 @@ sshd -t && systemctl reload ssh
 `sshd -t` validates before reloading. Skipping the verification step above is
 the single most common way to lock yourself out of a VPS.
 
-💻 **LOCAL** — capture the host fingerprint for GitHub (Phase 7):
+💻 **LOCAL** — capture the host fingerprints for GitHub (Phase 7):
 
 ```bash
-ssh-keyscan -t ed25519 <vps-ip> | ssh-keygen -lf - | awk '{print $2}'
+ssh-keyscan <vps-ip> 2>/dev/null | ssh-keygen -lf -
 ```
+
+Three lines come back — ECDSA, ED25519, RSA. **Use the ECDSA one**, and only the
+`SHA256:…` token.
+
+Why not ed25519, the modern choice? The Action verifies whichever host key the
+handshake *negotiates*, and Go's SSH client — which drone-ssh is built on —
+generally prefers ECDSA when the server offers it. Pinning ed25519 then fails
+with `ssh: handshake failed: ssh: host key fingerprint mismatch` even though the
+value was copied perfectly, which reads like a key problem and is not one.
+
+If it still mismatches, try the ED25519 then RSA line. And note this value is
+**per-machine**: rebuild or replace the VPS and it changes, so a stale secret
+from a previous host produces the identical error.
 SHA256:2xLx4ktHvLNCweF0IlxDWaD0q9ecwRmIuLshiLrPtr4
 
 ---
@@ -452,7 +465,13 @@ mismatch makes every secret resolve to an empty string with no warning.
 | `DEPLOY_HOST` | VPS IP | your provider |
 | `DEPLOY_USER` | `deploy` | — |
 | `DEPLOY_SSH_KEY` | 💻 `cat ~/.ssh/aas_deploy` — whole file, BEGIN/END lines included | Phase 2 |
-| `SSH_HOST_FINGERPRINT` | the `SHA256:…` string | Phase 2 |
+| `SSH_HOST_FINGERPRINT` | the **ECDSA** `SHA256:…` token | Phase 2 |
+
+`SSH_HOST_FINGERPRINT` is optional — omit it and the Action accepts whatever key
+the server presents, which is a first-connection MITM window but unblocks a
+deploy. It is also **per-machine**: replacing or rebuilding the VPS invalidates
+it, and a stale value fails with `host key fingerprint mismatch`, which looks
+like an authentication problem and is not one.
 
 Variables — `PUBLIC_WEB_URL` and `PUBLIC_API_URL` are **required** (the
 smoke-test step reads them with no default):
