@@ -355,6 +355,25 @@ nginx -t && systemctl reload nginx
 Enable **one** of the two — both declare `server_name twinfoundry.org` and nginx
 will refuse or silently pick one.
 
+Worth knowing how the wrong one fails: the two-domain config is perfectly valid
+nginx and passes `nginx -t`, because both of its server blocks point at the
+`twinfoundry.org` certificate. It just declares an `api.twinfoundry.org` vhost
+nothing resolves to, and — having no `location /api/` — hands `/api/...` to the
+web app, which answers **404** from its router. A config that loads cleanly while
+routing to the wrong place is harder to spot than one that refuses to load, so
+verify which is live rather than assuming:
+
+```bash
+grep -c "location /api/" /etc/nginx/sites-enabled/twinfoundry.org   # 1 = single-domain
+grep -c "api.twinfoundry.org" /etc/nginx/sites-enabled/twinfoundry.org  # 0 = single-domain
+```
+
+> **Updating the checkout later:** `git pull` fails on this host with *"You are
+> not currently on a branch"*. Every deploy runs `git checkout --force <sha>`,
+> which leaves the repo detached — deliberately, so the running code is pinned to
+> an exact commit. Use `git fetch --all --prune && git checkout --force
+> origin/main` instead, as the `deploy` user.
+
 `nginx -t` fails if a referenced file is absent. If it names
 `/etc/letsencrypt/ssl-dhparams.pem`, certbot never wrote it — the nginx plugin
 normally does that during install, which `certonly` skips.
