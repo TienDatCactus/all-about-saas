@@ -1,17 +1,17 @@
-import { Link } from "@tanstack/react-router"
-import { Image } from "./image"
-import type { ImageProps } from "./image"
+import { Link } from "@tanstack/react-router";
+import type { ImageProps } from "./image";
+import { Image } from "./image";
 
-import logo from "/logo/logo.svg"
+import { loadAsset } from "@/lib/utils";
 
 type LogoProps = Omit<ImageProps, "src"> & {
-  to?: string
-}
+  to?: string;
+};
 
 export default function Logo({ alt, to = "/", ...props }: LogoProps) {
   return (
     <Link to={to} aria-label="Go to homepage">
-      <Image {...props} src={logo} alt={alt} />
+      <Image {...props} src={loadAsset("logo.svg", "logo")} alt={alt} />
     </Link>
-  )
+  );
 }
