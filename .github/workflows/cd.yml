@@ -39,6 +39,19 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # Required for `vars.VITE_API_BASE_URL` to resolve at all.
+    #
+    # Environment secrets AND environment variables are injected only into jobs
+    # that name that environment. Without this line every `vars.*` read here is
+    # the empty string — set perfectly in the UI, invisible to this job — and the
+    # symptom is a guard reporting a variable as unset while you are looking at
+    # its value. `deploy` declared the environment and its `vars` worked, which
+    # made the difference look like something other than scoping.
+    #
+    # (Alternative: move these to repository-level variables, which every job can
+    # read. They are not secret. Kept environment-scoped to match how the
+    # deploy credentials are organised.)
+    environment: AAS
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:

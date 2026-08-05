@@ -476,8 +476,29 @@ currently shared by the entire internet.
 ## Phase 7 — Hand over to CI
 
 🌐 **BROWSER** — repo → Settings → Secrets and variables → Actions, scoped to
-the **`AAS`** environment. The deploy job declares `environment: AAS`; a
-mismatch makes every secret resolve to an empty string with no warning.
+the **`AAS`** environment.
+
+> **Read this before anything else in Phase 7.** Environment secrets *and*
+> environment variables reach only the jobs that declare that environment. Both
+> jobs in `cd.yml` say `environment: AAS`, and that line is load-bearing: a job
+> without it sees every `secrets.*` and `vars.*` as the **empty string** — no
+> warning, no error, the run proceeds.
+>
+> The symptoms never point at scoping:
+>
+> - `ssh: handshake failed` / `missing server host` — the SSH secrets were empty
+> - a guard reporting `VITE_API_BASE_URL is not set` while you are looking
+>   straight at its value in the UI
+> - one job reading a variable fine while another cannot, which reads like a typo
+>
+> Pick one arrangement and keep it consistent: **environment-scoped** (what this
+> repo does — every job reading a value must declare `environment:`, including
+> any job added later), or **repository-level** (available to all jobs, no
+> `environment:` needed; fine for the four variables here, since none is secret
+> and the API URL is compiled into public JavaScript anyway).
+>
+> If a value reads as empty and you can see it in the UI, check the job's
+> `environment:` before doubting the value.
 
 | Secret | Value | Where you got it |
 |---|---|---|
