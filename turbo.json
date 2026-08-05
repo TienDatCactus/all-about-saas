@@ -4,7 +4,22 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".output/**"]
+      "outputs": ["dist/**", ".output/**"],
+      // Turbo 2 runs tasks in STRICT env mode: a variable the task did not
+      // declare is removed from its environment, even when exported in the
+      // parent shell. So `ENV VITE_API_BASE_URL=...` in the Dockerfile set it
+      // for the container and turbo deleted it before Vite ran — Vite saw
+      // undefined, the app's `|| "http://localhost:8000"` fallback was inlined,
+      // and the shipped bundle called localhost from production. Nothing failed;
+      // the build, the push, the deploy, the healthchecks and the smoke test all
+      // passed.
+      //
+      // Verified by exporting a marker value and grepping the output: absent
+      // before this line, present after.
+      //
+      // Declaring it here also puts it in the cache key, which is required for
+      // correctness — two different API URLs must not share a cached build.
+      "env": ["VITE_API_BASE_URL"]
     },
     "lint": {
       "dependsOn": ["^lint"]
