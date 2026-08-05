@@ -40,6 +40,9 @@ export default () => ({
 	},
 	basePassword: process.env.BASE_PASSWORD,
 	frontendUrl: process.env.FRONTEND_URL,
+	// Enables POST /auth/dev/login. env.validation.ts refuses `true` in
+	// production, so this can only ever be on where NODE_ENV !== 'production'.
+	devAuthBypass: process.env.DEV_AUTH_BYPASS === 'true',
 	cookie: {
 		// Cross-origin dev (web:3001 ↔ api:8000) needs sameSite='none' + secure=true.
 		// Same-site prod (web + api behind one domain via reverse proxy) can use 'lax'.

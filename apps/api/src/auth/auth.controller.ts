@@ -1,5 +1,6 @@
 import {
 	BadRequestException,
+	NotFoundException,
 	UnauthorizedException,
 	Body,
 	Controller,
@@ -23,6 +24,7 @@ import { requireUser } from '../common/request-user';
 import { OAuthProvider } from '../users/entities/oauth-account.entity';
 import { UsersService } from '../users/users.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { DevLoginDto } from './dto/dev-login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendVerificationEmailDto } from './dto/send-verification-email.dto';
 import { LoginDto } from './dto/sign-in.dto';
@@ -67,6 +69,40 @@ export class AuthController {
 		// The envelope message comes from @ResponseMessage, so this returns data only
 		// — TransformInterceptor no longer lifts a `message` out of a payload that
 		// has other fields in it.
+		return {
+			accessToken: result.accessToken,
+		};
+	}
+
+	/**
+	 * Local-stand-in for the OAuth flows: mints a real session for any email,
+	 * so development needs no GitHub/Google/Facebook apps and no verification
+	 * mail. Guarded twice — the env flag (refused at boot in production) and a
+	 * NODE_ENV check here — and hidden as a 404 rather than announced as a 403.
+	 */
+	@Public()
+	@ResponseMessage('Dev login successful')
+	@Post('dev/login')
+	async devLogin(
+		@Body() body: DevLoginDto,
+		@Res({ passthrough: true }) res: Response,
+		@Req() req: Request,
+	) {
+		if (
+			!this.configService.get<boolean>('devAuthBypass') ||
+			process.env.NODE_ENV === 'production'
+		) {
+			throw new NotFoundException(`Cannot POST /auth/dev/login`);
+		}
+		const result = await this.authService.devLogin(
+			body.email,
+			this.authService.getSessionInfo(req),
+		);
+		this.authService.setCookie(
+			res,
+			result.refreshToken,
+			result.refreshTokenExpiresAt,
+		);
 		return {
 			accessToken: result.accessToken,
 		};
