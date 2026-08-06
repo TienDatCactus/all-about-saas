@@ -20,6 +20,14 @@ import configuration from '../config/configuration';
  */
 const STATE_COOKIE = 'oauth_state';
 
+/**
+ * Where to send the user *within the frontend* once the callback completes.
+ * OAuth is a full-page round-trip, so the SPA loses every bit of in-memory
+ * state — the path it wants back has to ride along server-side. Parked in its
+ * own cookie on the authorize leg and consumed by the callback.
+ */
+const RETURN_TO_COOKIE = 'oauth_return_to';
+
 /** Long enough to read a consent screen, short enough not to linger. */
 const STATE_TTL_MS = 10 * 60_000;
 
@@ -88,11 +96,49 @@ export function oauthStateOptions(
 	if (isCallbackLeg(http.getRequest<Request>())) {
 		return {};
 	}
+	const req = http.getRequest<Request>();
+	const res = http.getResponse<Response>();
 	const state = randomBytes(32).toString('base64url');
-	http.getResponse<Response>().cookie(STATE_COOKIE, state, {
+	res.cookie(STATE_COOKIE, state, {
 		...COOKIE_OPTIONS,
 		secure: configuration().cookie.secure,
 		maxAge: STATE_TTL_MS,
 	});
+	const returnTo = req.query?.returnTo;
+	if (typeof returnTo === 'string' && isSafeReturnTo(returnTo)) {
+		res.cookie(RETURN_TO_COOKIE, returnTo, {
+			...COOKIE_OPTIONS,
+			secure: configuration().cookie.secure,
+			maxAge: STATE_TTL_MS,
+		});
+	}
 	return { state };
+}
+
+/**
+ * A path this API is willing to bounce the browser to after login, appended
+ * to FRONTEND_URL. Anything that could escape the frontend origin is refused:
+ * absolute URLs ("https://evil.test"), scheme-relative ("//evil.test"), and
+ * backslash variants browsers normalize to slashes. Without this check the
+ * callback becomes an open redirect — a phishing mail could send victims
+ * through the real login and land them on a fake.
+ */
+export function isSafeReturnTo(value: string): boolean {
+	return (
+		value.length > 0 &&
+		value.length <= 2048 &&
+		value.startsWith('/') &&
+		!value.startsWith('//') &&
+		!value.startsWith('/\\')
+	);
+}
+
+/**
+ * Reads and clears the parked return path on the callback leg. Defaults to
+ * "/" — the pre-feature behaviour — when nothing (or garbage) was parked.
+ */
+export function consumeOAuthReturnTo(req: Request, res: Response): string {
+	const value = req.cookies?.[RETURN_TO_COOKIE];
+	res.clearCookie(RETURN_TO_COOKIE, { path: COOKIE_OPTIONS.path });
+	return typeof value === 'string' && isSafeReturnTo(value) ? value : '/';
 }

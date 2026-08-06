@@ -1,26 +1,30 @@
-import { formOptions, useForm } from "@tanstack/react-form"
-import { useNavigate } from "@tanstack/react-router"
-import React from "react"
-import type { SignUpIn } from "@/services/auth"
-import { AddonInput as Input } from "@/components/custom/addon-input"
-import { FormField } from "@/components/custom/form-field"
-import PasswordStrengthInput from "@/components/custom/password-strength"
-import { Button } from "@/components/custom/stateful-button"
-import { FieldGroup } from "@/components/ui/field"
-import { LoginInSchema, SignUpSchema, useSignupMutation } from "@/services/auth"
-import { toast } from "@/components/custom/toast"
+import { formOptions, useForm } from "@tanstack/react-form";
+import { useNavigate } from "@tanstack/react-router";
+import React from "react";
+import type { SignUpIn } from "@/services/auth";
+import { AddonInput as Input } from "@/components/custom/addon-input";
+import { FormField } from "@/components/custom/form-field";
+import PasswordStrengthInput from "@/components/custom/password-strength";
+import { Button } from "@/components/custom/stateful-button";
+import { FieldGroup } from "@/components/ui/field";
+import {
+  LoginInSchema,
+  SignUpSchema,
+  useSignupMutation,
+} from "@/services/auth";
+import { toast } from "@/components/custom/toast";
 
-const defaultValue: SignUpIn = { email: "", password: "", rePassword: "" }
+const defaultValue: SignUpIn = { email: "", password: "", rePassword: "" };
 
 const formOpts = formOptions({
   defaultValues: defaultValue,
   validators: {
     onSubmit: SignUpSchema,
   },
-})
+});
 const SignUpForm: React.FC = () => {
-  const { mutate, status } = useSignupMutation()
-  const navigate = useNavigate()
+  const { mutate, status } = useSignupMutation();
+  const navigate = useNavigate();
   const form = useForm({
     ...formOpts,
     onSubmit: (submission) => {
@@ -28,26 +32,26 @@ const SignUpForm: React.FC = () => {
         onSuccess: () => {
           toast.success("Check your inbox", {
             description: "We have sent you an activation email",
-          })
+          });
           // Fire-and-forget: nothing to do after the redirect settles.
           void navigate({
             to: "/auth/login",
-          })
+          });
         },
-      }) // use login schema as the submission source
+      }); // use login schema as the submission source
     },
-  })
+  });
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault()
+        e.preventDefault();
         // onSubmit only calls the (sync, fire-and-forget) mutate, so this
         // promise cannot reject — outcomes surface through mutation status.
-        void form.handleSubmit()
+        void form.handleSubmit();
       }}
       method="post"
-      className="mt-6 space-y-4"
+      className="space-y-4"
     >
       <FieldGroup>
         <FormField form={form} name="email" label="Email">
@@ -90,7 +94,7 @@ const SignUpForm: React.FC = () => {
         Sign up
       </Button>
     </form>
-  )
-}
+  );
+};
 
-export default SignUpForm
+export default SignUpForm;

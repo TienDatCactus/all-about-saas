@@ -1,7 +1,7 @@
 // data-dropdown.tsx
 import { CaretDownIcon } from "@phosphor-icons/react"
 import * as React from "react"
-import { Button } from "../ui/button"
+import { Button } from "../../ui/button"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -14,14 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu"
+} from "../../ui/dropdown-menu"
 import {
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from "../ui/item"
+} from "../../ui/item"
 import { cn } from "@/lib/utils"
 
 export interface DataDropdownGroup<T> {
@@ -129,9 +129,7 @@ export function DataDropdown<T>({
     const media = getMedia?.(item)
     return (
       <Item size="xs" className="w-full p-2">
-        {media != null && (
-          <ItemMedia variant={mediaVariant}>{media}</ItemMedia>
-        )}
+        {media != null && <ItemMedia variant={mediaVariant}>{media}</ItemMedia>}
         <ItemContent className="gap-0">
           <ItemTitle>{title}</ItemTitle>
           {description != null && (
@@ -233,7 +231,10 @@ export function DataDropdown<T>({
           </Button>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent className={cn("w-48", contentClassName)} align={align}>
+      <DropdownMenuContent
+        className={cn("w-48", contentClassName)}
+        align={align}
+      >
         {selectionMode === "single" ? (
           <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
             {body}

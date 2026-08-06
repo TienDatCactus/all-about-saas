@@ -395,6 +395,7 @@ describe('AuthController', () => {
 			async (method, provider) => {
 				const req: any = {
 					headers: {},
+					cookies: {},
 					user: { id: 'u1', email: 'dat@test.com' },
 				};
 				const res = makeRes();
@@ -419,8 +420,53 @@ describe('AuthController', () => {
 					'refresh-tok',
 					expiresAt,
 				);
-				expect(res.redirect).toHaveBeenCalledWith('https://app.test');
+				// `sso=1` tells the SPA a refresh cookie was just minted (the access
+				// token is memory-only, so it cannot know otherwise); "/" is the
+				// default when no return path was parked on the authorize leg.
+				expect(res.redirect).toHaveBeenCalledWith('https://app.test/?sso=1');
 			},
 		);
+
+		it('returns to the parked in-app path and clears its cookie', async () => {
+			const req: any = {
+				headers: {},
+				cookies: { oauth_return_to: '/badminton?tab=history' },
+				user: { id: 'u1', email: 'dat@test.com' },
+			};
+			const res = makeRes();
+			mockAuthService.getSessionInfo.mockReturnValue({ userAgent: 'jest' });
+			mockAuthService.oauthAccess.mockResolvedValue({
+				refreshToken: 'refresh-tok',
+				refreshTokenExpiresAt: new Date('2026-08-07T00:00:00.000Z'),
+			});
+
+			await controller.githubCallback(req, res);
+
+			expect(res.redirect).toHaveBeenCalledWith(
+				'https://app.test/badminton?tab=history&sso=1',
+			);
+			// Single-use: a later, unrelated login must not replay this path.
+			expect(res.clearCookie).toHaveBeenCalledWith('oauth_return_to', {
+				path: '/auth',
+			});
+		});
+
+		it('refuses an off-origin return path — the callback must not become an open redirect', async () => {
+			const req: any = {
+				headers: {},
+				cookies: { oauth_return_to: '//evil.test/phish' },
+				user: { id: 'u1', email: 'dat@test.com' },
+			};
+			const res = makeRes();
+			mockAuthService.getSessionInfo.mockReturnValue({ userAgent: 'jest' });
+			mockAuthService.oauthAccess.mockResolvedValue({
+				refreshToken: 'refresh-tok',
+				refreshTokenExpiresAt: new Date('2026-08-07T00:00:00.000Z'),
+			});
+
+			await controller.githubCallback(req, res);
+
+			expect(res.redirect).toHaveBeenCalledWith('https://app.test/?sso=1');
+		});
 	});
 });

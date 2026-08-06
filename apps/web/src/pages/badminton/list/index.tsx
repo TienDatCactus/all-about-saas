@@ -1,24 +1,24 @@
-import { PlusIcon, TrashIcon, UsersIcon } from "@phosphor-icons/react"
-import { Link } from "@tanstack/react-router"
-import DataCard from "@/components/custom/data/card"
-import DataPage from "@/components/custom/data/page"
+import { PlusIcon, TrashIcon, UsersIcon } from "@phosphor-icons/react";
+import { Link } from "@tanstack/react-router";
+import DataCard from "@/components/custom/data/card";
+import DataPage from "@/components/custom/data/page";
 
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { formatVnd } from "@/pages/badminton/lib/format"
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatVnd } from "@/pages/badminton/lib/format";
 import {
   useSessionsQuery,
   useUndoableDeleteSession,
-} from "@/services/badminton/queries"
+} from "@/services/badminton/queries";
 import DataPagination, {
   usePagination,
-} from "@/components/custom/data/pagination"
+} from "@/components/custom/data/pagination";
 
 export default function SessionListPage() {
-  const deleteSession = useUndoableDeleteSession()
-  const pagination = usePagination({})
+  const deleteSession = useUndoableDeleteSession();
+  const pagination = usePagination({});
 
-  const sessionsQuery = useSessionsQuery(pagination.query)
+  const sessionsQuery = useSessionsQuery(pagination.query);
 
   return (
     <DataPage
@@ -66,11 +66,11 @@ export default function SessionListPage() {
         <div className="flex flex-col gap-6">
           <ul className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sessions.data.map((session) => {
-              const total = session.computed?.grandTotal ?? 0
+              const total = session.computed?.grandTotal ?? 0;
               const players =
                 session.computed?.rows.length ??
                 session.participants?.length ??
-                0
+                0;
               return (
                 <li key={session.id}>
                   <Link
@@ -100,9 +100,9 @@ export default function SessionListPage() {
                           aria-label="Delete session"
                           className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                           onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            deleteSession(session)
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteSession(session);
                           }}
                         >
                           <TrashIcon />
@@ -111,12 +111,12 @@ export default function SessionListPage() {
                     />
                   </Link>
                 </li>
-              )
+              );
             })}
           </ul>
           <DataPagination {...pagination} total={sessions.total} />
         </div>
       )}
     </DataPage>
-  )
+  );
 }

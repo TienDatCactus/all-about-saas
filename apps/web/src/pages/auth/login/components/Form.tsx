@@ -1,48 +1,54 @@
-import { formOptions, useForm } from "@tanstack/react-form"
-import { useNavigate } from "@tanstack/react-router"
-import React from "react"
-import type { LoginIn } from "@/services/auth"
-import { AddonInput as Input } from "@/components/custom/addon-input"
-import { FormField } from "@/components/custom/form-field"
-import { Button } from "@/components/custom/stateful-button"
-import { FieldGroup } from "@/components/ui/field"
-import { LoginInSchema, useLoginMutation } from "@/services/auth"
+import { formOptions, useForm } from "@tanstack/react-form";
+import { useNavigate } from "@tanstack/react-router";
+import type { NavigateOptions } from "@tanstack/react-router";
+import React from "react";
+import type { LoginIn } from "@/services/auth";
+import { AddonInput as Input } from "@/components/custom/addon-input";
+import { FormField } from "@/components/custom/form-field";
+import { Button } from "@/components/custom/stateful-button";
+import { FieldGroup } from "@/components/ui/field";
+import { LoginInSchema, useLoginMutation } from "@/services/auth";
 
-const defaultValue: LoginIn = { email: "", password: "" }
+const defaultValue: LoginIn = { email: "", password: "" };
 
 const formOpts = formOptions({
   defaultValues: defaultValue,
   validators: {
     onSubmit: LoginInSchema,
   },
-})
-const LoginForm: React.FC = () => {
-  const navigate = useNavigate()
-  const { mutate, status } = useLoginMutation()
+});
+interface LoginFormProps {
+  redirectTo?: NavigateOptions["to"] | null;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
+  const navigate = useNavigate();
+  const { mutate, status } = useLoginMutation();
   const form = useForm({
     ...formOpts,
     onSubmit: (submission) => {
       mutate(LoginInSchema.parse(submission.value), {
         onSuccess: () => {
+          if (redirectTo === null) return;
           // Fire-and-forget: nothing to do after the redirect settles.
           void navigate({
-            to: "/",
-          })
+            to: redirectTo,
+          });
         },
-      })
+      });
     },
-  })
+  });
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault()
+        e.preventDefault();
         // onSubmit only calls the (sync, fire-and-forget) mutate, so this
         // promise cannot reject — outcomes surface through mutation status.
-        void form.handleSubmit()
+        void form.handleSubmit();
       }}
       method="post"
-      className="mt-6 space-y-4"
+      className=" space-y-4"
     >
       <FieldGroup>
         <FormField form={form} name="email" label="Email">
@@ -69,7 +75,7 @@ const LoginForm: React.FC = () => {
         Sign in
       </Button>
     </form>
-  )
-}
+  );
+};
 
-export default LoginForm
+export default LoginForm;

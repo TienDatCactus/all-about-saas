@@ -1,4 +1,4 @@
-import * as z from "zod"
+import * as z from "zod";
 
 /**
  * Validates an API response against the shape the caller claims it has.
@@ -17,30 +17,26 @@ import * as z from "zod"
 export class ResponseContractError extends Error {
   constructor(
     readonly endpoint: string,
-    readonly issues: z.ZodError["issues"]
+    readonly issues: z.ZodError["issues"],
   ) {
     const detail = issues
       .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
-      .join("; ")
-    super(`${endpoint} returned an unexpected shape — ${detail}`)
-    this.name = "ResponseContractError"
+      .join("; ");
+    super(`${endpoint} returned an unexpected shape — ${detail}`);
+    this.name = "ResponseContractError";
   }
 }
 
 export async function parseResponse<TSchema extends z.ZodType>(
   endpoint: string,
   schema: TSchema,
-  response: Promise<unknown>
+  response: Promise<unknown>,
 ): Promise<z.infer<TSchema>> {
-  const result = schema.safeParse(await response)
+  const result = schema.safeParse(await response);
   if (result.success) {
-    return result.data
+    return result.data;
   }
-  // Logged as well as thrown: the throw reaches the UI as a generic error state,
-  // while this line keeps the field-level detail in the console where it is
-  // actually actionable.
-  console.error(`[api] ${endpoint} failed response validation`, result.error)
-  throw new ResponseContractError(endpoint, result.error.issues)
+  throw new ResponseContractError(endpoint, result.error.issues);
 }
 
 /** `BaseService.paginate()`'s envelope, around any item schema. */
@@ -51,4 +47,4 @@ export const paginatedSchema = <TSchema extends z.ZodType>(item: TSchema) =>
     page: z.number(),
     limit: z.number(),
     pages: z.number(),
-  })
+  });

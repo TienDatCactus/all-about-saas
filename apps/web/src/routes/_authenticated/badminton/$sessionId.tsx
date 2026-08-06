@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import EditSessionPage from "@/pages/badminton/edit"
 
-export const Route = createFileRoute("/badminton/$sessionId")({
+export const Route = createFileRoute("/_authenticated/badminton/$sessionId")({
   staticData: { crumb: `Session Details` },
   component: RouteComponent,
 })

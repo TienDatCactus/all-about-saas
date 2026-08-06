@@ -17,6 +17,7 @@ import type { Request, Response } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
 import { ResponseMessage } from '../common/decorator/response-message.decorator';
 import { FacebookAuthGuard } from '../common/guard/facebook-auth.guard';
+import { consumeOAuthReturnTo } from '../common/guard/oauth-state';
 import { GithubAuthGuard } from '../common/guard/github-auth.guard';
 import { GoogleAuthGuard } from '../common/guard/google-auth.guard';
 import { JwtAuthGuard } from '../common/guard/jwt-auth.guard';
@@ -265,6 +266,29 @@ export class AuthController {
 		};
 	}
 	/* =================================  */
+	/**
+	 * Finishes every OAuth callback: back into the SPA at the path the user
+	 * started from (parked in a cookie by the authorize leg — see
+	 * oauth-state.ts), not dumped on the home page.
+	 *
+	 * `sso=1` tells the frontend "a refresh cookie was just minted": the access
+	 * token lives only in JS memory, so after this full-page redirect the SPA
+	 * has no way to know it is signed in until it exchanges the cookie — the
+	 * marker is what triggers that exchange immediately instead of after the
+	 * first 401.
+	 */
+	private redirectAfterOAuth(req: Request, res: Response) {
+		// FRONTEND_URL doubles as the CORS allowlist and may be comma-separated;
+		// only the first origin is the canonical web app.
+		const base = (this.configService.get<string>('frontendUrl') ?? '')
+			.split(',')[0]!
+			.trim()
+			.replace(/\/+$/, '');
+		const returnTo = consumeOAuthReturnTo(req, res);
+		const separator = returnTo.includes('?') ? '&' : '?';
+		return res.redirect(`${base}${returnTo}${separator}sso=1`);
+	}
+
 	@Public()
 	@UseGuards(GoogleAuthGuard)
 	@Get('google')
@@ -290,8 +314,7 @@ export class AuthController {
 			result.refreshToken,
 			result.refreshTokenExpiresAt,
 		);
-		const frontendUrl = this.configService.get<string>('frontendUrl')!;
-		return res.redirect(frontendUrl);
+		return this.redirectAfterOAuth(req, res);
 	}
 	@Public()
 	@Get('github')
@@ -319,8 +342,7 @@ export class AuthController {
 			result.refreshToken,
 			result.refreshTokenExpiresAt,
 		);
-		const frontendUrl = this.configService.get<string>('frontendUrl')!;
-		return res.redirect(frontendUrl);
+		return this.redirectAfterOAuth(req, res);
 	}
 	@Public()
 	@Get('facebook')
@@ -345,7 +367,6 @@ export class AuthController {
 			result.refreshToken,
 			result.refreshTokenExpiresAt,
 		);
-		const frontendUrl = this.configService.get<string>('frontendUrl')!;
-		return res.redirect(frontendUrl);
+		return this.redirectAfterOAuth(req, res);
 	}
 }

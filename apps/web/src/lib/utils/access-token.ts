@@ -47,11 +47,23 @@ export const setAccessToken = (token: string) => {
     return
   }
   accessToken = token
+  // Not a credential — a breadcrumb. The refresh cookie is httpOnly, so JS
+  // cannot ask "is someone signed in?" after a reload; this hint is what lets
+  // auth-dependent fetches (e.g. /users/me) run only when a session plausibly
+  // exists, instead of 401→refresh→redirect-to-login on every anonymous visit.
+  storage.set(AppConstants.sessionHintKey, "1")
 }
 
 export const clearAccessToken = () => {
   accessToken = undefined
+  storage.remove(AppConstants.sessionHintKey)
 }
+
+/** Whether a session plausibly exists: live token, or the login breadcrumb. */
+export const hasSessionHint = () =>
+  isBrowser() &&
+  (accessToken !== undefined ||
+    storage.get(AppConstants.sessionHintKey) !== null)
 
 // One-time migration: users who logged in before this change still have a
 // token sitting in localStorage. It is no longer read, but "no longer read"

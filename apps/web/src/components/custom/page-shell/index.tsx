@@ -1,14 +1,12 @@
-import {
-  CaretDownIcon,
-  DesktopTowerIcon,
-  PathIcon,
-} from "@phosphor-icons/react";
-import { useMemo, type ReactNode } from "react";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Breadcrumbs } from "./breadcrumb";
+import { DesktopTowerIcon, PathIcon } from "@phosphor-icons/react";
 import { useRouter } from "@tanstack/react-router";
-import { DataDropdown, type DataDropdownGroup } from "./data-dropdown";
+import { useMemo, type ReactNode } from "react";
+import { Button } from "../../ui/button";
+import { Separator } from "../../ui/separator";
+import { Breadcrumbs } from "../breadcrumb";
+import { DataDropdown, type DataDropdownGroup } from "../data/dropdown";
+import { UserMenu } from "./user-menu";
+import { ThemeToggler } from "./theme-toggle";
 
 /** "/auth/sign-up" → "Sign up", "/badminton/$sessionId" → "sessionId", "/" → "Home". */
 function routeTitle(path: string) {
@@ -53,7 +51,8 @@ export function PageShell({
         (hidden) =>
           path === hidden ||
           path.startsWith(`${hidden}/`) ||
-          path.includes("auth"),
+          path.includes("auth") ||
+          path.includes("$"),
       );
     const paths = (
       [
@@ -95,7 +94,7 @@ export function PageShell({
   return (
     <main className="@container flex min-h-screen w-full items-start justify-center">
       <div className="flex w-full flex-col">
-        <header className="border-border bg-background sticky top-0 z-20 flex h-12 w-full shrink-0 items-center justify-between gap-2 border-b px-4">
+        <header className="sticky top-0 z-20 flex h-12 w-full shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4">
           <div className="flex shrink-0 items-center gap-3">
             <Button variant="ghost" className="font-semibold">
               <DesktopTowerIcon />
@@ -108,51 +107,21 @@ export function PageShell({
               getDescription={(path) => path}
               getMedia={() => <PathIcon />}
               mediaVariant="icon"
-              // Param routes need a concrete id/token to be a destination.
-              isDisabled={(path) => path.includes("$")}
               label="Pages"
               align="start"
               contentClassName="w-64"
               onSelect={(path) => void router.navigate({ to: path })}
             />
           </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <Breadcrumbs />
+            <Separator orientation="vertical" />
+            <ThemeToggler />
+            <UserMenu />
+          </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </div>
     </main>
-  );
-}
-
-interface PageHeaderProps {
-  title: ReactNode;
-  description?: ReactNode;
-  actions?: ReactNode;
-}
-
-export function PageHeader({ title, description, actions }: PageHeaderProps) {
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 flex-col gap-1">
-        <Popover>
-          <div className="flex items-center">
-            <h1 className="truncate text-2xl font-semibold tracking-tight">
-              {title}
-            </h1>
-            <PopoverTrigger asChild>
-              <Button variant={"ghost"} size={"icon"}>
-                <CaretDownIcon />
-              </Button>
-            </PopoverTrigger>
-          </div>
-          <PopoverContent className="w-fit">
-            <Breadcrumbs />
-          </PopoverContent>
-        </Popover>
-        {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        ) : null}
-      </div>
-      {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
-    </div>
   );
 }
