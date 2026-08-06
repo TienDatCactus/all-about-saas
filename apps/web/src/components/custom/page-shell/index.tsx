@@ -10,8 +10,8 @@ import { UserMenu } from "./user-menu";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <main className="@container flex min-h-screen w-full items-start justify-center">
-      <div className="flex w-full flex-col">
+    <main className="@container flex  h-dvh w-full items-start justify-center">
+      <div className="flex  min-h-screen  w-full flex-col">
         <header className="sticky top-0 z-20 flex h-12 w-full shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4">
           <div className="flex shrink-0 items-center gap-3">
             <Button variant="ghost" className="font-semibold">
@@ -21,12 +21,17 @@ export function PageShell({ children }: { children: ReactNode }) {
             <RouteDropdown />
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            <Separator orientation="vertical" />
+            {/* <Separator orientation="vertical" /> */}
             <ThemeToggler />
             <UserMenu />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+        {/* flex-col so a page can center itself with m-auto — percentage
+            heights (h-full/min-h-full) can't resolve here because the column
+            above sizes itself with min-h-screen (indefinite height). */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 relative h-full w-full bg-background">
+          {children}
+        </div>
       </div>
     </main>
   );

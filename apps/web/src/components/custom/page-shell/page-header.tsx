@@ -15,7 +15,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 flex-col">
-        <div className="flex items-center ">
+        <div className="flex items-center">
           <h1 className="truncate text-2xl font-semibold tracking-tight">
             {title}
           </h1>
