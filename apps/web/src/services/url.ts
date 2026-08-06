@@ -1,4 +1,4 @@
-const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
 export const AUTH = {
   login: "/auth/login",
   signup: "/auth/signup",
@@ -14,15 +14,15 @@ export const AUTH = {
   // /auth/change-password and /auth/reset-password paths meant the opposite.
   resetPassword: "/auth/password/reset",
   changePassword: "/auth/password/change",
-};
+}
 
 export const BADMINTON = {
   sessions: "/badminton/sessions",
   session: (id: string) => `/badminton/sessions/${id}`,
   suggest: "/badminton/participants/suggest",
   publicSession: (shareToken: string) => `/badminton/public/${shareToken}`,
-};
+}
 
 export const USERS = {
   me: "/users/me",
-};
+}

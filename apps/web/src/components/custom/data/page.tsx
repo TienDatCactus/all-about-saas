@@ -1,17 +1,18 @@
-import DataState from "./state";
-import type React from "react";
-import type { DataStateProps } from "./state";
-import { PageShell } from "../page-shell";
-import { PageHeader } from "../page-shell/page-header";
+import DataState from "./state"
+import type React from "react"
+import type { DataStateProps } from "./state"
+import { PageShell } from "../page-shell"
+import { PageHeader } from "../page-shell/page-header"
 
 type HeaderValue<TData> =
-  React.ReactNode | ((data: TData | undefined) => React.ReactNode);
+  | React.ReactNode
+  | ((data: TData | undefined) => React.ReactNode)
 
 interface DataPageProps<TData> extends DataStateProps<TData> {
   /** Static node, or a function of the (possibly not yet loaded) query data. */
-  title: HeaderValue<TData>;
-  description?: HeaderValue<TData>;
-  actions?: React.ReactNode;
+  title: HeaderValue<TData>
+  description?: HeaderValue<TData>
+  actions?: React.ReactNode
 }
 
 /*
@@ -35,7 +36,7 @@ export default function DataPage<TData>({
   ...state
 }: DataPageProps<TData>) {
   const resolve = (value: HeaderValue<TData>) =>
-    typeof value === "function" ? value(state.query.data) : value;
+    typeof value === "function" ? value(state.query.data) : value
 
   return (
     <PageShell>
@@ -46,5 +47,5 @@ export default function DataPage<TData>({
       />
       <DataState {...state} />
     </PageShell>
-  );
+  )
 }

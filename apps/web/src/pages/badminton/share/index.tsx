@@ -1,12 +1,12 @@
-import { computeSplit } from "@repo/badminton-calc";
-import { BadmintonSummary } from "../components/Summary";
-import type { PublicSession } from "@/services/badminton/types";
-import DataPage from "@/components/custom/data/page";
-import { Skeleton } from "@/components/ui/skeleton";
-import { usePublicSessionQuery } from "@/services/badminton/queries";
+import { computeSplit } from "@repo/badminton-calc"
+import { BadmintonSummary } from "../components/Summary"
+import type { PublicSession } from "@/services/badminton/types"
+import DataPage from "@/components/custom/data/page"
+import { Skeleton } from "@/components/ui/skeleton"
+import { usePublicSessionQuery } from "@/services/badminton/queries"
 
 function toComputed(session: PublicSession) {
-  if (session.computed) return session.computed;
+  if (session.computed) return session.computed
   // Fallback: recompute from inputs if the stored snapshot is missing.
   return computeSplit({
     courtCost: session.courtCost,
@@ -19,15 +19,15 @@ function toComputed(session: PublicSession) {
       discount: p.discount,
       shuttleFraction: p.shuttleFraction,
     })),
-  });
+  })
 }
 
 export default function BadmintonSummaryPage({
   shareToken,
 }: {
-  shareToken: string;
+  shareToken: string
 }) {
-  const publicQuery = usePublicSessionQuery(shareToken);
+  const publicQuery = usePublicSessionQuery(shareToken)
 
   return (
     <DataPage
@@ -50,5 +50,5 @@ export default function BadmintonSummaryPage({
         </div>
       )}
     </DataPage>
-  );
+  )
 }

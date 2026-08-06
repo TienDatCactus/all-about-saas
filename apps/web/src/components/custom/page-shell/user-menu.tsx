@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
 import {
   BadgeCheckIcon,
   BellIcon,
   CreditCardIcon,
   LogOutIcon,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +15,12 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/lib/context/auth";
-import { DataAvatar } from "../data/avatar";
+} from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/lib/context/auth"
+import { DataAvatar } from "../data/avatar"
 
 export function UserMenu() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuth()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -50,5 +50,5 @@ export function UserMenu() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

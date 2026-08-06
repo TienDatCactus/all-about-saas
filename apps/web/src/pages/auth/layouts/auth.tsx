@@ -1,23 +1,23 @@
-import { Link } from "@tanstack/react-router";
-import Logo from "@/components/custom/logo";
-import { Separator } from "@/components/ui/separator";
+import { Link } from "@tanstack/react-router"
+import Logo from "@/components/custom/logo"
+import { Separator } from "@/components/ui/separator"
 
 interface AuthLayoutProps {
   title: {
-    text: string;
-    link?: string;
-    anchor?: string;
-  };
-  form: React.ReactNode;
+    text: string
+    link?: string
+    anchor?: string
+  }
+  form: React.ReactNode
   action?: {
-    text?: string;
-    component: React.ReactNode;
-  };
+    text?: string
+    component: React.ReactNode
+  }
   legend?: {
-    text?: string;
-    link?: string;
-    anchor?: string;
-  };
+    text?: string
+    link?: string
+    anchor?: string
+  }
 }
 export default function AuthLayout({
   title,
@@ -81,5 +81,5 @@ export default function AuthLayout({
         )}
       </div>
     </div>
-  );
+  )
 }

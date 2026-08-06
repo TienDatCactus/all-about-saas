@@ -4,10 +4,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import LoginForm from "./components/Form";
-import { Separator } from "@/components/ui/separator";
-import Providers from "./components/Providers";
+} from "@/components/ui/dialog"
+import LoginForm from "./components/Form"
+import { Separator } from "@/components/ui/separator"
+import Providers from "./components/Providers"
 
 /**
  * The non-redirect auth gate's modal (routes/_authenticated.tsx): rendered
@@ -47,5 +47,5 @@ export function LoginDialog() {
         <Providers />
       </DialogContent>
     </Dialog>
-  );
+  )
 }

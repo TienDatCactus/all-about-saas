@@ -13,6 +13,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu"
 import {
@@ -78,7 +81,19 @@ export interface DataDropdownProps<T> {
   /** `destructive` styles the row as a dangerous action (`none` mode only). */
   getVariant?: (item: T) => "default" | "destructive"
   isDisabled?: (item: T) => boolean
-  /** Fires on activation in every selection mode. `index` is the flat position. */
+  /**
+   * Children of a row. A non-empty array turns the row into a submenu: same
+   * row layout as the sub-trigger (plus the caret), children rendered in a
+   * DropdownMenuSubContent through this same pipeline — so grandchildren
+   * nest further, and selection modes / getters apply at every depth. The
+   * sub-trigger itself only opens the flyout; it never fires onSelect.
+   */
+  getChildren?: (item: T) => T[] | undefined
+  /**
+   * Fires on activation in every selection mode. `index` is the item's
+   * pre-order position across the whole tree (groups, then each item followed
+   * by its children).
+   */
   onSelect?: (item: T, index: number) => void
   /**
    * Custom trigger element. Rendered via Radix `asChild`, so it must accept a
@@ -95,8 +110,8 @@ export interface DataDropdownProps<T> {
  * Dropdown over an arbitrary list of data. Rows default to the Item layout
  * (media + title + description, where media is any node — avatar, icon…);
  * pass `renderItem` to replace a row wholesale or `trigger` to replace the
- * button. Supports labeled groups and radio / checkbox selection on top of
- * plain action items.
+ * button. Supports labeled groups, radio / checkbox selection, and nested
+ * submenus (`getChildren`) on top of plain action items.
  */
 export function DataDropdown<T>({
   items,
@@ -115,6 +130,7 @@ export function DataDropdown<T>({
   getShortcut,
   getVariant,
   isDisabled,
+  getChildren,
   onSelect,
   trigger,
   label = "Select",
@@ -142,7 +158,13 @@ export function DataDropdown<T>({
     )
   }
 
-  const renderMenuItem = (item: T, index: number) => {
+  // Pre-order position across the whole tree, assigned as rows render. A
+  // plain counter (reset every render) keeps `index` meaningful for flat
+  // lists, groups and nested submenus alike.
+  let cursor = 0
+
+  const renderMenuItem = (item: T): React.ReactNode => {
+    const index = cursor++
     const key = String(getKey ? getKey(item, index) : index)
     const disabled = isDisabled?.(item)
     const shortcut = getShortcut?.(item)
@@ -154,6 +176,21 @@ export function DataDropdown<T>({
         )}
       </>
     )
+
+    const children = getChildren?.(item)
+    if (children && children.length > 0) {
+      return (
+        <DropdownMenuSub key={key}>
+          {/* SubTrigger appends its own caret after the row content. */}
+          <DropdownMenuSubTrigger disabled={disabled}>
+            {content}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            {children.map((child) => renderMenuItem(child))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      )
+    }
 
     if (selectionMode === "single") {
       return (
@@ -202,24 +239,17 @@ export function DataDropdown<T>({
     )
   }
 
-  // Flat position across sections, so onSelect's index means the same thing
-  // whether the data came in as `items` or `groups`.
-  let flatIndex = 0
-  const body = sections.map((group, groupIndex) => {
-    const start = flatIndex
-    flatIndex += group.items.length
-    return (
-      <React.Fragment key={group.key ?? groupIndex}>
-        {groupIndex > 0 && <DropdownMenuSeparator />}
-        <DropdownMenuGroup>
-          {group.label != null && (
-            <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
-          )}
-          {group.items.map((item, i) => renderMenuItem(item, start + i))}
-        </DropdownMenuGroup>
-      </React.Fragment>
-    )
-  })
+  const body = sections.map((group, groupIndex) => (
+    <React.Fragment key={group.key ?? groupIndex}>
+      {groupIndex > 0 && <DropdownMenuSeparator />}
+      <DropdownMenuGroup>
+        {group.label != null && (
+          <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+        )}
+        {group.items.map((item) => renderMenuItem(item))}
+      </DropdownMenuGroup>
+    </React.Fragment>
+  ))
 
   return (
     <DropdownMenu>

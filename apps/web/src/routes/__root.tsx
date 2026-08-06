@@ -1,15 +1,15 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MotionConfig } from "motion/react";
-import appCss from "../styles.css?url";
-import { getErrorStatus } from "@/lib/utils/http";
-import { ConfirmProvider } from "@/components/custom/confirm";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { MotionProvider, useMotion } from "@/lib/context/animation";
-import { AuthProvider } from "@/lib/context/auth";
-import { ThemeProvider } from "@/lib/context/theme";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { MotionConfig } from "motion/react"
+import appCss from "../styles.css?url"
+import { getErrorStatus } from "@/lib/utils/http"
+import { ConfirmProvider } from "@/components/custom/confirm"
+import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { MotionProvider, useMotion } from "@/lib/context/animation"
+import { AuthProvider } from "@/lib/context/auth"
+import { ThemeProvider } from "@/lib/context/theme"
 
 export const Route = createRootRoute({
   staticData: { crumb: "Home" },
@@ -54,32 +54,28 @@ export const Route = createRootRoute({
     </main>
   ),
   shellComponent: Providers,
-});
+})
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        const status = getErrorStatus(error);
+        const status = getErrorStatus(error)
         // No status = no server verdict (network drop, timeout). Worth a retry.
         // A schema mismatch also lands here, and retrying won't fix it — but
         // two extra requests is a cheap price for not special-casing it.
-        if (status === undefined) return failureCount < 2;
-        if (status >= 400 && status < 500) return false;
-        return failureCount < 2;
+        if (status === undefined) return failureCount < 2
+        if (status >= 400 && status < 500) return false
+        return failureCount < 2
       },
     },
   },
-});
+})
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { preference } = useMotion();
+  const { preference } = useMotion()
   const reducedMotionMode =
-    preference === "system"
-      ? "user"
-      : preference === "off"
-        ? "always"
-        : "never";
+    preference === "system" ? "user" : preference === "off" ? "always" : "never"
   return (
     <MotionConfig isValidProp={() => true} reducedMotion={reducedMotionMode}>
       <html lang="en" suppressHydrationWarning>
@@ -94,7 +90,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </body>
       </html>
     </MotionConfig>
-  );
+  )
 }
 
 function Providers({ children }: { children: React.ReactNode }) {
@@ -113,5 +109,5 @@ function Providers({ children }: { children: React.ReactNode }) {
         </QueryClientProvider>
       </MotionProvider>
     </ThemeProvider>
-  );
+  )
 }

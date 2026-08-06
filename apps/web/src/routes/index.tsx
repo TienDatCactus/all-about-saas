@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { authApi } from "@/services/auth";
-import { PageShell } from "@/components/custom/page-shell";
+import { createFileRoute } from "@tanstack/react-router"
+import { Button } from "@/components/ui/button"
+import { authApi } from "@/services/auth"
+import { PageShell } from "@/components/custom/page-shell"
 
 export const Route = createFileRoute("/")({
   component: App,
-});
+})
 
 function App() {
   return (
@@ -19,12 +19,12 @@ function App() {
         <Button
           onClick={() => {
             // Dev scratch button: fire the refresh call and ignore the result.
-            void authApi.refresh();
+            void authApi.refresh()
           }}
         >
           dat
         </Button>
       </div>
     </PageShell>
-  );
+  )
 }
