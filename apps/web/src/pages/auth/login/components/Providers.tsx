@@ -1,15 +1,15 @@
-import React from "react";
-import { ReactSVG } from "react-svg";
-import { Button } from "@/components/ui/button";
-import { loadAsset } from "@/lib/utils";
-import { authApi } from "@/services/auth";
+import React from "react"
+import { ReactSVG } from "react-svg"
+import { Button } from "@/components/ui/button"
+import { loadAsset } from "@/lib/utils"
+import { authApi } from "@/services/auth"
 
 interface Provider {
-  name: string;
-  iconUrl: string;
+  name: string
+  iconUrl: string
   // The auth API's OAuth entry points are async (they resolve to a redirect),
   // so the callback is allowed to return a promise the caller fires and forgets.
-  callback: (returnTo?: string) => void;
+  callback: (returnTo?: string) => void
 }
 
 /**
@@ -19,8 +19,8 @@ interface Provider {
  * successful login would be absurd, so those fall back to home.
  */
 function currentReturnTo(): string {
-  const path = window.location.pathname + window.location.search;
-  return path.startsWith("/auth") ? "/" : path;
+  const path = window.location.pathname + window.location.search
+  return path.startsWith("/auth") ? "/" : path
 }
 const providers: Array<Provider> = [
   {
@@ -38,7 +38,7 @@ const providers: Array<Provider> = [
     iconUrl: loadAsset("facebook.svg", "svg"),
     callback: authApi.loginWithFacebook,
   },
-];
+]
 const Providers: React.FC = () => {
   return (
     <ul className="space-y-4">
@@ -49,7 +49,7 @@ const Providers: React.FC = () => {
           className="flex w-full items-center justify-center space-x-2 py-2"
           onClick={() => {
             // Fire-and-forget: the callback just kicks off the OAuth redirect.
-            void provider.callback(currentReturnTo());
+            void provider.callback(currentReturnTo())
           }}
         >
           <ReactSVG src={provider.iconUrl} aria-hidden={true} />
@@ -59,7 +59,7 @@ const Providers: React.FC = () => {
         </Button>
       ))}
     </ul>
-  );
-};
+  )
+}
 
-export default Providers;
+export default Providers
