@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useCallback, useEffect, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 
-import { cn } from "@/lib/utils";
-import { MoonIcon, SunIcon } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/lib/context/theme";
+import { cn } from "@/lib/utils"
+import { MoonIcon, SunIcon } from "@phosphor-icons/react"
+import { Button } from "@/components/ui/button"
+import { useTheme } from "@/lib/context/theme"
 
 interface AnimatedThemeTogglerProps extends React.ComponentPropsWithoutRef<"button"> {
-  duration?: number;
+  duration?: number
 }
 
 export const ThemeToggler = ({
@@ -17,16 +17,16 @@ export const ThemeToggler = ({
   duration = 600,
   ...props
 }: AnimatedThemeTogglerProps) => {
-  const { theme, setTheme } = useTheme();
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme()
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   const toggleTheme = useCallback(() => {
-    if (!buttonRef.current) return;
+    if (!buttonRef.current) return
 
     // "system" must be resolved before flipping, or an OS-dark user's first
     // click "switches" to the dark they are already looking at — a no-op with
@@ -34,28 +34,28 @@ export const ThemeToggler = ({
     const resolvedDark =
       theme === "system"
         ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        : theme === "dark";
-    const newTheme = resolvedDark ? "light" : "dark";
+        : theme === "dark"
+    const newTheme = resolvedDark ? "light" : "dark"
 
     if (document.startViewTransition) {
       document
         .startViewTransition(() => {
           flushSync(() => {
-            setTheme(newTheme);
-          });
+            setTheme(newTheme)
+          })
         })
         .ready.then(() => {
           // Unmounted mid-transition (route change) leaves the ref null; the
           // theme is already applied, only the reveal animation is skipped.
-          if (!buttonRef.current) return;
+          if (!buttonRef.current) return
           const { top, left, width, height } =
-            buttonRef.current.getBoundingClientRect();
-          const x = left + width / 2;
-          const y = top + height / 2;
+            buttonRef.current.getBoundingClientRect()
+          const x = left + width / 2
+          const y = top + height / 2
           const maxRadius = Math.hypot(
             Math.max(left, window.innerWidth - left),
-            Math.max(top, window.innerHeight - top),
-          );
+            Math.max(top, window.innerHeight - top)
+          )
 
           document.documentElement.animate(
             {
@@ -68,18 +68,18 @@ export const ThemeToggler = ({
               duration,
               easing: "ease-in-out",
               pseudoElement: "::view-transition-new(root)",
-            },
-          );
+            }
+          )
         })
         // `.ready` rejects whenever the transition is skipped — hidden tab,
         // a second click starting a new transition, reduced-motion. The theme
         // itself already switched; only the reveal is lost, so swallow it
         // instead of surfacing an unhandled rejection.
-        .catch(() => {});
+        .catch(() => {})
     } else {
-      setTheme(newTheme);
+      setTheme(newTheme)
     }
-  }, [theme, setTheme, duration]);
+  }, [theme, setTheme, duration])
 
   // Same "system" resolution as the toggle, gated on mounted so SSR never
   // touches window; pre-mount the fallback branch below renders regardless.
@@ -87,7 +87,7 @@ export const ThemeToggler = ({
     mounted &&
     (theme === "system"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
-      : theme === "dark");
+      : theme === "dark")
 
   return (
     <Button
@@ -109,5 +109,5 @@ export const ThemeToggler = ({
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>
-  );
-};
+  )
+}

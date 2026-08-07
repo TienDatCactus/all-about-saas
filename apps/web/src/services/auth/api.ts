@@ -1,5 +1,5 @@
-import * as z from "zod";
-import { AUTH } from "../url";
+import * as z from "zod"
+import { AUTH } from "../url"
 import type {
   ChangePasswordIn,
   LoginIn,
@@ -7,9 +7,9 @@ import type {
   SendVerificationEmailIn,
   SignUpIn,
   VerifyEmailIn,
-} from "./types";
-import { http } from "@/lib/utils/http";
-import { parseResponse } from "@/lib/utils/parse-response";
+} from "./types"
+import { http } from "@/lib/utils/http"
+import { parseResponse } from "@/lib/utils/parse-response"
 
 /**
  * What login and refresh actually put on the wire. The old
@@ -18,36 +18,36 @@ import { parseResponse } from "@/lib/utils/parse-response";
  * API drifts, parseResponse fails loudly at the boundary instead of handing a
  * garbage "token" to the Authorization header.
  */
-const AccessTokenSchema = z.object({ accessToken: z.string().min(1) });
+const AccessTokenSchema = z.object({ accessToken: z.string().min(1) })
 
 const withReturnTo = (url: string, returnTo?: string) =>
-  returnTo ? `${url}?returnTo=${encodeURIComponent(returnTo)}` : url;
+  returnTo ? `${url}?returnTo=${encodeURIComponent(returnTo)}` : url
 
 export const authApi = {
   login: (data: LoginIn): Promise<string> =>
     parseResponse(
       "auth.login",
       AccessTokenSchema,
-      http.post(AUTH.login, data),
+      http.post(AUTH.login, data)
     ).then((r) => r.accessToken),
   logout: async (): Promise<void> => {
-    return http.post(AUTH.logout);
+    return http.post(AUTH.logout)
   },
   signUp: async (data: Pick<SignUpIn, "email" | "password">): Promise<void> => {
-    return http.post(AUTH.signup, data);
+    return http.post(AUTH.signup, data)
   },
   // OAuth is a full-page round-trip, so the SPA path to come back to has to
   // travel with the request — the API parks it in a cookie and its callback
   // redirects to FRONTEND_URL + returnTo. Server-side validation only accepts
   // absolute in-app paths ("/badminton"), anything else falls back to "/".
   loginWithGoogle: (returnTo?: string): void => {
-    window.location.href = withReturnTo(AUTH.googleLogin, returnTo);
+    window.location.href = withReturnTo(AUTH.googleLogin, returnTo)
   },
   loginWithGithub: (returnTo?: string): void => {
-    window.location.href = withReturnTo(AUTH.githubLogin, returnTo);
+    window.location.href = withReturnTo(AUTH.githubLogin, returnTo)
   },
   loginWithFacebook: (returnTo?: string): void => {
-    window.location.href = withReturnTo(AUTH.facebookLogin, returnTo);
+    window.location.href = withReturnTo(AUTH.facebookLogin, returnTo)
   },
   refresh: (): Promise<string> =>
     parseResponse(
@@ -55,21 +55,21 @@ export const authApi = {
       AccessTokenSchema,
       // Silent background call — it must not drive the top loading bar,
       // whose cycle belongs to the 401'd request being retried.
-      http.post(AUTH.refresh, undefined, { skipLoadingBar: true }),
+      http.post(AUTH.refresh, undefined, { skipLoadingBar: true })
     ).then((r) => r.accessToken),
   verifyEmail: async (data: VerifyEmailIn) => {
-    return http.post(AUTH.verifyEmail, data);
+    return http.post(AUTH.verifyEmail, data)
   },
   sendVerificationEmail: async (
-    data: SendVerificationEmailIn,
+    data: SendVerificationEmailIn
   ): Promise<void> => {
-    return http.post(AUTH.sendVerificationEmail, data);
+    return http.post(AUTH.sendVerificationEmail, data)
   },
   /** Finish a forgotten-password reset using the emailed selector + token. */
   resetPassword: async (
-    data: Pick<ResetPasswordIn, "selector" | "token" | "password">,
+    data: Pick<ResetPasswordIn, "selector" | "token" | "password">
   ): Promise<void> => {
-    return http.post(AUTH.resetPassword, data);
+    return http.post(AUTH.resetPassword, data)
   },
   /**
    * Change the signed-in user's own password. The account comes from the JWT;
@@ -77,8 +77,8 @@ export const authApi = {
    * session on success.
    */
   changePassword: async (
-    data: Pick<ChangePasswordIn, "currentPassword" | "newPassword">,
+    data: Pick<ChangePasswordIn, "currentPassword" | "newPassword">
   ): Promise<void> => {
-    return http.post(AUTH.changePassword, data);
+    return http.post(AUTH.changePassword, data)
   },
-};
+}
