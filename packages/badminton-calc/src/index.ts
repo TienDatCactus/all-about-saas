@@ -55,7 +55,7 @@ export interface CalcInput {
   shuttleUnitPrice: number;
   /** Total shuttles used in the session (shared pot). shuttleCost = shuttleUnitPrice × this. */
   totalShuttleCount: number;
-  participants: CalcParticipanArray<T>;
+  participants: CalcParticipant[];
 }
 
 const ROUND_UNIT = 1000;
@@ -86,8 +86,7 @@ export function computeSplit(
   input: CalcInput,
   computedAt: string = new Date().toISOString(),
 ): ComputedSnapshot {
-  const { courtCost, shuttleUnitPrice, totalShuttleCount, participants } =
-    input;
+  const { courtCost, shuttleUnitPrice, totalShuttleCount, participants } = input;
 
   const shuttleCost = shuttleUnitPrice * totalShuttleCount;
   const expense = courtCost + shuttleCost;
