@@ -36,10 +36,6 @@ export async function parseResponse<TSchema extends z.ZodType>(
   if (result.success) {
     return result.data
   }
-  // Logged as well as thrown: the throw reaches the UI as a generic error state,
-  // while this line keeps the field-level detail in the console where it is
-  // actually actionable.
-  console.error(`[api] ${endpoint} failed response validation`, result.error)
   throw new ResponseContractError(endpoint, result.error.issues)
 }
 

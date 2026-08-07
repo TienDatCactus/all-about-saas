@@ -65,6 +65,8 @@ const baseSchema = z.looseObject({
 	FRONTEND_URL: z.string().min(1).optional(),
 	BASE_PASSWORD: z.string().min(1).optional(),
 
+	DEV_AUTH_BYPASS: z.enum(['true', 'false']).optional(),
+
 	...oauthProvider('GOOGLE'),
 	...oauthProvider('GITHUB'),
 	...oauthProvider('FACEBOOK'),
@@ -86,6 +88,18 @@ const envSchema = baseSchema.superRefine((env, ctx) => {
 			path: ['FRONTEND_URL'],
 			message:
 				'FRONTEND_URL is required in production — CORS needs an explicit origin allowlist',
+		});
+	}
+
+	// POST /auth/dev/login mints real tokens for any email, no credentials — it
+	// exists so local dev needs no OAuth apps. In production that is an open
+	// door into any account, so the flag is refused before the route can exist.
+	if (env.NODE_ENV === 'production' && env.DEV_AUTH_BYPASS === 'true') {
+		ctx.addIssue({
+			code: 'custom',
+			path: ['DEV_AUTH_BYPASS'],
+			message:
+				'DEV_AUTH_BYPASS=true is refused in production — it lets anyone log in as any email without credentials',
 		});
 	}
 

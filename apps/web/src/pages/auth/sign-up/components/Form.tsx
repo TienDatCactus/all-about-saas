@@ -47,7 +47,7 @@ const SignUpForm: React.FC = () => {
         void form.handleSubmit()
       }}
       method="post"
-      className="mt-6 space-y-4"
+      className="space-y-4"
     >
       <FieldGroup>
         <FormField form={form} name="email" label="Email">

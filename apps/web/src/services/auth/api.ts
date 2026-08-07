@@ -20,6 +20,9 @@ import { parseResponse } from "@/lib/utils/parse-response"
  */
 const AccessTokenSchema = z.object({ accessToken: z.string().min(1) })
 
+const withReturnTo = (url: string, returnTo?: string) =>
+  returnTo ? `${url}?returnTo=${encodeURIComponent(returnTo)}` : url
+
 export const authApi = {
   login: (data: LoginIn): Promise<string> =>
     parseResponse(
@@ -33,20 +36,26 @@ export const authApi = {
   signUp: async (data: Pick<SignUpIn, "email" | "password">): Promise<void> => {
     return http.post(AUTH.signup, data)
   },
-  loginWithGoogle: async (): Promise<void> => {
-    window.location.href = AUTH.googleLogin
+  // OAuth is a full-page round-trip, so the SPA path to come back to has to
+  // travel with the request — the API parks it in a cookie and its callback
+  // redirects to FRONTEND_URL + returnTo. Server-side validation only accepts
+  // absolute in-app paths ("/badminton"), anything else falls back to "/".
+  loginWithGoogle: (returnTo?: string): void => {
+    window.location.href = withReturnTo(AUTH.googleLogin, returnTo)
   },
-  loginWithGithub: async (): Promise<void> => {
-    window.location.href = AUTH.githubLogin
+  loginWithGithub: (returnTo?: string): void => {
+    window.location.href = withReturnTo(AUTH.githubLogin, returnTo)
   },
-  loginWithFacebook: async (): Promise<void> => {
-    window.location.href = AUTH.facebookLogin
+  loginWithFacebook: (returnTo?: string): void => {
+    window.location.href = withReturnTo(AUTH.facebookLogin, returnTo)
   },
   refresh: (): Promise<string> =>
     parseResponse(
       "auth.refresh",
       AccessTokenSchema,
-      http.post(AUTH.refresh)
+      // Silent background call — it must not drive the top loading bar,
+      // whose cycle belongs to the 401'd request being retried.
+      http.post(AUTH.refresh, undefined, { skipLoadingBar: true })
     ).then((r) => r.accessToken),
   verifyEmail: async (data: VerifyEmailIn) => {
     return http.post(AUTH.verifyEmail, data)

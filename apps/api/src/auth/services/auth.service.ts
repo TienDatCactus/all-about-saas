@@ -101,12 +101,26 @@ export class AuthService {
 		if (!user.isActive) {
 			throw new HttpException('User is not active', 400);
 		}
-		const payload: PayloadDto = {
-			email: user.email,
-			sub: user.id,
+		return {
+			...(await this.issueSession(
+				{ id: user.id, email: user.email },
+				sessionInfo,
+			)),
+			user,
 		};
-		const refreshToken = await this.tokensService.generateRefreshToken(payload);
+	}
+
+	/**
+	 * The shared tail of every way to become logged in — password, OAuth,
+	 * dev bypass: sign the token pair and record the session row.
+	 */
+	private async issueSession(
+		user: { id: string; email: string },
+		sessionInfo: SessionInfo,
+	): Promise<Omit<LoginResp, 'user'>> {
+		const payload: PayloadDto = { email: user.email, sub: user.id };
 		const accessToken = await this.tokensService.generateAccessToken(payload);
+		const refreshToken = await this.tokensService.generateRefreshToken(payload);
 		const expiresAt = this.sessionExpiry();
 		await this.sessionRepo.save(
 			this.sessionRepo.create({
@@ -118,12 +132,36 @@ export class AuthService {
 				expiresAt,
 			}),
 		);
-		return {
-			accessToken,
-			refreshToken,
-			refreshTokenExpiresAt: expiresAt,
-			user,
-		};
+		return { accessToken, refreshToken, refreshTokenExpiresAt: expiresAt };
+	}
+
+	/**
+	 * Dev-only sign-in: find-or-create a verified, active account for `email`
+	 * and issue a real session — no password, no OAuth provider round-trip.
+	 * Exists so local dev needs no OAuth apps at all; the route is gated on
+	 * `devAuthBypass`, which env validation refuses in production.
+	 */
+	async devLogin(email: string, sessionInfo: SessionInfo): Promise<LoginResp> {
+		let user = await this.usersService.findOne({ email });
+		if (!user) {
+			user = await this.usersService.create({
+				email,
+				// Throwaway: these accounts sign in through this endpoint, and a
+				// guessable shared password would outlive the dev database it was
+				// seeded into.
+				password: crypto.randomBytes(16).toString('hex'),
+				emailVerified: true,
+				isActive: true,
+			});
+		} else if (!user.isActive || !user.emailVerified) {
+			// The point of the bypass is to skip the email-verification loop, so an
+			// account created via ordinary signup must not stay locked behind it.
+			await this.usersService.update(user.id, {
+				emailVerified: true,
+				isActive: true,
+			});
+		}
+		return { ...(await this.issueSession(user, sessionInfo)), user };
 	}
 
 	/** refreshExpiresIn is configured in seconds; Date math is in ms. */
@@ -208,27 +246,7 @@ export class AuthService {
 			throw new HttpException('Failed to create user from OAuth data', 400);
 		}
 
-		const payload: PayloadDto = { email: user.email, sub: user.id };
-		const accessToken = await this.tokensService.generateAccessToken(payload);
-		const refreshToken = await this.tokensService.generateRefreshToken(payload);
-
-		const expiresAt = this.sessionExpiry();
-		const session = this.sessionRepo.create({
-			userId: user.id,
-			refreshTokenHash: this.tokensService.hashToken(refreshToken),
-			deviceName: sessionInfo.deviceName,
-			ipAddress: sessionInfo.ipAddress,
-			userAgent: sessionInfo.userAgent,
-			expiresAt,
-		});
-		await this.sessionRepo.save(session);
-
-		return {
-			user,
-			accessToken,
-			refreshToken,
-			refreshTokenExpiresAt: expiresAt,
-		};
+		return { ...(await this.issueSession(user, sessionInfo)), user };
 	}
 
 	/**

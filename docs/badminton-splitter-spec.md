@@ -21,15 +21,15 @@ scaffold, reusing the current auth, users, and CASL layers.
 The original base plan named Next.js / React Hook Form / Prisma / SQLite. **The repo
 uses none of those.** Build against what's actually here:
 
-| Concern | Use |
-|---|---|
-| Web app | `apps/web` — **TanStack Start** (Vite + Nitro SSR), `@tanstack/react-router` |
-| Forms | **`@tanstack/react-form`** + **Zod v4** |
-| UI | shadcn v4 on Base UI + Radix, Tailwind v4, `sonner` toasts |
-| Summary table | Plain shadcn `<Table>` for v1 (an 8-row table doesn't need TanStack Table; skip the dep) |
-| API | `apps/api` — **NestJS 11 + TypeORM 0.3 + PostgreSQL** |
-| Auth / RBAC | Reuse existing JWT/SSO auth, `users`, and **CASL** |
-| Shared calc | New workspace package `packages/badminton-calc` — one pure implementation imported by BOTH web and api |
+| Concern       | Use                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| Web app       | `apps/web` — **TanStack Start** (Vite + Nitro SSR), `@tanstack/react-router`                           |
+| Forms         | **`@tanstack/react-form`** + **Zod v4**                                                                |
+| UI            | shadcn v4 on Base UI + Radix, Tailwind v4, `sonner` toasts                                             |
+| Summary table | Plain shadcn `<Table>` for v1 (an 8-row table doesn't need TanStack Table; skip the dep)               |
+| API           | `apps/api` — **NestJS 11 + TypeORM 0.3 + PostgreSQL**                                                  |
+| Auth / RBAC   | Reuse existing JWT/SSO auth, `users`, and **CASL**                                                     |
+| Shared calc   | New workspace package `packages/badminton-calc` — one pure implementation imported by BOTH web and api |
 
 The shared calc package is the key architectural call: the split algorithm must
 produce identical numbers on the client (instant preview) and the server (canonical
@@ -39,31 +39,33 @@ snapshot for the share link). One source of truth prevents drift.
 
 ## 3. Locked decisions (from interview)
 
-| Area | Decision |
-|---|---|
-| Scope | **Full integrated**: Nest API module + Postgres persistence, tied to existing users/CASL |
-| Court fee | **Time-proportional** via a per-player played-fraction (0–100%, default 100%) |
-| Shuttle cost | **Unit price × count** → total shuttle cost is *derived*, not typed |
-| Discount effect | **Redistributed** onto everyone else, so collected == expense. Applies to the **whole bill** (court + shuttle) |
-| Discount storage | **Per-session only** — not stored on any player profile |
-| Rounding | Round each share to **nearest 1,000 VND**, distribute leftover by **largest-remainder** |
-| Player identity | Participant is **either a linked app user (`userId`) or a free-text name**; UI resolves via autocomplete |
-| History/stats | Key off `userId` when linked; free-text names are ephemeral. **All analytics deferred** past v1 |
-| Guests | Free-text names are the guest path (quick-add, no account needed) |
-| Access | **Login required to create/edit**; **public unguessable read-only link** to view/verify |
-| Settlement | **Calc + copy only** in v1 — no paid/unpaid tracking, no bank QR |
-| Locale | **VND**, English UI, Vietnamese number formatting (`150.000`) |
+| Area             | Decision                                                                                                       |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| Scope            | **Full integrated**: Nest API module + Postgres persistence, tied to existing users/CASL                       |
+| Court fee        | **Time-proportional** via a per-player played-fraction (0–100%, default 100%)                                  |
+| Shuttle cost     | **Unit price × count** → total shuttle cost is _derived_, not typed                                            |
+| Discount effect  | **Redistributed** onto everyone else, so collected == expense. Applies to the **whole bill** (court + shuttle) |
+| Discount storage | **Per-session only** — not stored on any player profile                                                        |
+| Rounding         | Round each share to **nearest 1,000 VND**, distribute leftover by **largest-remainder**                        |
+| Player identity  | Participant is **either a linked app user (`userId`) or a free-text name**; UI resolves via autocomplete       |
+| History/stats    | Key off `userId` when linked; free-text names are ephemeral. **All analytics deferred** past v1                |
+| Guests           | Free-text names are the guest path (quick-add, no account needed)                                              |
+| Access           | **Login required to create/edit**; **public unguessable read-only link** to view/verify                        |
+| Settlement       | **Calc + copy only** in v1 — no paid/unpaid tracking, no bank QR                                               |
+| Locale           | **VND**, English UI, Vietnamese number formatting (`150.000`)                                                  |
 
 ### Explicitly deferred (design so they drop in later, don't build now)
+
 Saved analytics dashboard (total spent per player, avg/session, games played) ·
 paid/unpaid settlement · VietQR generation · Excel/PDF export · dark mode polish ·
 i18n / Vietnamese UI · reusable player roster with default discounts.
 
 ### v2 idea — court-fee "satisfaction" reaction (optional)
+
 A lightweight per-player reaction on their computed **court** share so the group can
 signal agreement before settling — e.g. a 👍 / 👎 (or thumbs / "seems fair" / "too much")
 tap on each row. Purpose: surface disputes about the time-proportional court split
-*before* money changes hands, not a hard vote that changes the math. Optional, **v2**.
+_before_ money changes hands, not a hard vote that changes the math. Optional, **v2**.
 Rough shape when built: a `reaction` value per participant (nullable enum) plus who/when,
 likely on the public share view so non-owners can react. Does **not** affect the
 calculation — purely social confirmation.
@@ -76,27 +78,27 @@ calculation — purely social confirmation.
 // A single session, owned by the authed organizer.
 @Entity()
 class BadmintonSession {
-  @PrimaryGeneratedColumn('uuid') id: string;
+  @PrimaryGeneratedColumn("uuid") id: string;
 
-  @ManyToOne(() => User) owner: User;      // creator; only they can edit
+  @ManyToOne(() => User) owner: User; // creator; only they can edit
   @Column() ownerId: string;
 
-  @Column({ type: 'date' }) playedOn: string;
+  @Column({ type: "date" }) playedOn: string;
   @Column({ nullable: true }) title?: string;
 
   // Money inputs (VND, integer — no decimals in VND).
-  @Column('int') courtCost: number;         // e.g. 150000
-  @Column('int') shuttleUnitPrice: number;  // e.g. per shuttle; shuttleCost is derived
+  @Column("int") courtCost: number; // e.g. 150000
+  @Column("int") shuttleUnitPrice: number; // e.g. per shuttle; shuttleCost is derived
 
   // Public read-only sharing.
-  @Column({ unique: true }) shareToken: string;   // unguessable, e.g. 22-char nanoid
+  @Column({ unique: true }) shareToken: string; // unguessable, e.g. 22-char nanoid
 
   // Canonical computed snapshot, frozen at last save, served to the public link
   // so the share view never recomputes / drifts.
-  @Column({ type: 'jsonb', nullable: true }) computed?: ComputedSnapshot;
+  @Column({ type: "jsonb", nullable: true }) computed?: ComputedSnapshot;
 
-  @OneToMany(() => SessionParticipant, p => p.session, { cascade: true })
-  participants: SessionParticipant[];
+  @OneToMany(() => SessionParticipant, (p) => p.session, { cascade: true })
+  participants: SessionParticipanArray<T>;
 
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
@@ -105,9 +107,11 @@ class BadmintonSession {
 // One attendee in one session. Identity is EITHER a linked user OR a free-text name.
 @Entity()
 class SessionParticipant {
-  @PrimaryGeneratedColumn('uuid') id: string;
+  @PrimaryGeneratedColumn("uuid") id: string;
 
-  @ManyToOne(() => BadmintonSession, s => s.participants, { onDelete: 'CASCADE' })
+  @ManyToOne(() => BadmintonSession, (s) => s.participants, {
+    onDelete: "CASCADE",
+  })
   session: BadmintonSession;
   @Column() sessionId: string;
 
@@ -120,9 +124,9 @@ class SessionParticipant {
   @Column() name: string;
 
   // Split inputs.
-  @Column('float', { default: 1 }) courtFraction: number;    // 0..1, 0 = excluded from court
-  @Column('float', { default: 1 }) shuttleFraction: number;  // 0..1 weight for the shared shuttle pot; 0 = excluded
-  @Column('float', { default: 0 }) discount: number;         // 0..1, e.g. 0.15
+  @Column("float", { default: 1 }) courtFraction: number; // 0..1, 0 = excluded from court
+  @Column("float", { default: 1 }) shuttleFraction: number; // 0..1 weight for the shared shuttle pot; 0 = excluded
+  @Column("float", { default: 0 }) discount: number; // 0..1, e.g. 0.15
 }
 // Session-level: @Column('int', { default: 0 }) totalShuttleCount — the shared shuttle pot.
 ```
@@ -133,16 +137,16 @@ class SessionParticipant {
 type ComputedRow = {
   participantId: string;
   name: string;
-  court: number;    // rounded VND
-  shuttle: number;  // rounded VND
-  total: number;    // court + shuttle, rounded
+  court: number; // rounded VND
+  shuttle: number; // rounded VND
+  total: number; // court + shuttle, rounded
 };
 type ComputedSnapshot = {
   courtCost: number;
-  shuttleCost: number;       // derived = shuttleUnitPrice * totalShuttleCount
-  grandTotal: number;        // courtCost + shuttleCost, rounded to 1000
+  shuttleCost: number; // derived = shuttleUnitPrice * totalShuttleCount
+  grandTotal: number; // courtCost + shuttleCost, rounded to 1000
   rows: ComputedRow[];
-  roundingResidual: number;  // exact expense − Σ rounded totals, absorbed by organizer
+  roundingResidual: number; // exact expense − Σ rounded totals, absorbed by organizer
   computedAt: string;
 };
 ```
@@ -224,6 +228,7 @@ largest-remainder. Golden-number values will be pinned in the calc package's tes
 ## 6. Surfaces
 
 ### API (`apps/api`, new `badminton` module, CASL-guarded)
+
 - `POST   /badminton/sessions` — create (auth). Body = session + participants array. Generates `shareToken`, computes + stores snapshot.
 - `GET    /badminton/sessions` — list mine (auth).
 - `GET    /badminton/sessions/:id` — read mine (auth, CASL `read` own).
@@ -235,6 +240,7 @@ largest-remainder. Golden-number values will be pinned in the calc package's tes
 Server recomputes on every write using `packages/badminton-calc` — client numbers are a preview, server snapshot is canonical.
 
 ### Web (`apps/web`, TanStack Start routes)
+
 - `/badminton` — my sessions list + "New session".
 - `/badminton/sessions/$id` — editor: money inputs, participant rows (autocomplete name/user, fraction %, shuttle count, discount %), live preview table (client calc), Save, "Copy summary", "Copy share link".
 - `/s/$shareToken` — public read-only verification view (SSR from the public endpoint).
@@ -244,6 +250,7 @@ Copy-to-clipboard emits a plain-text / markdown table built from the snapshot.
 ---
 
 ## 7. Validation & edge rules
+
 - VND amounts: non-negative integers. `courtFraction ∈ [0,1]`, `discount ∈ [0,1)`, `shuttleFraction ∈ [0,1]`, `totalShuttleCount` integer ≥ 0.
 - `Σ courtFraction == 0` ⇒ no one charged court (allowed; court effectively free/absorbed elsewhere).
 - `Σ effectiveWeight == 0` (everyone 0 shuttles or 100% discount) ⇒ shuttle shares all 0; surface a warning.
@@ -255,6 +262,7 @@ Copy-to-clipboard emits a plain-text / markdown table built from the snapshot.
 ---
 
 ## 8. Suggested build phases
+
 1. **`packages/badminton-calc`** — pure algorithm + Zod schemas + rounding-invariant unit tests. (No UI, fully testable.)
 2. **API module** — entities, migration, CRUD, CASL rules, public share endpoint, suggest endpoint.
 3. **Web editor** — `/badminton` list + `$id` editor with live preview + copy + share link.

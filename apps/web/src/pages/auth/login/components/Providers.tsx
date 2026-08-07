@@ -9,7 +9,18 @@ interface Provider {
   iconUrl: string
   // The auth API's OAuth entry points are async (they resolve to a redirect),
   // so the callback is allowed to return a promise the caller fires and forgets.
-  callback: () => Promise<void>
+  callback: (returnTo?: string) => void
+}
+
+/**
+ * The in-app path to land on after the provider round-trip: wherever the
+ * user is right now — which is exactly the page the login dialog is covering.
+ * From an /auth/* page (dedicated login screen) going "back" there after a
+ * successful login would be absurd, so those fall back to home.
+ */
+function currentReturnTo(): string {
+  const path = window.location.pathname + window.location.search
+  return path.startsWith("/auth") ? "/" : path
 }
 const providers: Array<Provider> = [
   {
@@ -38,7 +49,7 @@ const Providers: React.FC = () => {
           className="flex w-full items-center justify-center space-x-2 py-2"
           onClick={() => {
             // Fire-and-forget: the callback just kicks off the OAuth redirect.
-            void provider.callback()
+            void provider.callback(currentReturnTo())
           }}
         >
           <ReactSVG src={provider.iconUrl} aria-hidden={true} />

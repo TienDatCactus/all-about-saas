@@ -175,3 +175,15 @@
   -ms-transition: all 0.2s ease-in-out;
   -o-transition: all 0.2s ease-in-out;
 }
+
+/*
+ * Theme toggle's circular reveal (theme-toggle.tsx). The browser's default
+ * view transition cross-fades old and new snapshots, which smears the
+ * clip-path wipe into a blur — so the built-in animation is turned off and
+ * the toggler drives ::view-transition-new(root) itself.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

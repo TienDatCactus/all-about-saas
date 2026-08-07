@@ -20,6 +20,24 @@ import { User } from '../users/entities/user.entity';
 import { GithubStrategy } from './strategy/github.strategy';
 import { FacebookStrategy } from './strategy/facebook.strategy';
 
+/**
+ * A passport strategy registers itself with the provider's client id the
+ * moment its constructor runs, so instantiating one unconditionally forces
+ * every environment to carry OAuth env vars (the old `placeholder_id`
+ * fallbacks). Local dev uses /auth/dev/login instead of OAuth apps, so an
+ * unconfigured provider resolves to `null` and is simply never registered;
+ * the matching guard turns the absence into an explicit 503.
+ */
+const optionalOAuthStrategy = (
+	strategy: new (config: ConfigService) => object,
+	configKey: 'google' | 'github' | 'facebook',
+) => ({
+	provide: strategy,
+	inject: [ConfigService],
+	useFactory: (config: ConfigService) =>
+		config.get<string>(`${configKey}.clientId`) ? new strategy(config) : null,
+});
+
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([Session, VerificationToken, User]),
@@ -40,11 +58,11 @@ import { FacebookStrategy } from './strategy/facebook.strategy';
 		LocalAuthGuard,
 		LocalStrategy,
 		JwtStrategy,
-		GoogleStrategy,
 		GoogleAuthGuard,
 		MailService,
-		GithubStrategy,
-		FacebookStrategy,
+		optionalOAuthStrategy(GoogleStrategy, 'google'),
+		optionalOAuthStrategy(GithubStrategy, 'github'),
+		optionalOAuthStrategy(FacebookStrategy, 'facebook'),
 	],
 	exports: [AuthService, TokensService],
 })

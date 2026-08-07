@@ -5,6 +5,7 @@ import {
   setAccessToken,
 } from "./access-token"
 import { AppConstants } from "./constants"
+import { trackRequestEnd, trackRequestStart } from "./loading-bar"
 import { storage } from "./local-storage"
 import type {
   AxiosInstance,
@@ -14,6 +15,15 @@ import type {
 } from "axios"
 import { toast } from "@/components/custom/toast"
 import { authApi } from "@/services/auth"
+
+// Opt-out for requests that shouldn't drive the top loading bar
+// (background polling, silent refreshes): pass { skipLoadingBar: true }
+// in the request config.
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipLoadingBar?: boolean
+  }
+}
 
 /**
  * HTTP status out of whatever the response interceptor rejected with, which is
@@ -74,6 +84,7 @@ export class HttpClient {
     // below rehydrates it from the refresh cookie — no boot-time ceremony.
     this.axiosInstance.interceptors.request.use(
       (config) => {
+        if (!config.skipLoadingBar) trackRequestStart()
         const token = getAccessToken()
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
@@ -88,6 +99,7 @@ export class HttpClient {
     // Response interceptor
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
+        if (!response.config.skipLoadingBar) trackRequestEnd()
         const method = response.config.method?.toUpperCase()
         const message =
           response.data?.message ||
@@ -114,12 +126,19 @@ export class HttpClient {
         const originalRequest = error.config as
           | (InternalAxiosRequestConfig & { _retry?: boolean })
           | undefined
-        if (
+        const willRetry =
           status === 401 &&
           !isAuthRequest &&
-          originalRequest &&
+          originalRequest !== undefined &&
           !originalRequest._retry
-        ) {
+
+        // On the retry path the bar cycle must stay open until the retry
+        // settles (the finally below) — ending it here would complete() the
+        // bar mid-flow, and the library's delayed reset after complete()
+        // kills any restarted cycle ~1.3s later.
+        if (!willRetry && !error.config?.skipLoadingBar) trackRequestEnd()
+
+        if (willRetry) {
           // Share a single in-flight refresh across all concurrent 401s.
           if (!this.refreshPromise) {
             this.refreshPromise = authApi.refresh().finally(() => {
@@ -133,7 +152,7 @@ export class HttpClient {
 
             originalRequest._retry = true
             originalRequest.headers.Authorization = `Bearer ${token}`
-            return this.axiosInstance(originalRequest)
+            return await this.axiosInstance(originalRequest)
           } catch (refreshError) {
             clearAccessToken()
             storage.clear()
@@ -143,6 +162,10 @@ export class HttpClient {
                 ? refreshError
                 : new Error(String(refreshError))
             )
+          } finally {
+            // The retried request counts its own start/end through the
+            // interceptors; this closes the ORIGINAL request's cycle.
+            if (!originalRequest.skipLoadingBar) trackRequestEnd()
           }
         }
 

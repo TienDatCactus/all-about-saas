@@ -1,5 +1,6 @@
 import { formOptions, useForm } from "@tanstack/react-form"
 import { useNavigate } from "@tanstack/react-router"
+import type { NavigateOptions } from "@tanstack/react-router"
 import React from "react"
 import type { LoginIn } from "@/services/auth"
 import { AddonInput as Input } from "@/components/custom/addon-input"
@@ -16,7 +17,11 @@ const formOpts = formOptions({
     onSubmit: LoginInSchema,
   },
 })
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  redirectTo?: NavigateOptions["to"] | null
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
   const navigate = useNavigate()
   const { mutate, status } = useLoginMutation()
   const form = useForm({
@@ -24,9 +29,10 @@ const LoginForm: React.FC = () => {
     onSubmit: (submission) => {
       mutate(LoginInSchema.parse(submission.value), {
         onSuccess: () => {
+          if (redirectTo === null) return
           // Fire-and-forget: nothing to do after the redirect settles.
           void navigate({
-            to: "/",
+            to: redirectTo,
           })
         },
       })
@@ -42,7 +48,7 @@ const LoginForm: React.FC = () => {
         void form.handleSubmit()
       }}
       method="post"
-      className="mt-6 space-y-4"
+      className="space-y-4"
     >
       <FieldGroup>
         <FormField form={form} name="email" label="Email">

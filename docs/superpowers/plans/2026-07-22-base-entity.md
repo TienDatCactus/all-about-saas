@@ -22,36 +22,38 @@
 ### Task 1: Base entity classes
 
 **Files:**
+
 - Create: `apps/api/src/common/entities/base.entity.ts`
 - Delete: `apps/api/src/common/others/base.entity.ts` (and `common/others/` dir if then empty)
 
 **Interfaces:**
+
 - Produces: `BaseEntity { id: string (uuid PK); createdAt: Date; updatedAt: Date }`, `SoftDeleteBaseEntity extends BaseEntity { deletedAt?: Date }`. All later tasks import from `'../../common/entities/base.entity'` (adjust relative depth per file).
 
 - [ ] **Step 1: Create the file**
 
 ```ts
 import {
-	CreateDateColumn,
-	DeleteDateColumn,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
-} from 'typeorm';
+  CreateDateColumn,
+  DeleteDateColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
 export abstract class BaseEntity {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
-	@CreateDateColumn()
-	createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-	@UpdateDateColumn()
-	updatedAt: Date;
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
 
 export abstract class SoftDeleteBaseEntity extends BaseEntity {
-	@DeleteDateColumn()
-	deletedAt?: Date;
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }
 ```
 
@@ -70,46 +72,48 @@ Expected: exit 0.
 ### Task 2: Migrate uuid-PK entities (Session, VerificationToken, UserProfile, OAuthAccount)
 
 **Files:**
+
 - Modify: `apps/api/src/auth/entities/session.entity.ts`
 - Modify: `apps/api/src/auth/entities/verification-token.entity.ts`
 - Modify: `apps/api/src/users/entities/user-profile.entity.ts`
 - Modify: `apps/api/src/users/entities/oauth-account.entity.ts`
 
 **Interfaces:**
+
 - Consumes: `BaseEntity` from Task 1.
 - Produces: same public shapes plus inherited `createdAt`/`updatedAt`. `OAuthAccount.linkedAt` is REMOVED, replaced by inherited `createdAt` (grep confirmed `linkedAt` referenced nowhere outside the entity).
 
 - [ ] **Step 1: Session — extend BaseEntity, drop `id`/`createdAt`, add `select: false` deferred to Task 5**
 
 ```ts
-import { Column, Entity, ManyToOne } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { BaseEntity } from '../../common/entities/base.entity';
+import { Column, Entity, ManyToOne } from "typeorm";
+import { User } from "../../users/entities/user.entity";
+import { BaseEntity } from "../../common/entities/base.entity";
 
 @Entity()
 export class Session extends BaseEntity {
-	@ManyToOne(() => User, {
-		onDelete: 'CASCADE',
-	})
-	user: User;
+  @ManyToOne(() => User, {
+    onDelete: "CASCADE",
+  })
+  user: User;
 
-	@Column()
-	refreshToken: string;
+  @Column()
+  refreshToken: string;
 
-	@Column()
-	deviceName: string;
+  @Column()
+  deviceName: string;
 
-	@Column()
-	userAgent: string;
+  @Column()
+  userAgent: string;
 
-	@Column()
-	ipAddress: string;
+  @Column()
+  ipAddress: string;
 
-	@Column({ nullable: true })
-	revokedAt?: Date;
+  @Column({ nullable: true })
+  revokedAt?: Date;
 
-	@Column()
-	expiresAt: Date;
+  @Column()
+  expiresAt: Date;
 }
 ```
 
@@ -135,35 +139,37 @@ Expected: build exit 0; tests pass (specs mock repositories, entity shape change
 ### Task 3: Migrate int-PK entities to uuid (Role, Permission, ResourceRegistry)
 
 **Files:**
+
 - Modify: `apps/api/src/roles/entities/role.entity.ts`
 - Modify: `apps/api/src/casl/entities/permission.entity.ts`
 - Modify: `apps/api/src/casl/entities/resource-registry.entity.ts`
 - Possibly modify: `apps/api/src/roles/roles.service.ts`, `apps/api/src/roles/roles.controller.ts`, casl services — anywhere typed `id: number` for these entities.
 
 **Interfaces:**
+
 - Consumes: `BaseEntity` from Task 1.
 - Produces: `Role.id` / `Permission.id` / `ResourceRegistry.id` change type `number` → `string` (uuid). **Breaking for dev DB** — synchronize cannot convert int PK with FKs to uuid in place; dev database must be dropped/recreated (it is dev-only; `synchronize: false` everywhere else).
 
 - [ ] **Step 1: Role**
 
 ```ts
-import { Entity, Column, OneToMany } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Permission } from '../../casl/entities/permission.entity';
-import { BaseEntity } from '../../common/entities/base.entity';
+import { Entity, Column, OneToMany } from "typeorm";
+import { User } from "../../users/entities/user.entity";
+import { Permission } from "../../casl/entities/permission.entity";
+import { BaseEntity } from "../../common/entities/base.entity";
 
 @Entity()
 export class Role extends BaseEntity {
-	@Column({ unique: true })
-	name: string; // e.g. "admin", "editor", "viewer"
+  @Column({ unique: true })
+  name: string; // e.g. "admin", "editor", "viewer"
 
-	@OneToMany(() => User, (user) => user.role)
-	users: User[];
+  @OneToMany(() => User, (user) => user.role)
+  users: User[];
 
-	@OneToMany(() => Permission, (permission) => permission.role, {
-		cascade: true,
-	})
-	permissions: Permission[];
+  @OneToMany(() => Permission, (permission) => permission.role, {
+    cascade: true,
+  })
+  permissions: Permission[];
 }
 ```
 
@@ -186,53 +192,55 @@ Expected: exit 0. Update any spec fixtures using numeric ids (e.g. `id: 1` → `
 ### Task 4: User extends SoftDeleteBaseEntity
 
 **Files:**
+
 - Modify: `apps/api/src/users/entities/user.entity.ts`
 
 **Interfaces:**
+
 - Consumes: `SoftDeleteBaseEntity` from Task 1.
 - Produces: `User` unchanged publicly (`id`, `createdAt`, `updatedAt`, `deletedAt` now inherited). `password` keeps `select: false` (already in working tree).
 
 - [ ] **Step 1: Rewrite entity**
 
 ```ts
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { OAuthAccount } from './oauth-account.entity';
-import { Session } from '../../auth/entities/session.entity';
-import { VerificationToken } from '../../auth/entities/verification-token.entity';
-import { UserProfile } from './user-profile.entity';
-import { Role } from '../../roles/entities/role.entity';
-import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from "typeorm";
+import { OAuthAccount } from "./oauth-account.entity";
+import { Session } from "../../auth/entities/session.entity";
+import { VerificationToken } from "../../auth/entities/verification-token.entity";
+import { UserProfile } from "./user-profile.entity";
+import { Role } from "../../roles/entities/role.entity";
+import { SoftDeleteBaseEntity } from "../../common/entities/base.entity";
 
 @Entity()
 export class User extends SoftDeleteBaseEntity {
-	@Column({ unique: true })
-	email: string;
+  @Column({ unique: true })
+  email: string;
 
-	@Column({ nullable: true, select: false })
-	password: string;
+  @Column({ nullable: true, select: false })
+  password: string;
 
-	@Column({ default: false })
-	isActive: boolean;
+  @Column({ default: false })
+  isActive: boolean;
 
-	@Column({ default: false })
-	emailVerified: boolean;
+  @Column({ default: false })
+  emailVerified: boolean;
 
-	@OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
-	oauthAccounts: OAuthAccount[];
+  @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
+  oauthAccounts: OAuthAccounArray<T>;
 
-	@OneToMany(() => Session, (session) => session.user)
-	sessions: Session[];
+  @OneToMany(() => Session, (session) => session.user)
+  sessions: Session[];
 
-	@OneToMany(() => VerificationToken, (token) => token.user)
-	verificationTokens: VerificationToken[];
+  @OneToMany(() => VerificationToken, (token) => token.user)
+  verificationTokens: VerificationToken[];
 
-	@ManyToOne(() => Role, (role) => role.users, { nullable: true })
-	role: Role;
+  @ManyToOne(() => Role, (role) => role.users, { nullable: true })
+  role: Role;
 
-	@OneToOne(() => UserProfile, (profile) => profile.user, {
-		cascade: true,
-	})
-	profile: UserProfile;
+  @OneToOne(() => UserProfile, (profile) => profile.user, {
+    cascade: true,
+  })
+  profile: UserProfile;
 }
 ```
 
@@ -245,6 +253,7 @@ Run: `pnpm --filter api build` — expected exit 0.
 ### Task 5: select:false call-site fixes (password + refreshToken)
 
 **Files:**
+
 - Modify: `apps/api/src/auth/entities/session.entity.ts` (`refreshToken` column)
 - Modify: `apps/api/src/users/services/users-query.service.ts` (new method)
 - Modify: `apps/api/src/users/services/users-command.service.ts:49` (`validateUser`)
@@ -252,6 +261,7 @@ Run: `pnpm --filter api build` — expected exit 0.
 - Test: `apps/api/src/users/services/users.service.spec.ts` / `apps/api/src/auth/services/auth.service.spec.ts`
 
 **Interfaces:**
+
 - Produces: `UsersQueryService.findOneWithPassword(q: FindOptionsWhere<User>): Promise<User | null>` — returns user WITH password populated. Default `findOneBy` no longer returns password.
 
 - [ ] **Step 1: Session.refreshToken gets select: false**

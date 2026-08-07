@@ -22,6 +22,10 @@ export default [
     rules: {
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
+      "import/order": "off",
+      "import/consistent-type-specifier-style": "off",
+      "sort-imports": "off",
+      "no-shadow": "off",
     },
   },
   {

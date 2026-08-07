@@ -11,18 +11,15 @@ import {
 } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
 
+// No fallbacks: AuthModule only constructs this when the provider is fully
+// configured, so a missing env var can no longer masquerade as a live client.
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 	constructor(private readonly configService: ConfigService) {
 		super({
-			clientID:
-				configService.get<string>('google.clientId') || 'placeholder_id',
-			clientSecret:
-				configService.get<string>('google.clientSecret') ||
-				'placeholder_secret',
-			callbackURL:
-				configService.get<string>('google.callbackURL') ||
-				'http://localhost:8000/auth/google/callback',
+			clientID: configService.get<string>('google.clientId')!,
+			clientSecret: configService.get<string>('google.clientSecret')!,
+			callbackURL: configService.get<string>('google.callbackURL')!,
 			scope: ['email', 'profile'],
 		});
 	}

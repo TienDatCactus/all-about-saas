@@ -22,3 +22,7 @@ export const BADMINTON = {
   suggest: "/badminton/participants/suggest",
   publicSession: (shareToken: string) => `/badminton/public/${shareToken}`,
 }
+
+export const USERS = {
+  me: "/users/me",
+}

@@ -21,10 +21,10 @@ export class RolesGuard implements CanActivate {
 	) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
-		const required = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-			context.getHandler(),
-			context.getClass(),
-		]);
+		const required = this.reflector.getAllAndOverride<Array<string>>(
+			ROLES_KEY,
+			[context.getHandler(), context.getClass()],
+		);
 		// No @Roles on the route → nothing for this guard to decide.
 		if (!required || required.length === 0) return true;
 

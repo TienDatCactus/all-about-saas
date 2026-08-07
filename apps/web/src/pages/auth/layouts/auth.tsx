@@ -28,28 +28,30 @@ export default function AuthLayout({
   return (
     <div className="flex flex-1 flex-col justify-center px-4 py-10 lg:px-6">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <div>
-          <Logo alt="Logo" className="mx-auto w-52" />
+        <div className="mb-6">
+          <div>
+            <Logo alt="Logo" className="mx-auto w-52" />
+          </div>
+          <h2 className="text-center text-xl font-semibold text-balance text-foreground">
+            {title.text}{" "}
+            {title.link && (
+              <Link to={title.link} className="link">
+                {title.anchor}
+              </Link>
+            )}
+          </h2>{" "}
+          <p className="mt-4 text-center text-xs text-pretty text-muted-foreground dark:text-muted-foreground">
+            By continuing to use our services, you agree to our{" "}
+            <a href="#" className="underline underline-offset-4">
+              terms of service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="underline underline-offset-4">
+              privacy policy
+            </a>
+            .
+          </p>
         </div>
-        <h2 className="text-center text-xl font-semibold text-balance text-foreground">
-          {title.text}{" "}
-          {title.link && (
-            <Link to={title.link} className="link">
-              {title.anchor}
-            </Link>
-          )}
-        </h2>{" "}
-        <p className="mt-4 text-center text-xs text-pretty text-muted-foreground dark:text-muted-foreground">
-          By continuing to use our services, you agree to our{" "}
-          <a href="#" className="underline underline-offset-4">
-            terms of service
-          </a>{" "}
-          and{" "}
-          <a href="#" className="underline underline-offset-4">
-            privacy policy
-          </a>
-          .
-        </p>
         {form}
         {action && (
           <>

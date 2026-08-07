@@ -36,6 +36,18 @@ secrets:
     file: ./secrets/db_password
   jwt_secret:
     file: ./secrets/jwt_secret
+  # Compose refuses to start a service whose listed secret file is missing,
+  # even when the app would never read it. For a provider you don't use,
+  # `touch` an empty placeholder — its *_FILE variable stays unset (see the
+  # api service), so the file is never opened.
+  base_password:
+    file: ./secrets/base_password
+  google_client_secret:
+    file: ./secrets/google_client_secret
+  github_client_secret:
+    file: ./secrets/github_client_secret
+  facebook_client_secret:
+    file: ./secrets/facebook_client_secret
 
 services:
   postgres:
@@ -187,11 +199,38 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL for the CORS allowlist}
       COOKIE_SECURE: 'true'
       COOKIE_SAME_SITE: lax
+      # --- OAuth (values come from .env.prod; see .env.prod.example) ---
+      # Env validation enforces all-three-or-none per provider, and "" counts
+      # as unset. The `:+` interpolation ties each secret file to its CLIENT_ID:
+      # a disabled provider leaves *_CLIENT_SECRET_FILE empty, so file-secrets
+      # never opens the (placeholder) file.
+      #
+      # CALLBACK URLs are the PUBLIC ones. Under the single-domain nginx
+      # variant they carry the /api prefix that nginx strips before proxying:
+      #   https://<domain>/api/auth/<provider>/callback
+      BASE_PASSWORD_FILE: ${BASE_PASSWORD_FILE:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET_FILE: ${GOOGLE_CLIENT_ID:+/run/secrets/google_client_secret}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET_FILE: ${GITHUB_CLIENT_ID:+/run/secrets/github_client_secret}
+      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL:-}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
+      FACEBOOK_CLIENT_SECRET_FILE: ${FACEBOOK_CLIENT_ID:+/run/secrets/facebook_client_secret}
+      FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL:-}
       # Same Docker network, no TLS between api and postgres. Turn on the moment
       # the database lives anywhere else.
       DATABASE_SSL: ${DATABASE_SSL:-false}
       DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
-    secrets: [db_password, jwt_secret]
+    secrets:
+      [
+        db_password,
+        jwt_secret,
+        base_password,
+        google_client_secret,
+        github_client_secret,
+        facebook_client_secret,
+      ]
     networks: [internal]
     depends_on:
       postgres:
