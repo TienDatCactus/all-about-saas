@@ -116,10 +116,6 @@ export class HttpClient {
         return response.data
       },
       async (error) => {
-        // Unconditional end for the failed request; the 401 path below stays
-        // balanced because both the refresh call and the retried request go
-        // back through this same instance and count themselves.
-        if (!error.config?.skipLoadingBar) trackRequestEnd()
         const status =
           error.response?.status || error.response?.data?.statusCode
         const requestUrl = error.config?.url || ""
@@ -130,12 +126,19 @@ export class HttpClient {
         const originalRequest = error.config as
           | (InternalAxiosRequestConfig & { _retry?: boolean })
           | undefined
-        if (
+        const willRetry =
           status === 401 &&
           !isAuthRequest &&
-          originalRequest &&
+          originalRequest !== undefined &&
           !originalRequest._retry
-        ) {
+
+        // On the retry path the bar cycle must stay open until the retry
+        // settles (the finally below) — ending it here would complete() the
+        // bar mid-flow, and the library's delayed reset after complete()
+        // kills any restarted cycle ~1.3s later.
+        if (!willRetry && !error.config?.skipLoadingBar) trackRequestEnd()
+
+        if (willRetry) {
           // Share a single in-flight refresh across all concurrent 401s.
           if (!this.refreshPromise) {
             this.refreshPromise = authApi.refresh().finally(() => {
@@ -149,7 +152,7 @@ export class HttpClient {
 
             originalRequest._retry = true
             originalRequest.headers.Authorization = `Bearer ${token}`
-            return this.axiosInstance(originalRequest)
+            return await this.axiosInstance(originalRequest)
           } catch (refreshError) {
             clearAccessToken()
             storage.clear()
@@ -159,6 +162,10 @@ export class HttpClient {
                 ? refreshError
                 : new Error(String(refreshError))
             )
+          } finally {
+            // The retried request counts its own start/end through the
+            // interceptors; this closes the ORIGINAL request's cycle.
+            if (!originalRequest.skipLoadingBar) trackRequestEnd()
           }
         }
 

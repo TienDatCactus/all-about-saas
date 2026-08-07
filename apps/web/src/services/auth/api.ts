@@ -53,7 +53,9 @@ export const authApi = {
     parseResponse(
       "auth.refresh",
       AccessTokenSchema,
-      http.post(AUTH.refresh)
+      // Silent background call — it must not drive the top loading bar,
+      // whose cycle belongs to the 401'd request being retried.
+      http.post(AUTH.refresh, undefined, { skipLoadingBar: true })
     ).then((r) => r.accessToken),
   verifyEmail: async (data: VerifyEmailIn) => {
     return http.post(AUTH.verifyEmail, data)

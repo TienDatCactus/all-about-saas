@@ -1,10 +1,10 @@
 import { DesktopTowerIcon } from "@phosphor-icons/react"
-import { type ReactNode } from "react"
 import { Button } from "../../ui/button"
 import { Separator } from "../../ui/separator"
 import RouteDropdown from "./route-dropdown"
 import { ThemeToggler } from "./theme-toggle"
 import { UserMenu } from "./user-menu"
+import type { ReactNode } from "react"
 
 /** "/auth/sign-up" → "Sign up", "/badminton/$sessionId" → "sessionId", "/" → "Home". */
 
