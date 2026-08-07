@@ -1,10 +1,9 @@
-import { DesktopTowerIcon } from "@phosphor-icons/react"
-import { Button } from "../../ui/button"
-import { Separator } from "../../ui/separator"
-import RouteDropdown from "./route-dropdown"
-import { ThemeToggler } from "./theme-toggle"
-import { UserMenu } from "./user-menu"
-import type { ReactNode } from "react"
+import { DesktopTowerIcon } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
+import { Button } from "../../ui/button";
+import RouteDropdown from "./route-dropdown";
+import { ThemeToggler } from "./theme-toggle";
+import { UserMenu } from "./user-menu";
 
 /** "/auth/sign-up" → "Sign up", "/badminton/$sessionId" → "sessionId", "/" → "Home". */
 
@@ -34,5 +33,5 @@ export function PageShell({ children }: { children: ReactNode }) {
         </div>
       </div>
     </main>
-  )
+  );
 }

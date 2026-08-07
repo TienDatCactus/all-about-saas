@@ -1,14 +1,13 @@
-import { type ReactNode } from "react"
-import { DataTooltip } from "../data/tooltip"
-import { Breadcrumbs } from "../breadcrumb"
-import { DataHoverCard } from "../data/hover-card"
-import { InfoIcon } from "@phosphor-icons/react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
+import { InfoIcon } from "@phosphor-icons/react";
+import { type ReactNode } from "react";
+import { Breadcrumbs } from "../breadcrumb";
+import { DataHoverCard } from "../data/hover-card";
 
 interface PageHeaderProps {
-  title: ReactNode
-  description?: ReactNode
-  actions?: ReactNode
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
 }
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
@@ -37,5 +36,5 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
       </div>
       {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
     </div>
-  )
+  );
 }
