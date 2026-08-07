@@ -34,9 +34,7 @@ function App() {
       sparkRadius={20}
     >
       <PageShell>
-        <div
-          className="absolute inset-0 bg-[radial-gradient(rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:16px_16px] dark:bg-[radial-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)]"
-        />
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:16px_16px] dark:bg-[radial-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)]" />
         <div className="z-10 m-auto flex flex-col items-center gap-6 text-center">
           <Badge variant="outline">
             <AlienIcon />
