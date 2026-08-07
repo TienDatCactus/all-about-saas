@@ -281,7 +281,7 @@ export class AuthController {
 		// FRONTEND_URL doubles as the CORS allowlist and may be comma-separated;
 		// only the first origin is the canonical web app.
 		const base = (this.configService.get<string>('frontendUrl') ?? '')
-			.split(',')[0]!
+			.split(',')[0]
 			.trim()
 			.replace(/\/+$/, '');
 		const returnTo = consumeOAuthReturnTo(req, res);

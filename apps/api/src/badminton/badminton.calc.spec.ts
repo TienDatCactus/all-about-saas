@@ -125,7 +125,7 @@ describe('computeSplit', () => {
 	});
 
 	describe('reconciliation invariants (property-style)', () => {
-		const cases: CalcInput[] = [
+		const cases: CalcInpuArray<T> = [
 			{
 				courtCost: 150_000,
 				shuttleUnitPrice: 4_583,

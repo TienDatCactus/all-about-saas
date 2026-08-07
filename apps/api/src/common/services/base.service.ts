@@ -20,7 +20,7 @@ export interface PaginateOptions<T> {
 }
 
 export interface PaginatedResult<T> {
-	data: T[];
+	data: Array<T>;
 	total: number;
 	page: number;
 	limit: number;
@@ -41,7 +41,7 @@ export interface PaginatedResult<T> {
 export abstract class BaseService<T extends BaseEntity> {
 	protected constructor(protected readonly repository: Repository<T>) {}
 
-	find(options?: FindManyOptions<T>): Promise<T[]> {
+	find(options?: FindManyOptions<T>): Promise<Array<T>> {
 		return this.repository.find(options);
 	}
 

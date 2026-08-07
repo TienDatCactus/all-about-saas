@@ -52,7 +52,7 @@ async function bootstrap() {
 			whitelist: true,
 			forbidNonWhitelisted: true,
 			exceptionFactory: (validationErrors) => {
-				const validation: Record<string, string[]> = {};
+				const validation: Record<string, Array<string>> = {};
 				const extractErrors = (err: ValidationError, prefix = '') => {
 					const key = prefix ? `${prefix}.${err.property}` : err.property;
 					if (err.constraints) {

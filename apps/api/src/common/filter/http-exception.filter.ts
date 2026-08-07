@@ -101,7 +101,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 				code = thrown.name || 'HTTP_EXCEPTION';
 			} else if (isRecord(exceptionResponse)) {
 				// `message` is only taken when it really is a string. Nest's built-in
-				// validation errors put a string[] there, which used to be written
+				// validation errors put a Array<string> there, which used to be written
 				// straight into a field the response contract declares as `string`.
 				message = asString(exceptionResponse.message) ?? message;
 				code = asString(exceptionResponse.code) ?? thrown.name ?? 'BAD_REQUEST';

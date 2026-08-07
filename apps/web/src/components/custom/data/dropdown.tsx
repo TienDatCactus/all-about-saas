@@ -1,7 +1,7 @@
 // data-dropdown.tsx
-import { CaretDownIcon } from "@phosphor-icons/react"
-import * as React from "react"
-import { Button } from "../../ui/button"
+import { CaretDownIcon } from "@phosphor-icons/react";
+import * as React from "react";
+import { Button } from "../../ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -17,70 +17,70 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu"
+} from "../../ui/dropdown-menu";
 import {
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from "../../ui/item"
-import { cn } from "@/lib/utils"
+} from "../../ui/item";
+import { cn } from "@/lib/utils";
 
 export interface DataDropdownGroup<T> {
-  key?: React.Key
+  key?: React.Key;
   /** Section heading, rendered as a DropdownMenuLabel. */
-  label?: React.ReactNode
-  items: T[]
+  label?: React.ReactNode;
+  items: Array<T>;
 }
 
 export interface DataDropdownProps<T> {
   /** Flat list of rows. For labeled sections use `groups` instead. */
-  items?: T[]
+  items?: Array<T>;
   /** Sections separated by DropdownMenuSeparator, each optionally labeled. */
-  groups?: DataDropdownGroup<T>[]
+  groups?: Array<DataDropdownGroup<T>>;
   /**
    * Stable key per row; falls back to the array index. Required in practice
    * for `single`/`multiple` selection, where it is the row's value.
    */
-  getKey?: (item: T, index: number) => React.Key
+  getKey?: (item: T, index: number) => React.Key;
   /**
    * - `none` (default): plain action items.
    * - `single`: radio items — control with `value`/`onValueChange`.
    * - `multiple`: checkbox items — control with `values`/`onValuesChange`;
    *   the menu stays open while toggling.
    */
-  selectionMode?: "none" | "single" | "multiple"
+  selectionMode?: "none" | "single" | "multiple";
   /** Selected key in `single` mode. */
-  value?: string
-  onValueChange?: (value: string) => void
+  value?: string;
+  onValueChange?: (value: string) => void;
   /** Selected keys in `multiple` mode. */
-  values?: string[]
-  onValuesChange?: (values: string[]) => void
+  values?: Array<string>;
+  onValuesChange?: (values: Array<string>) => void;
   /**
    * Full control over a row's content — wins over the field getters below.
    * The row is already wrapped in the appropriate menu item.
    */
-  renderItem?: (item: T, index: number) => React.ReactNode
+  renderItem?: (item: T, index: number) => React.ReactNode;
   /** Default row layout: title + optional description + optional media. */
-  getTitle?: (item: T) => React.ReactNode
-  getDescription?: (item: T) => React.ReactNode
+  getTitle?: (item: T) => React.ReactNode;
+  getDescription?: (item: T) => React.ReactNode;
   /**
    * Leading visual for the row — any React node: an <Avatar>, an icon, a
    * status dot… Rendered inside ItemMedia; return undefined to leave a
    * particular row without one.
    */
-  getMedia?: (item: T) => React.ReactNode
+  getMedia?: (item: T) => React.ReactNode;
   /**
    * ItemMedia variant for sizing: "icon" for svg icons, "image" for
    * avatars/photos, "default" otherwise.
    */
-  mediaVariant?: React.ComponentProps<typeof ItemMedia>["variant"]
+  mediaVariant?: React.ComponentProps<typeof ItemMedia>["variant"];
   /** Trailing hint (e.g. ⌘K), rendered as a DropdownMenuShortcut. */
-  getShortcut?: (item: T) => React.ReactNode
+  getShortcut?: (item: T) => React.ReactNode;
   /** `destructive` styles the row as a dangerous action (`none` mode only). */
-  getVariant?: (item: T) => "default" | "destructive"
-  isDisabled?: (item: T) => boolean
+  getVariant?: (item: T) => "default" | "destructive";
+  isDisabled?: (item: T) => boolean;
   /**
    * Children of a row. A non-empty array turns the row into a submenu: same
    * row layout as the sub-trigger (plus the caret), children rendered in a
@@ -88,22 +88,22 @@ export interface DataDropdownProps<T> {
    * nest further, and selection modes / getters apply at every depth. The
    * sub-trigger itself only opens the flyout; it never fires onSelect.
    */
-  getChildren?: (item: T) => T[] | undefined
+  getChildren?: (item: T) => Array<T> | undefined;
   /**
    * Fires on activation in every selection mode. `index` is the item's
    * pre-order position across the whole tree (groups, then each item followed
    * by its children).
    */
-  onSelect?: (item: T, index: number) => void
+  onSelect?: (item: T, index: number) => void;
   /**
    * Custom trigger element. Rendered via Radix `asChild`, so it must accept a
    * forwarded ref and spread props (any ui/ component does).
    */
-  trigger?: React.ReactElement
+  trigger?: React.ReactElement;
   /** Label for the default outline-button trigger. Ignored when `trigger` is set. */
-  label?: React.ReactNode
-  align?: React.ComponentProps<typeof DropdownMenuContent>["align"]
-  contentClassName?: string
+  label?: React.ReactNode;
+  align?: React.ComponentProps<typeof DropdownMenuContent>["align"];
+  contentClassName?: string;
 }
 
 /**
@@ -137,12 +137,14 @@ export function DataDropdown<T>({
   align = "end",
   contentClassName,
 }: DataDropdownProps<T>) {
-  const sections: DataDropdownGroup<T>[] = groups ?? [{ items: items ?? [] }]
+  const sections: Array<DataDropdownGroup<T>> = groups ?? [
+    { items: items ?? [] },
+  ];
 
   const renderDefaultRow = (item: T) => {
-    const title = getTitle ? getTitle(item) : String(item)
-    const description = getDescription?.(item)
-    const media = getMedia?.(item)
+    const title = getTitle ? getTitle(item) : String(item);
+    const description = getDescription?.(item);
+    const media = getMedia?.(item);
     return (
       <Item size="xs" className="w-full p-2">
         {media != null && <ItemMedia variant={mediaVariant}>{media}</ItemMedia>}
@@ -155,19 +157,19 @@ export function DataDropdown<T>({
           )}
         </ItemContent>
       </Item>
-    )
-  }
+    );
+  };
 
   // Pre-order position across the whole tree, assigned as rows render. A
   // plain counter (reset every render) keeps `index` meaningful for flat
   // lists, groups and nested submenus alike.
-  let cursor = 0
+  let cursor = 0;
 
   const renderMenuItem = (item: T): React.ReactNode => {
-    const index = cursor++
-    const key = String(getKey ? getKey(item, index) : index)
-    const disabled = isDisabled?.(item)
-    const shortcut = getShortcut?.(item)
+    const index = cursor++;
+    const key = String(getKey ? getKey(item, index) : index);
+    const disabled = isDisabled?.(item);
+    const shortcut = getShortcut?.(item);
     const content = (
       <>
         {renderItem ? renderItem(item, index) : renderDefaultRow(item)}
@@ -175,9 +177,9 @@ export function DataDropdown<T>({
           <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>
         )}
       </>
-    )
+    );
 
-    const children = getChildren?.(item)
+    const children = getChildren?.(item);
     if (children && children.length > 0) {
       return (
         <DropdownMenuSub key={key}>
@@ -189,7 +191,7 @@ export function DataDropdown<T>({
             {children.map((child) => renderMenuItem(child))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-      )
+      );
     }
 
     if (selectionMode === "single") {
@@ -202,11 +204,11 @@ export function DataDropdown<T>({
         >
           {content}
         </DropdownMenuRadioItem>
-      )
+      );
     }
 
     if (selectionMode === "multiple") {
-      const checked = values.includes(key)
+      const checked = values.includes(key);
       return (
         <DropdownMenuCheckboxItem
           key={key}
@@ -217,14 +219,14 @@ export function DataDropdown<T>({
           onSelect={(event) => event.preventDefault()}
           onCheckedChange={(next) => {
             onValuesChange?.(
-              next ? [...values, key] : values.filter((v) => v !== key)
-            )
-            onSelect?.(item, index)
+              next ? [...values, key] : values.filter((v) => v !== key),
+            );
+            onSelect?.(item, index);
           }}
         >
           {content}
         </DropdownMenuCheckboxItem>
-      )
+      );
     }
 
     return (
@@ -236,8 +238,8 @@ export function DataDropdown<T>({
       >
         {content}
       </DropdownMenuItem>
-    )
-  }
+    );
+  };
 
   const body = sections.map((group, groupIndex) => (
     <React.Fragment key={group.key ?? groupIndex}>
@@ -249,7 +251,7 @@ export function DataDropdown<T>({
         {group.items.map((item) => renderMenuItem(item))}
       </DropdownMenuGroup>
     </React.Fragment>
-  ))
+  ));
 
   return (
     <DropdownMenu>
@@ -274,5 +276,5 @@ export function DataDropdown<T>({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

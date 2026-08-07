@@ -23,7 +23,7 @@ export interface CalcInput {
 	shuttleUnitPrice: number;
 	/** Total shuttles used in the session (shared pot). shuttleCost = shuttleUnitPrice × this. */
 	totalShuttleCount: number;
-	participants: CalcParticipant[];
+	participants: CalcParticipanArray<T>;
 }
 
 const ROUND_UNIT = 1000;

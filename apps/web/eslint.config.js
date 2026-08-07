@@ -1,7 +1,7 @@
 //  @ts-check
 
-import { tanstackConfig } from "@tanstack/eslint-config"
-import reactHooks from "eslint-plugin-react-hooks"
+import { tanstackConfig } from "@tanstack/eslint-config";
+import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
   ...tanstackConfig,
@@ -22,6 +22,10 @@ export default [
     rules: {
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
+      "import/order": "off",
+      "import/consistent-type-specifier-style": "off",
+      "sort-imports": "off",
+      "no-shadow": "off",
     },
   },
   {
@@ -37,4 +41,4 @@ export default [
       "dist/**",
     ],
   },
-]
+];

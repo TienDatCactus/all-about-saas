@@ -14,6 +14,15 @@ on a crash.
 mkdir -p secrets
 openssl rand -hex 32    | tr -d '\r\n' > secrets/jwt_secret   # >=32 chars, enforced at boot
 openssl rand -base64 24 | tr -d '\r\n' > secrets/db_password
+# Password stamped onto accounts created through OAuth (see .env.prod.example):
+openssl rand -base64 24 | tr -d '\r\n' > secrets/base_password
+# OAuth client secrets, pasted from each provider's console. printf, not echo —
+# echo appends a newline. Compose needs every listed file to EXIST, so create
+# an empty one (plain `touch`) for any provider you don't use; it is only read
+# when that provider's CLIENT_ID is set in .env.prod.
+printf '%s' '<google client secret>'   > secrets/google_client_secret
+printf '%s' '<github client secret>'   > secrets/github_client_secret
+printf '%s' '<facebook client secret>' > secrets/facebook_client_secret
 chmod 600 secrets/*
 ```
 

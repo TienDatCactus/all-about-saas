@@ -57,5 +57,5 @@ export class BadmintonSession extends SoftDeleteBaseEntity {
 		cascade: true,
 		orphanedRowAction: 'delete',
 	})
-	participants!: BadmintonParticipant[];
+	participants!: BadmintonParticipanArray<T>;
 }

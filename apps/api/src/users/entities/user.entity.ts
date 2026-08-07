@@ -50,7 +50,7 @@ export class User extends SoftDeleteBaseEntity {
 	emailVerified!: boolean;
 
 	@OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
-	oauthAccounts!: OAuthAccount[];
+	oauthAccounts!: OAuthAccounArray<T>;
 
 	@OneToMany(() => Session, (session) => session.user)
 	sessions!: Session[];

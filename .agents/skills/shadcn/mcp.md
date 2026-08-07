@@ -40,7 +40,7 @@ namespaces such as `@acme`, public GitHub sources such as `owner/repo`, or
 registry catalog URLs. Omit `registries` to list from every registry configured
 in `components.json`.
 
-**Input:** `registries` (string[], optional — omit for all configured), `types` (string[], optional — e.g. `["ui", "block"]`), `limit` (number, optional, defaults to 100), `offset` (number, optional)
+**Input:** `registries` (Array<string>, optional — omit for all configured), `types` (Array<string>, optional — e.g. `["ui", "block"]`), `limit` (number, optional, defaults to 100), `offset` (number, optional)
 
 ### `shadcn:search_items_in_registries`
 
@@ -49,13 +49,13 @@ GitHub sources, or registry catalog URLs. Omit `registries` to search every
 registry configured in `components.json` — e.g. "find me a hero" across all
 configured registries.
 
-**Input:** `registries` (string[], optional — omit for all configured), `query` (string), `types` (string[], optional — e.g. `["ui", "block"]`), `limit` (number, optional, defaults to 100), `offset` (number, optional)
+**Input:** `registries` (Array<string>, optional — omit for all configured), `query` (string), `types` (Array<string>, optional — e.g. `["ui", "block"]`), `limit` (number, optional, defaults to 100), `offset` (number, optional)
 
 ### `shadcn:view_items_in_registries`
 
 View item details including full file contents.
 
-**Input:** `items` (string[]) — e.g.
+**Input:** `items` (Array<string>) — e.g.
 `["@shadcn/button", "@shadcn/card", "owner/repo/item"]`
 
 ### `shadcn:get_item_examples_from_registries`
@@ -63,13 +63,13 @@ View item details including full file contents.
 Find usage examples and demos with source code. Omit `registries` to search
 every registry configured in `components.json`.
 
-**Input:** `registries` (string[], optional — omit for all configured), `query` (string) — e.g. `"accordion-demo"`, `"button example"`
+**Input:** `registries` (Array<string>, optional — omit for all configured), `query` (string) — e.g. `"accordion-demo"`, `"button example"`
 
 ### `shadcn:get_add_command_for_items`
 
 Returns the CLI install command.
 
-**Input:** `items` (string[]) — e.g. `["@shadcn/button"]`
+**Input:** `items` (Array<string>) — e.g. `["@shadcn/button"]`
 
 ### `shadcn:get_audit_checklist`
 
