@@ -2,8 +2,10 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MotionConfig } from "motion/react"
+import LoadingBar from "react-top-loading-bar"
 import appCss from "../styles.css?url"
 import { getErrorStatus } from "@/lib/utils/http"
+import { registerLoadingBar } from "@/lib/utils/loading-bar"
 import { ConfirmProvider } from "@/components/custom/confirm"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -83,6 +85,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body suppressHydrationWarning>
+          <LoadingBar
+            ref={registerLoadingBar}
+            color="var(--primary)"
+            height={2}
+          />
           <div className="flex min-h-dvh items-center justify-center">
             {children}
           </div>

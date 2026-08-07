@@ -5,6 +5,7 @@ import {
   setAccessToken,
 } from "./access-token"
 import { AppConstants } from "./constants"
+import { trackRequestEnd, trackRequestStart } from "./loading-bar"
 import { storage } from "./local-storage"
 import type {
   AxiosInstance,
@@ -14,6 +15,15 @@ import type {
 } from "axios"
 import { toast } from "@/components/custom/toast"
 import { authApi } from "@/services/auth"
+
+// Opt-out for requests that shouldn't drive the top loading bar
+// (background polling, silent refreshes): pass { skipLoadingBar: true }
+// in the request config.
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipLoadingBar?: boolean
+  }
+}
 
 /**
  * HTTP status out of whatever the response interceptor rejected with, which is
@@ -74,6 +84,7 @@ export class HttpClient {
     // below rehydrates it from the refresh cookie — no boot-time ceremony.
     this.axiosInstance.interceptors.request.use(
       (config) => {
+        if (!config.skipLoadingBar) trackRequestStart()
         const token = getAccessToken()
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
@@ -88,6 +99,7 @@ export class HttpClient {
     // Response interceptor
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
+        if (!response.config.skipLoadingBar) trackRequestEnd()
         const method = response.config.method?.toUpperCase()
         const message =
           response.data?.message ||
@@ -104,6 +116,10 @@ export class HttpClient {
         return response.data
       },
       async (error) => {
+        // Unconditional end for the failed request; the 401 path below stays
+        // balanced because both the refresh call and the retried request go
+        // back through this same instance and count themselves.
+        if (!error.config?.skipLoadingBar) trackRequestEnd()
         const status =
           error.response?.status || error.response?.data?.statusCode
         const requestUrl = error.config?.url || ""
