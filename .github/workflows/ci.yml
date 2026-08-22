@@ -38,6 +38,8 @@ jobs:
         # silently skipped both apps — the two halves that matter most.
         run: npx turbo run check-types
 
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@v3.97.0
       # - name: Lint
       #   # Both apps, both blocking. Web joined the required gate once its ~300-error
       #   # backlog was burned down to zero — see the lint-web-backlog job this replaced.
