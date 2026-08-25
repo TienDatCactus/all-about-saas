@@ -1,2 +1,2 @@
-npx turbo format 
+npx turbo format  && npm run check-types
 # && npx turbo lint
