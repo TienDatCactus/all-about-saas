@@ -49,7 +49,7 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                className="w-full"
                 onClick={() => field.pushValue(newPlayer())}
               >
                 <PlusIcon />

@@ -1,5 +1,5 @@
 import { ShareLink } from "../components/ShareLink"
-import { SessionEditor } from "../components/SessionEditor"
+import { SessionEditor } from "../components/session-editor"
 import { sessionToValues } from "../lib/form"
 import DataPage from "@/components/custom/data/page"
 import { Skeleton } from "@/components/ui/skeleton"

@@ -187,3 +187,9 @@
   animation: none;
   mix-blend-mode: normal;
 }
+
+.stack-row { 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,7 +1,6 @@
 "use client"
 
 import { differenceInCalendarDays } from "date-fns"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import * as React from "react"
 import {
   DayPicker,
@@ -12,6 +11,7 @@ import {
 import type { DayPickerProps } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 
 export type CalendarProps = DayPickerProps & {
   /**
@@ -195,7 +195,7 @@ function Calendar({
       }}
       components={{
         Chevron: ({ orientation }) => {
-          const Icon = orientation === "left" ? ChevronLeft : ChevronRight
+          const Icon = orientation === "left" ? CaretLeftIcon : CaretRightIcon
           return <Icon className="h-4 w-4" />
         },
         Nav: ({ className }) => (
@@ -371,7 +371,7 @@ function Nav({
         }
         onClick={handlePreviousClick}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <CaretLeftIcon className="h-4 w-4" />
       </Button>
 
       <Button
@@ -387,7 +387,7 @@ function Nav({
         }
         onClick={handleNextClick}
       >
-        <ChevronRight className="h-4 w-4" />
+        <CaretRightIcon className="h-4 w-4" />
       </Button>
     </nav>
   )

@@ -1,12 +1,5 @@
 "use client"
 
-import {
-  BadgeCheckIcon,
-  BellIcon,
-  CreditCardIcon,
-  LogOutIcon,
-} from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -18,9 +11,31 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/context/auth"
 import { DataAvatar } from "../data/avatar"
+import { Link } from "@tanstack/react-router"
+import { Route as LoginRoute } from "@/routes/auth/login"
+import { ButtonGroup } from "@/components/ui/button-group"
+import { Route as SignUpRoute } from "@/routes/auth/sign-up"
+import {
+  BellIcon,
+  CheckCircleIcon,
+  CreditCardIcon,
+  SignOutIcon,
+} from "@phosphor-icons/react"
 
 export function UserMenu() {
   const { user, logout } = useAuth()
+  if (!user) {
+    return (
+      <ButtonGroup>
+        <Button variant={"outline"}>
+          <Link to={LoginRoute.path}>Login</Link>
+        </Button>
+        <Button>
+          <Link to={SignUpRoute.path}>Sign up</Link>
+        </Button>
+      </ButtonGroup>
+    )
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -31,7 +46,7 @@ export function UserMenu() {
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
           <DropdownMenuItem>
-            <BadgeCheckIcon />
+            <CheckCircleIcon />
             Account
           </DropdownMenuItem>
           <DropdownMenuItem>
@@ -45,7 +60,7 @@ export function UserMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
-          <LogOutIcon />
+          <SignOutIcon />
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>

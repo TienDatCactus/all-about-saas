@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/item"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-
 export type ToastStatus =
   | "success"
   | "error"
@@ -153,7 +152,6 @@ export default function Toast(props: ToastProps) {
   }, [id, isPaused, persistent, status])
 
   const percentage = (remainingMs / duration) * 100
-
   const copyToClipboard = () => {
     if (!error) return
     const text = [

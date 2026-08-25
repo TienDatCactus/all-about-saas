@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router"
-import { SessionEditor } from "../components/SessionEditor"
 import { PageShell } from "../../../components/custom/page-shell"
 import { PageHeader } from "../../../components/custom/page-shell/page-header"
+import { SessionEditor } from "../components/session-editor"
 
 export default function NewSessionPage() {
   const navigate = useNavigate()

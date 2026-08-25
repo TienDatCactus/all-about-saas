@@ -10,11 +10,11 @@ import {
   hasNamedPlayer,
   valuesToComputed,
   valuesToPayload,
-} from "../lib/form"
-import { PlayerEditor } from "./player-editor"
-import { BadmintonSummary } from "./Summary"
+} from "../../lib/form"
+import { PlayerEditor } from "../player-editor"
+import { BadmintonSummary } from "../Summary"
 import type { BadmintonSession } from "@/services/badminton/types"
-import type { EditorValues } from "../lib/form"
+import type { EditorValues } from "../../lib/form"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import DataCard from "@/components/custom/data/card"
 import { FormField } from "@/components/custom/form-field"
@@ -26,6 +26,7 @@ import {
   useCreateSessionMutation,
   useUpdateSessionMutation,
 } from "@/services/badminton/queries"
+import { ShuttlePriceCalc } from "./ShuttlePriceCalc"
 
 interface SessionEditorProps {
   sessionId?: string
@@ -129,21 +130,24 @@ export function SessionEditor({
                   description="Shuttle total = price × total shuttles."
                 >
                   {({ field }) => (
-                    <Input
-                      id="shuttleUnitPrice"
-                      inputMode="numeric"
-                      aria-label="Shuttle price per shuttle"
-                      placeholder="0"
-                      className="text-right tabular-nums"
-                      startAddon={<CoinsIcon />}
-                      endAddon="₫"
-                      value={
-                        field.state.value ? formatVnd(field.state.value) : ""
-                      }
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        field.handleChange(parseVnd(e.target.value))
-                      }
-                    />
+                    <div className="stack-row gap-2">
+                      <Input
+                        id="shuttleUnitPrice"
+                        inputMode="numeric"
+                        aria-label="Shuttle price per shuttle"
+                        placeholder="0"
+                        className="text-right tabular-nums"
+                        startAddon={<CoinsIcon />}
+                        endAddon="₫"
+                        value={
+                          field.state.value ? formatVnd(field.state.value) : ""
+                        }
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          field.handleChange(parseVnd(e.target.value))
+                        }
+                      />
+                      <ShuttlePriceCalc onApply={field.handleChange} />
+                    </div>
                   )}
                 </FormField>
                 <FormField
