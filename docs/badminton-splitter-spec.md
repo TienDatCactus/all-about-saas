@@ -1,7 +1,24 @@
-# Badminton Money Splitter — Spec (v1)
+# Badminton Money Splitter — Spec (v2)
 
-Status: **Draft, ready to build.** Derived from an interview on 2026-07-25.
+Status: **Draft, ready to build.** Derived from an interview on 2026-07-25,
+revised 2026-08-25 (v2: hours + weight-class split, discount removed) and
+2026-08-26 (v2.1: shuttleWeight scale + default).
 Owner: dtran. Lives in the `all-about-saas` monorepo.
+
+## Changelog
+
+- **v2 (2026-08-25):** The v1 model asked the organizer to type a raw 0..1
+  "fraction" for court and shuttle share, and a discount fraction — all three
+  by instinct, with no defined way to derive the number. Replaced with:
+  court split by raw hours played, shuttle split by a weight-class (default
+  6 for nam / 4 for nữ, editable), and discount removed outright. See §3-§5
+  and §7, updated in place below; §4's TypeORM sketch and §5's algorithm are
+  the current canonical versions.
+- **v2.1 (2026-08-26):** `shuttleWeight` is explicitly a 0-10 scale (10 = 100%;
+  nam = 6 = 60%, nữ = 4 = 40%), capped at 10, and its default (before any
+  gender is picked) is 6 — the nam-equivalent, not a neutral value — since
+  most sessions are majority-male and only nữ participants (the minority
+  case) need the value touched.
 
 ---
 
@@ -42,10 +59,10 @@ snapshot for the share link). One source of truth prevents drift.
 | Area             | Decision                                                                                                       |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
 | Scope            | **Full integrated**: Nest API module + Postgres persistence, tied to existing users/CASL                       |
-| Court fee        | **Time-proportional** via a per-player played-fraction (0–100%, default 100%)                                  |
+| Court fee        | **Time-proportional** via each player's raw hours played (`hoursPlayed`, default 1) — not a %, a stable per-person fact that stays correct as the roster changes |
 | Shuttle cost     | **Unit price × count** → total shuttle cost is _derived_, not typed                                            |
-| Discount effect  | **Redistributed** onto everyone else, so collected == expense. Applies to the **whole bill** (court + shuttle) |
-| Discount storage | **Per-session only** — not stored on any player profile                                                        |
+| Shuttle split    | **Weight-proportional** via each player's `shuttleWeight`, a 0-10 scale (10 = 100%; nam = 6 = 60%, nữ = 4 = 40%), max 10; defaults to 6 (nam-equivalent) before any `gender` pick, since only the nữ (minority) case needs touching; editable per player |
+| Discount         | **Removed in v2.** No discount input anywhere; collected == expense always, no redistribution step. |
 | Rounding         | Round each share to **nearest 1,000 VND**, distribute leftover by **largest-remainder**                        |
 | Player identity  | Participant is **either a linked app user (`userId`) or a free-text name**; UI resolves via autocomplete       |
 | History/stats    | Key off `userId` when linked; free-text names are ephemeral. **All analytics deferred** past v1                |
@@ -58,7 +75,7 @@ snapshot for the share link). One source of truth prevents drift.
 
 Saved analytics dashboard (total spent per player, avg/session, games played) ·
 paid/unpaid settlement · VietQR generation · Excel/PDF export · dark mode polish ·
-i18n / Vietnamese UI · reusable player roster with default discounts.
+i18n / Vietnamese UI · reusable player roster with default hours/weight-class per person.
 
 ### v2 idea — court-fee "satisfaction" reaction (optional)
 
@@ -123,10 +140,10 @@ class SessionParticipant {
   // for linked users it's a snapshot of their name at session time.
   @Column() name: string;
 
-  // Split inputs.
-  @Column("float", { default: 1 }) courtFraction: number; // 0..1, 0 = excluded from court
-  @Column("float", { default: 1 }) shuttleFraction: number; // 0..1 weight for the shared shuttle pot; 0 = excluded
-  @Column("float", { default: 0 }) discount: number; // 0..1, e.g. 0.15
+  // Split inputs (v2).
+  @Column("float", { default: 1 }) hoursPlayed: number; // raw hours, 0 = excluded from court
+  @Column("float", { default: 6 }) shuttleWeight: number; // 0-10 scale, shared shuttle pot; 0 = excluded; default 6 = nam-equivalent
+  @Column({ type: "enum", enum: ["male", "female"], nullable: true }) gender?: "male" | "female"; // UI convenience only — sets the default shuttleWeight (6/4), not read by the calc package
 }
 // Session-level: @Column('int', { default: 0 }) totalShuttleCount — the shared shuttle pot.
 ```
@@ -167,32 +184,24 @@ Inputs:
   courtCost                              // VND int
   shuttleUnitPrice                       // VND int
   totalShuttleCount                      // shared pot, int
-  participants[i]: { courtFraction f_i, shuttleFraction s_i, discount d_i }
+  participants[i]: { hoursPlayed h_i, shuttleWeight w_i }
 
 Derived:
   shuttleCost = shuttleUnitPrice * totalShuttleCount
 
 Court (time-proportional):
-  totalFraction = Σ f_i
-  courtRaw_i    = totalFraction == 0 ? 0 : courtCost * f_i / totalFraction
-  // f_i = 0 ⇒ pays nothing for court ("exclude from court" = set fraction 0)
+  totalHours = Σ h_i
+  courtRaw_i = totalHours == 0 ? 0 : courtCost * h_i / totalHours
+  // h_i = 0 ⇒ pays nothing for court ("exclude from court" = set hours 0)
 
-Shuttle (weight-proportional, shared pot, no discount yet):
-  totalShuttleFraction = Σ s_i
-  shuttleRaw_i = totalShuttleFraction == 0 ? 0 : shuttleCost * s_i / totalShuttleFraction
-  // s_i = 0 ⇒ pays nothing for shuttles ("exclude from shuttle" = set weight 0)
+Shuttle (weight-proportional, shared pot):
+  totalWeight = Σ w_i
+  shuttleRaw_i = totalWeight == 0 ? 0 : shuttleCost * w_i / totalWeight
+  // w_i = 0 ⇒ pays nothing for shuttles ("exclude from shuttle" = set weight 0)
 
-Undiscounted fair share (Σ over players == courtCost + shuttleCost == expense):
+Fair share (Σ over players == courtCost + shuttleCost == expense; no discount step in v2):
   fair_i = courtRaw_i + shuttleRaw_i
-
-Whole-bill discount, redistributed to preserve the total:
-  eff_i    = fair_i * (1 - d_i)          // discount lowers the WHOLE bill, not just shuttle
-  scale    = expense / Σ eff_j            // rescale so the shortfall spreads onto everyone
-  rawTotal_i = eff_i * scale
-  // A discount lowers player i's court AND shuttle share; the redistribution is
-  // proportional across all players. Σ rawTotal_i == expense exactly.
-  // (For the court/shuttle display columns, split rawTotal_i back in the
-  //  courtRaw_i : shuttleRaw_i ratio.)
+  rawTotal_i = fair_i
 
 Rounding (largest-remainder @ 1,000 VND):
   target      = round_to_1000(courtCost + shuttleCost)
@@ -208,20 +217,23 @@ Rounding (largest-remainder @ 1,000 VND):
 Split total_i back into court/shuttle for display proportionally to raw parts.
 ```
 
+Note on units: `hoursPlayed`/`shuttleWeight` are raw numbers, not normalized 0..1
+fractions — the `/ totalHours` and `/ totalWeight` divisions normalize automatically,
+so any consistent unit works and the split stays correct as players are added or
+removed (a v1 fraction had to be manually re-eyeballed whenever the roster changed).
+
 ### Worked example
 
-Court 150,000; 8 players all at fraction 1.0. Shuttle total 330,000 (derived from
-unitPrice × Σcount). Counts `10,10,10,10,8,8,8,8`; two players at 15% discount.
+Court 150,000; 8 players, `hoursPlayed` all `2` (a full session). Shuttle total
+330,000 (derived from unitPrice × Σcount). Weight-class: 4 nam (`shuttleWeight = 6`),
+4 nữ (`shuttleWeight = 4`).
 
-Undiscounted fair shares: court `150,000/8 = 18,750` each; shuttle by count share of
-330,000. Each player's `fair_i = court + shuttle`. Then the 15% discount is applied to
-those two players' **whole** `fair_i` and the pool is rescaled so Σ still = 480,000.
-
-Note: this **intentionally differs** from the original prompt's example table
-(66,164), which discounted shuttle only. Whole-bill discounting lowers the two
-discounted players' court share as well, pushing their totals lower and everyone
-else's slightly higher. Final shares are rounded to clean thousands via
-largest-remainder. Golden-number values will be pinned in the calc package's tests.
+Court: `150,000 / 8 = 18,750` each (equal hours ⇒ equal split).
+Shuttle: total weight `= 4×6 + 4×4 = 40`; nam share `330,000 × 6/40 = 49,500` each,
+nữ share `330,000 × 4/40 = 33,000` each.
+`fair_i = court + shuttle`: nam `68,250`, nữ `51,750`. Rounded to nearest 1,000 VND via
+largest-remainder; Σ rounded == round_to_1000(480,000) exactly. Golden-number values
+are pinned in the calc package's tests.
 
 ---
 
@@ -242,7 +254,7 @@ Server recomputes on every write using `packages/badminton-calc` — client numb
 ### Web (`apps/web`, TanStack Start routes)
 
 - `/badminton` — my sessions list + "New session".
-- `/badminton/sessions/$id` — editor: money inputs, participant rows (autocomplete name/user, fraction %, shuttle count, discount %), live preview table (client calc), Save, "Copy summary", "Copy share link".
+- `/badminton/sessions/$id` — editor: money inputs, participant rows (autocomplete name/user, hours played, gender + shuttle weight), live preview table (client calc), Save, "Copy summary", "Copy share link".
 - `/s/$shareToken` — public read-only verification view (SSR from the public endpoint).
 
 Copy-to-clipboard emits a plain-text / markdown table built from the snapshot.
@@ -251,13 +263,13 @@ Copy-to-clipboard emits a plain-text / markdown table built from the snapshot.
 
 ## 7. Validation & edge rules
 
-- VND amounts: non-negative integers. `courtFraction ∈ [0,1]`, `discount ∈ [0,1)`, `shuttleFraction ∈ [0,1]`, `totalShuttleCount` integer ≥ 0.
-- `Σ courtFraction == 0` ⇒ no one charged court (allowed; court effectively free/absorbed elsewhere).
-- `Σ effectiveWeight == 0` (everyone 0 shuttles or 100% discount) ⇒ shuttle shares all 0; surface a warning.
+- VND amounts: non-negative integers. `hoursPlayed ≥ 0`, `shuttleWeight ∈ [0, 10]`, `gender ∈ {'male','female'} | null`, `totalShuttleCount` integer ≥ 0.
+- `Σ hoursPlayed == 0` ⇒ no one charged court; that pot's cost is absorbed into `roundingResidual` instead of collected (same mechanism as `Σ shuttleWeight == 0` below, not a separate rule).
+- `Σ shuttleWeight == 0` (everyone excluded) ⇒ shuttle shares all 0, same absorption; surface a warning in the UI when this makes `roundingResidual` exceed the normal ≤999 VND rounding gap (i.e. a whole pot went uncollected, not just a rounding remainder).
 - A participant needs a `name`; `userId` optional.
-- Rounding invariant is a hard test: **Σ rounded totals == round_to_1000(expense)** for every computed snapshot.
+- Rounding invariant is a hard test **only when both axes have a nonzero total** (`Σ hoursPlayed > 0` and `Σ shuttleWeight > 0` whenever that axis's cost is nonzero): **Σ rounded totals == round_to_1000(expense)**. The two bullets above are the documented exception — when an axis's total is zero, its pot is not collected at all, and `roundingResidual` carries the full uncollected amount rather than the normal sub-1,000 gap. A test should pin this exception explicitly so it reads as documented behavior, not an untested gap.
 - Share token: unguessable (nanoid ≥ 22 chars), rotatable later.
-- Discount scope is **whole bill** (court + shuttle) — confirmed. All open items resolved.
+- No discount input anywhere in v2 — removed outright, not deferred.
 
 ---
 

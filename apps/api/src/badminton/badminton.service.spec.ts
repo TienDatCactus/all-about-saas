@@ -1,6 +1,9 @@
 import { NotFoundException } from '@nestjs/common';
 import { BadmintonService } from './badminton.service';
-import { BadmintonParticipant } from './entities/badminton-participant.entity';
+import {
+	BadmintonParticipant,
+	ParticipantGender,
+} from './entities/badminton-participant.entity';
 import { BadmintonSession } from './entities/badminton-session.entity';
 import { CreateBadmintonSessionDto } from './badminton.dto';
 
@@ -62,8 +65,8 @@ describe('BadmintonService', () => {
 			shuttleUnitPrice: 1_000,
 			totalShuttleCount: 20,
 			participants: [
-				{ name: 'A', shuttleFraction: 0.5 },
-				{ name: 'B', shuttleFraction: 0.5 },
+				{ name: 'A', shuttleWeight: 6 },
+				{ name: 'B', shuttleWeight: 4 },
 			],
 		};
 
@@ -86,7 +89,7 @@ describe('BadmintonService', () => {
 		expect(sessionRepo.save).toHaveBeenCalledTimes(1);
 	});
 
-	it('create: applies field defaults (courtFraction=1, discount=0, shuttleFraction=1)', async () => {
+	it('create: applies field defaults (hoursPlayed=1, shuttleWeight=6 — nam-equivalent)', async () => {
 		const dto: CreateBadmintonSessionDto = {
 			playedOn: '2026-07-25',
 			courtCost: 50_000,
@@ -96,9 +99,28 @@ describe('BadmintonService', () => {
 		};
 		const saved: any = await service.createSession('owner-1', dto);
 		const p = saved.participants[0];
-		expect(p.courtFraction).toBe(1);
-		expect(p.discount).toBe(0);
-		expect(p.shuttleFraction).toBe(1);
+		expect(p.hoursPlayed).toBe(1);
+		expect(p.shuttleWeight).toBe(6);
+	});
+
+	it('create: stores gender when provided (UI convenience field, not read by the calc)', async () => {
+		const dto: CreateBadmintonSessionDto = {
+			playedOn: '2026-07-25',
+			courtCost: 50_000,
+			shuttleUnitPrice: 1_000,
+			totalShuttleCount: 0,
+			participants: [
+				{ name: 'A', gender: ParticipantGender.MALE },
+				{ name: 'B', gender: ParticipantGender.FEMALE },
+			],
+		};
+		const saved: any = await service.createSession('owner-1', dto);
+		expect(saved.participants.find((p: any) => p.name === 'A').gender).toBe(
+			ParticipantGender.MALE,
+		);
+		expect(saved.participants.find((p: any) => p.name === 'B').gender).toBe(
+			ParticipantGender.FEMALE,
+		);
 	});
 
 	it('findOneOwned: throws NotFound when the session is not owned', async () => {
@@ -125,9 +147,8 @@ describe('BadmintonService', () => {
 				{
 					id: 'p1',
 					name: 'A',
-					courtFraction: 1,
-					discount: 0,
-					shuttleFraction: 1,
+					hoursPlayed: 1,
+					shuttleWeight: 1,
 				},
 			],
 			computed: undefined,
@@ -157,9 +178,8 @@ describe('BadmintonService', () => {
 				{
 					id: 'p-old',
 					name: 'Old',
-					courtFraction: 1,
-					discount: 0,
-					shuttleFraction: 1,
+					hoursPlayed: 1,
+					shuttleWeight: 1,
 				},
 			],
 			computed: undefined,
@@ -180,9 +200,8 @@ describe('BadmintonService', () => {
 			res.participants.map((p: any) => p.id),
 		);
 		// Same field defaults as create(), so the snapshot never computes on undefined.
-		expect(res.participants[0].courtFraction).toBe(1);
-		expect(res.participants[0].discount).toBe(0);
-		expect(res.participants[0].shuttleFraction).toBe(1);
+		expect(res.participants[0].hoursPlayed).toBe(1);
+		expect(res.participants[0].shuttleWeight).toBe(6);
 		expect(res.computed.rows.every((r: any) => Number.isFinite(r.total))).toBe(
 			true,
 		);
@@ -331,9 +350,9 @@ describe('BadmintonService', () => {
 					id: 'p1',
 					userId: 'secret-user',
 					name: 'A',
-					courtFraction: 1,
-					discount: 0,
-					shuttleFraction: 1,
+					hoursPlayed: 1,
+					shuttleWeight: 1,
+					gender: ParticipantGender.MALE,
 				},
 			],
 			computed: { rows: [] },
@@ -344,6 +363,7 @@ describe('BadmintonService', () => {
 		expect(view.ownerId).toBeUndefined();
 		expect(view.participants[0].userId).toBeUndefined();
 		expect(view.participants[0].name).toBe('A');
+		expect(view.participants[0].gender).toBe(ParticipantGender.MALE);
 		expect(view.title).toBe('Friday');
 	});
 });

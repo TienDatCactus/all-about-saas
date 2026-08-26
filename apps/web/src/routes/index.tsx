@@ -1,15 +1,13 @@
-import { AlienIcon, ConfettiIcon } from "@phosphor-icons/react"
-import { useForm } from "@tanstack/react-form"
-import { createFileRoute } from "@tanstack/react-router"
-import { useRef } from "react"
+import ClickSpark from "@/components/ClickSpark"
 import type { ConfettiRef } from "@/components/custom/confetti"
 import { Confetti } from "@/components/custom/confetti"
-import { FormField } from "@/components/custom/form-field"
 import { PageShell } from "@/components/custom/page-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import ClickSpark from "@/components/ClickSpark"
+import { AlienIcon, ConfettiIcon } from "@phosphor-icons/react"
+import { createFileRoute } from "@tanstack/react-router"
+import { useRef } from "react"
 
 export const Route = createFileRoute("/")({
   component: App,
@@ -17,15 +15,13 @@ export const Route = createFileRoute("/")({
 
 function App() {
   const confettiRef = useRef<ConfettiRef>(null)
-
-  const form = useForm({
-    defaultValues: {
-      email: "",
-    },
-    onSubmit: async () => {
-      await confettiRef.current?.fire({ particleCount: 100, spread: 70 })
-    },
-  })
+  const inputRef = useRef<HTMLInputElement>(null)
+  async function onClick() {
+    if (!inputRef.current?.value) {
+      return
+    }
+    await confettiRef.current?.fire({ particleCount: 100, spread: 70 })
+  }
   return (
     <ClickSpark
       sparkColor="oklch(0.5 0.134 242.749)"
@@ -49,31 +45,17 @@ function App() {
             dashboard. You can use it as a starting point for your own SaaS
             projects.
           </p>
-          <form
-            action=""
-            onSubmit={(e) => {
-              e.preventDefault()
-              void form.handleSubmit()
-            }}
-            className="w-96"
-          >
-            <div className="flex w-full gap-2">
-              <FormField form={form} name="email">
-                {({ inputProps }) => (
-                  <Input
-                    placeholder="Enter your email so we can celebrate yo shi!"
-                    className="flex-1"
-                    {...inputProps}
-                  />
-                )}
-              </FormField>
-
-              <Button>
-                Save
-                <ConfettiIcon />
-              </Button>
-            </div>
-          </form>
+          <div className="stack-row w-96 gap-2">
+            <Input
+              ref={inputRef}
+              placeholder="Enter your email so we can celebrate yo shi!"
+              className="flex-1"
+            />
+            <Button onClick={onClick}>
+              Save
+              <ConfettiIcon />
+            </Button>
+          </div>
         </div>
         <Confetti
           ref={confettiRef}

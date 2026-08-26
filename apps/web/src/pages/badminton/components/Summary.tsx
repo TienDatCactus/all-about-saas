@@ -1,8 +1,9 @@
-import { CalculatorIcon, CopyIcon } from "@phosphor-icons/react"
+import { CalculatorIcon, CopyIcon, WarningIcon } from "@phosphor-icons/react"
 import type { ComputedSnapshot } from "@/services/badminton/types"
 import DataCard from "@/components/custom/data/card"
 import DataEmpty from "@/components/custom/data/empty"
 import { toast } from "@/components/custom/toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -58,10 +59,9 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
     "
       action={
         <Button
+          tabIndex={-1}
           variant="outline"
           size="sm"
-          // handleCopy resolves its own failure path (error toast), so the
-          // promise is safe to fire and forget.
           onClick={(e) => {
             void handleCopy(e)
           }}
@@ -73,47 +73,57 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
       }
       content={
         hasRows ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Player</TableHead>
-                  <TableHead className="text-right">Court</TableHead>
-                  <TableHead className="text-right">Shuttle</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {computed.rows.map((row, index) => (
-                  <TableRow key={row.participantId ?? `${index}-${row.name}`}>
-                    <TableCell className="font-medium">{row.name}</TableCell>
+          <div className="flex flex-col gap-4">
+            {Math.abs(computed.roundingResidual) > 999 && (
+              <Alert variant="destructive">
+                <WarningIcon />
+                <AlertDescription>
+                  {`${formatDong(computed.roundingResidual)} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.`}
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Player</TableHead>
+                    <TableHead className="text-right">Court</TableHead>
+                    <TableHead className="text-right">Shuttle</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {computed.rows.map((row, index) => (
+                    <TableRow key={row.participantId ?? `${index}-${row.name}`}>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="text-right text-muted-foreground tabular-nums">
+                        {formatDong(row.court)}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground tabular-nums">
+                        {formatDong(row.shuttle)}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">
+                        {formatDong(row.total)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell>Total collected</TableCell>
                     <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatDong(row.court)}
+                      {formatVnd(computed.courtCost)}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatDong(row.shuttle)}
+                      {formatVnd(computed.shuttleCost)}
                     </TableCell>
-                    <TableCell className="text-right font-semibold tabular-nums">
-                      {formatDong(row.total)}
+                    <TableCell className="text-right tabular-nums">
+                      {formatVnd(computed.grandTotal)}
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell>Total collected</TableCell>
-                  <TableCell className="text-right text-muted-foreground tabular-nums">
-                    {formatVnd(computed.courtCost)}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground tabular-nums">
-                    {formatVnd(computed.shuttleCost)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatVnd(computed.grandTotal)}
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
+                </TableFooter>
+              </Table>
+            </div>
           </div>
         ) : (
           <DataEmpty

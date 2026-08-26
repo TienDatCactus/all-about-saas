@@ -40,12 +40,14 @@ export interface CalcParticipant {
   /** Stable id used to key the output row back to the participant. */
   id: string;
   name: string;
-  /** Played fraction of the session, 0..1. Drives the time-proportional court split. */
-  courtFraction: number;
-  /** Whole-bill discount, 0..1 (e.g. 0.15). Redistributed onto other players. */
-  discount: number;
-  /** This player's weight for the shared shuttle pot, 0..1. Split works like courtFraction. */
-  shuttleFraction: number;
+  /**
+   * Raw hours played this session. Drives the time-proportional court split.
+   * Not a 0..1 fraction — the algorithm divides by the sum, so any consistent
+   * unit normalizes correctly, and the number stays valid as the roster changes.
+   */
+  hoursPlayed: number;
+  /** Raw weight for the shared shuttle pot. Same normalization as hoursPlayed. */
+  shuttleWeight: number;
 }
 
 export interface CalcInput {
@@ -70,12 +72,10 @@ const roundToUnit = (x: number): number =>
  * Compute each player's share of a session.
  *
  * Model (see docs/badminton-splitter-spec.md §5):
- *  - Court fee is split time-proportionally by `courtFraction`.
+ *  - Court fee is split proportionally by each player's `hoursPlayed`.
  *  - Shuttle fee is a shared pot (shuttleCost = unitPrice × totalShuttleCount) split by
- *    each player's `shuttleFraction` weight — exactly like the court split.
- *  - A player's discount reduces their WHOLE bill (court + shuttle); the shortfall is
- *    redistributed proportionally onto everyone via a single rescale, so the collected
- *    amount still equals the expense.
+ *    each player's `shuttleWeight` — exactly like the court split.
+ *  - No discount step: each player's fair share IS their final pre-rounding total.
  *  - Each player's total is rounded to the nearest 1,000 VND using the largest-remainder
  *    method, guaranteeing Σ(rounded totals) === round(expense) exactly.
  *
@@ -103,41 +103,27 @@ export function computeSplit(
     };
   }
 
-  const totalFraction = sum(participants.map((p) => p.courtFraction));
-  const totalShuttleFraction = sum(participants.map((p) => p.shuttleFraction));
+  const totalHours = sum(participants.map((p) => p.hoursPlayed));
+  const totalWeight = sum(participants.map((p) => p.shuttleWeight));
 
-  // Undiscounted fair share per player, and its court/shuttle breakdown. Both the
-  // court pot and the shuttle pot are split by each player's respective weight.
-  // Each record carries its participant so the steps below can zip through one
-  // array instead of indexing parallel ones.
+  // Fair share per player, and its court/shuttle breakdown. Both pots are split by
+  // each player's respective raw weight. No discount step in v2 — `total` here is
+  // the final pre-rounding amount.
   const fair = participants.map((participant) => {
     const court =
-      totalFraction === 0
-        ? 0
-        : (courtCost * participant.courtFraction) / totalFraction;
+      totalHours === 0 ? 0 : (courtCost * participant.hoursPlayed) / totalHours;
     const shuttle =
-      totalShuttleFraction === 0
+      totalWeight === 0
         ? 0
-        : (shuttleCost * participant.shuttleFraction) / totalShuttleFraction;
+        : (shuttleCost * participant.shuttleWeight) / totalWeight;
     return { participant, court, shuttle, total: court + shuttle };
   });
 
-  // Whole-bill discount, redistributed by a single rescale so Σ === expense.
-  const eff = fair.map((f) => ({
-    fair: f,
-    value: f.total * (1 - f.participant.discount),
-  }));
-  const totalEff = sum(eff.map((e) => e.value));
-  const scale = totalEff === 0 ? 0 : expense / totalEff;
-
-  // Largest-remainder rounding of the per-player total to 1,000 VND. The target is
-  // what's actually collectable (Σ raw) — equal to round(expense) in every normal
-  // case, but 0 in the degenerate "everyone fully discounted" case, so we don't invent
-  // a payment nobody owes.
-  const scaled = eff.map((e, i) => {
-    const raw = e.value * scale;
+  // Largest-remainder rounding of each fair total to 1,000 VND.
+  const scaled = fair.map((f, i) => {
+    const raw = f.total;
     const base = Math.floor(raw / ROUND_UNIT) * ROUND_UNIT;
-    return { fair: e.fair, i, raw, base, remainder: raw - base };
+    return { fair: f, i, raw, base, remainder: raw - base };
   });
   const collectTarget = roundToUnit(sum(scaled.map((s) => s.raw)));
   let increments = Math.round(
@@ -145,8 +131,6 @@ export function computeSplit(
   );
   increments = Math.max(0, Math.min(participants.length, increments));
 
-  // The `increments` players with the largest remainders round up; everyone
-  // else keeps the floored base. Indices are distinct, so a Set is exact.
   const roundUp = new Set(
     [...scaled]
       .sort((a, b) => b.remainder - a.remainder || a.i - b.i)
@@ -155,7 +139,7 @@ export function computeSplit(
   );
 
   // Split each rounded total back into court/shuttle for display, preserving the
-  // pre-discount court:shuttle ratio. court + shuttle === total per row.
+  // fair court:shuttle ratio. court + shuttle === total per row.
   const rows: ComputedRow[] = scaled.map(({ fair: f, i, base }) => {
     const total = roundUp.has(i) ? base + ROUND_UNIT : base;
     const court = f.total === 0 ? 0 : Math.round((total * f.court) / f.total);

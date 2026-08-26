@@ -9,9 +9,9 @@ export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc"
 export const ParticipantInputSchema = z.object({
   userId: z.uuid().optional(),
   name: z.string().min(1, "Name is required").max(120),
-  courtFraction: z.number().min(0).max(1).optional(),
-  discount: z.number().min(0).max(1).optional(),
-  shuttleFraction: z.number().min(0).max(1).optional(),
+  hoursPlayed: z.number().min(0).optional(),
+  shuttleWeight: z.number().min(0).max(10).optional(),
+  gender: z.enum(["male", "female"]).optional(),
 })
 
 export type ParticipantInput = z.infer<typeof ParticipantInputSchema>
@@ -63,9 +63,9 @@ export const SessionParticipantSchema = z.object({
   // Guests have no account and the column is nullable, so JSON carries null.
   userId: z.string().nullish(),
   name: z.string(),
-  courtFraction: z.number(),
-  discount: z.number(),
-  shuttleFraction: z.number(),
+  hoursPlayed: z.number(),
+  shuttleWeight: z.number(),
+  gender: z.enum(["male", "female"]).nullish(),
 })
 
 export type SessionParticipant = z.infer<typeof SessionParticipantSchema>

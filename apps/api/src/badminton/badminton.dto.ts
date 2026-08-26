@@ -11,8 +11,9 @@ import {
 	Min,
 	ValidateNested,
 } from 'class-validator';
-import { IsNumber, IsUUID, Max } from 'class-validator';
+import { IsEnum, IsNumber, IsUUID, Max } from 'class-validator';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { ParticipantGender } from './entities/badminton-participant.entity';
 
 export class CreateBadmintonSessionDto {
 	/** Date the session was played, 'YYYY-MM-DD'. */
@@ -57,26 +58,23 @@ export class ParticipantInputDto {
 	@MaxLength(120)
 	name!: string;
 
-	/** Played fraction of the session, 0..1 (drives the time-proportional court split). Defaults to 1. */
+	/** Raw hours played this session (drives the time-proportional court split). Defaults to 1. */
 	@IsOptional()
 	@IsNumber()
 	@Min(0)
-	@Max(1)
-	courtFraction?: number;
+	hoursPlayed?: number;
 
-	/** Whole-bill discount, 0..1 (e.g. 0.15). Defaults to 0. */
+	/** Raw weight for the shared shuttle pot, 0-10 scale (10 = 100%). Defaults to 6 (nam-equivalent). */
 	@IsOptional()
 	@IsNumber()
 	@Min(0)
-	@Max(1)
-	discount?: number;
+	@Max(10)
+	shuttleWeight?: number;
 
-	/** Weight for the shared shuttle pot, 0..1 (split like courtFraction). Defaults to 1. */
+	/** UI convenience only — the web app uses this to default shuttleWeight (6 nam / 4 nữ). */
 	@IsOptional()
-	@IsNumber()
-	@Min(0)
-	@Max(1)
-	shuttleFraction?: number;
+	@IsEnum(ParticipantGender)
+	gender?: ParticipantGender;
 }
 
 export class UpdateBadmintonSessionDto extends PartialType(

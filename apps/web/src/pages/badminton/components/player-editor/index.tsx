@@ -26,9 +26,8 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
             <TableHeader>
               <TableRow>
                 <TableCell>Player</TableCell>
-                <TableCell className="text-right">Shuttle %</TableCell>
-                <TableCell className="text-right">Court %</TableCell>
-                <TableCell className="text-right">Discount %</TableCell>
+                <TableCell className="text-right">Hours played</TableCell>
+                <TableCell>Shuttle weight</TableCell>
                 <TableCell>Remove</TableCell>
               </TableRow>
             </TableHeader>

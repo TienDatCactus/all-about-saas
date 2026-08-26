@@ -22,13 +22,13 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
       }}
     >
       {(session) => (
-        <>
+        <div className="space-y-4">
           <ShareLink shareToken={session.shareToken} />
           <SessionEditor
             sessionId={sessionId}
             initialValues={sessionToValues(session)}
           />
-        </>
+        </div>
       )}
     </DataPage>
   )

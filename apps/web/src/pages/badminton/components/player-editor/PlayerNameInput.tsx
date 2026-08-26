@@ -94,6 +94,7 @@ export function PlayerNameInput({
       emptyMessage={enabled ? "No matches" : "Type to search"}
       onBlur={onBlur}
       aria-invalid={ariaInvalid}
+      className="w-32 lg:w-full"
     />
   )
 }

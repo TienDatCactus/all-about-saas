@@ -1,12 +1,14 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { ReactSVG } from "react-svg"
 import { Button } from "@/components/ui/button"
 import { loadAsset } from "@/lib/utils"
 import { authApi } from "@/services/auth"
+import { useTheme } from "@/lib/context/theme"
 
 interface Provider {
   name: string
   iconUrl: string
+  darkIconUrl?: string
   // The auth API's OAuth entry points are async (they resolve to a redirect),
   // so the callback is allowed to return a promise the caller fires and forgets.
   callback: (returnTo?: string) => void
@@ -40,6 +42,17 @@ const providers: Array<Provider> = [
   },
 ]
 const Providers: React.FC = () => {
+  const { isDarkMode } = useTheme()
+  const deriveAsset = useCallback(
+    (provider: Pick<Provider, "iconUrl" | "darkIconUrl">) => {
+      return isDarkMode
+        ? provider.iconUrl
+        : provider?.darkIconUrl
+          ? provider.darkIconUrl
+          : provider.iconUrl
+    },
+    [isDarkMode]
+  )
   return (
     <ul className="space-y-4">
       {providers.map((provider) => (
@@ -52,7 +65,7 @@ const Providers: React.FC = () => {
             void provider.callback(currentReturnTo())
           }}
         >
-          <ReactSVG src={provider.iconUrl} aria-hidden={true} />
+          <ReactSVG src={deriveAsset(provider)} aria-hidden={true} />
           <span className="text-sm font-medium">
             Sign in with {provider.name}
           </span>

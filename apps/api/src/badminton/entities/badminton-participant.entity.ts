@@ -3,6 +3,11 @@ import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { BadmintonSession } from './badminton-session.entity';
 
+export enum ParticipantGender {
+	MALE = 'male',
+	FEMALE = 'female',
+}
+
 /**
  * One attendee of one {@link BadmintonSession}. Identity is EITHER a linked app
  * user ({@link userId}) OR a free-text guest — in both cases {@link name} holds
@@ -37,15 +42,19 @@ export class BadmintonParticipant extends SoftDeleteBaseEntity {
 	@Column()
 	name!: string;
 
-	/** Played fraction of the session, 0..1. Drives the time-proportional court split; 0 = excluded from court. */
+	/** Raw hours played this session. Drives the time-proportional court split; 0 = excluded from court. */
 	@Column('float', { default: 1 })
-	courtFraction!: number;
+	hoursPlayed!: number;
 
-	/** Discount on the whole bill, 0..1 (e.g. 0.15). Redistributed onto other players. */
-	@Column('float', { default: 0 })
-	discount!: number;
+	/**
+	 * Raw weight for the shared shuttle pot, on a 0-10 scale (10 = 100%); 0 = excluded
+	 * from shuttle fee. Defaults to the nam-equivalent weight (6) rather than a neutral
+	 * value — most sessions are majority-male, so this only needs touching for nữ.
+	 */
+	@Column('float', { default: 6 })
+	shuttleWeight!: number;
 
-	/** Weight for the shared shuttle pot, 0..1. Split works like {@link courtFraction}; 0 = excluded from shuttle fee. */
-	@Column('float', { default: 1 })
-	shuttleFraction!: number;
+	/** UI convenience only — sets the default shuttleWeight (6 nam / 4 nữ). Never read by the calc package. */
+	@Column({ type: 'enum', enum: ParticipantGender, nullable: true })
+	gender?: ParticipantGender;
 }

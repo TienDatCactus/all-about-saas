@@ -4,17 +4,12 @@ const AT = '2026-07-25T00:00:00.000Z';
 
 const p = (
 	id: string,
-	overrides: Partial<{
-		courtFraction: number;
-		discount: number;
-		shuttleFraction: number;
-	}> = {},
+	overrides: Partial<{ hoursPlayed: number; shuttleWeight: number }> = {},
 ) => ({
 	id,
 	name: id,
-	courtFraction: overrides.courtFraction ?? 1,
-	discount: overrides.discount ?? 0,
-	shuttleFraction: overrides.shuttleFraction ?? 0,
+	hoursPlayed: overrides.hoursPlayed ?? 1,
+	shuttleWeight: overrides.shuttleWeight ?? 0,
 });
 
 describe('computeSplit', () => {
@@ -24,8 +19,8 @@ describe('computeSplit', () => {
 			shuttleUnitPrice: 1_000,
 			totalShuttleCount: 20,
 			participants: [
-				p('A', { shuttleFraction: 0.5 }),
-				p('B', { shuttleFraction: 0.5 }),
+				p('A', { shuttleWeight: 1 }),
+				p('B', { shuttleWeight: 1 }),
 			],
 		};
 		const out = computeSplit(input, AT);
@@ -33,14 +28,14 @@ describe('computeSplit', () => {
 		expect(out.grandTotal).toBe(120_000);
 	});
 
-	it('splits an even, no-discount session exactly', () => {
+	it('splits an even session exactly', () => {
 		const input: CalcInput = {
 			courtCost: 100_000,
 			shuttleUnitPrice: 1_000,
 			totalShuttleCount: 20,
 			participants: [
-				p('A', { shuttleFraction: 0.5 }),
-				p('B', { shuttleFraction: 0.5 }),
+				p('A', { shuttleWeight: 1 }),
+				p('B', { shuttleWeight: 1 }),
 			],
 		};
 		const out = computeSplit(input, AT);
@@ -63,38 +58,15 @@ describe('computeSplit', () => {
 		expect(out.roundingResidual).toBe(0);
 	});
 
-	it('redistributes a whole-bill discount onto other players (total preserved)', () => {
-		const input: CalcInput = {
-			courtCost: 100_000,
-			shuttleUnitPrice: 1_000,
-			totalShuttleCount: 20,
-			participants: [
-				p('A', { shuttleFraction: 0.5 }),
-				p('B', { shuttleFraction: 0.5, discount: 0.5 }),
-			],
-		};
-		const out = computeSplit(input, AT);
-		// fair = 60k each; B at 50% → eff 60k/30k, scale = 120k/90k = 4/3
-		// A = 80k, B = 40k
-		expect(out.rows.find((r) => r.participantId === 'A')!.total).toBe(80_000);
-		expect(out.rows.find((r) => r.participantId === 'B')!.total).toBe(40_000);
-		// discount is on the WHOLE bill: B pays less than A on both dimensions
-		const a = out.rows.find((r) => r.participantId === 'A')!;
-		const b = out.rows.find((r) => r.participantId === 'B')!;
-		expect(b.total).toBeLessThan(a.total);
-		expect(a.court + a.shuttle).toBe(a.total);
-		expect(b.court + b.shuttle).toBe(b.total);
-	});
-
-	it('excludes courtFraction=0 from court and shuttleFraction=0 from shuttle', () => {
+	it('excludes hoursPlayed=0 from court and shuttleWeight=0 from shuttle', () => {
 		const input: CalcInput = {
 			courtCost: 90_000,
 			shuttleUnitPrice: 1_000,
 			totalShuttleCount: 20,
 			participants: [
-				p('Player', { courtFraction: 1, shuttleFraction: 0.5 }),
-				p('CourtOnly', { courtFraction: 1, shuttleFraction: 0 }),
-				p('ShuttleOnly', { courtFraction: 0, shuttleFraction: 0.5 }),
+				p('Player', { hoursPlayed: 1, shuttleWeight: 1 }),
+				p('CourtOnly', { hoursPlayed: 1, shuttleWeight: 0 }),
+				p('ShuttleOnly', { hoursPlayed: 0, shuttleWeight: 1 }),
 			],
 		};
 		const out = computeSplit(input, AT);
@@ -102,8 +74,8 @@ describe('computeSplit', () => {
 			(r) => r.participantId === 'ShuttleOnly',
 		)!;
 		const courtOnly = out.rows.find((r) => r.participantId === 'CourtOnly')!;
-		expect(shuttleOnly.court).toBe(0); // court weight 0 → no court
-		expect(courtOnly.shuttle).toBe(0); // shuttle weight 0 → no shuttle
+		expect(shuttleOnly.court).toBe(0);
+		expect(courtOnly.shuttle).toBe(0);
 	});
 
 	it('applies time-proportional court split', () => {
@@ -112,16 +84,36 @@ describe('computeSplit', () => {
 			shuttleUnitPrice: 0,
 			totalShuttleCount: 0,
 			participants: [
-				p('Full', { courtFraction: 1, shuttleFraction: 0 }),
-				p('Half', { courtFraction: 0.5, shuttleFraction: 0 }),
+				p('Full', { hoursPlayed: 2, shuttleWeight: 0 }),
+				p('Half', { hoursPlayed: 1, shuttleWeight: 0 }),
 			],
 		};
 		const out = computeSplit(input, AT);
-		// court weights 1 : 0.5 → 66,667 : 33,333, rounded to 1,000 → 67,000 : 33,000
 		const full = out.rows.find((r) => r.participantId === 'Full')!;
 		const half = out.rows.find((r) => r.participantId === 'Half')!;
 		expect(full.total).toBeGreaterThan(half.total);
 		expect(full.total + half.total).toBe(out.grandTotal);
+	});
+
+	it('is scale-invariant: doubling every hoursPlayed/shuttleWeight in lockstep produces the same split', () => {
+		const base: CalcInput = {
+			courtCost: 150_000,
+			shuttleUnitPrice: 2_000,
+			totalShuttleCount: 30,
+			participants: [
+				p('A', { hoursPlayed: 1, shuttleWeight: 6 }),
+				p('B', { hoursPlayed: 2, shuttleWeight: 4 }),
+			],
+		};
+		const doubled: CalcInput = {
+			...base,
+			participants: base.participants.map((pp) => ({
+				...pp,
+				hoursPlayed: pp.hoursPlayed * 2,
+				shuttleWeight: pp.shuttleWeight * 2,
+			})),
+		};
+		expect(computeSplit(doubled, AT).rows).toEqual(computeSplit(base, AT).rows);
 	});
 
 	describe('reconciliation invariants (property-style)', () => {
@@ -131,14 +123,14 @@ describe('computeSplit', () => {
 				shuttleUnitPrice: 4_583,
 				totalShuttleCount: 70,
 				participants: [
-					p('Lam', { shuttleFraction: 10 / 70 }),
-					p('Dat', { shuttleFraction: 10 / 70 }),
-					p('Kien', { shuttleFraction: 10 / 70 }),
-					p('Thai', { shuttleFraction: 10 / 70 }),
-					p('Hieu', { shuttleFraction: 8 / 70 }),
-					p('Truong', { shuttleFraction: 8 / 70 }),
-					p('Trang', { shuttleFraction: 8 / 70, discount: 0.15 }),
-					p('Giang', { shuttleFraction: 8 / 70, discount: 0.15 }),
+					p('Lam', { shuttleWeight: 10 }),
+					p('Dat', { shuttleWeight: 10 }),
+					p('Kien', { shuttleWeight: 10 }),
+					p('Thai', { shuttleWeight: 10 }),
+					p('Hieu', { shuttleWeight: 8 }),
+					p('Truong', { shuttleWeight: 8 }),
+					p('Trang', { shuttleWeight: 8 }),
+					p('Giang', { shuttleWeight: 8 }),
 				],
 			},
 			{
@@ -146,15 +138,11 @@ describe('computeSplit', () => {
 				shuttleUnitPrice: 3_111,
 				totalShuttleCount: 27,
 				participants: [
-					p('A', {
-						courtFraction: 0.3,
-						shuttleFraction: 5 / 27,
-						discount: 0.1,
-					}),
-					p('B', { courtFraction: 1, shuttleFraction: 12 / 27 }),
-					p('C', { courtFraction: 0.75, shuttleFraction: 0, discount: 0.2 }),
-					p('D', { courtFraction: 1, shuttleFraction: 7 / 27 }),
-					p('E', { courtFraction: 0, shuttleFraction: 3 / 27 }),
+					p('A', { hoursPlayed: 0.3, shuttleWeight: 5 }),
+					p('B', { hoursPlayed: 1, shuttleWeight: 12 }),
+					p('C', { hoursPlayed: 0.75, shuttleWeight: 0 }),
+					p('D', { hoursPlayed: 1, shuttleWeight: 7 }),
+					p('E', { hoursPlayed: 0, shuttleWeight: 3 }),
 				],
 			},
 		];
@@ -171,7 +159,6 @@ describe('computeSplit', () => {
 					expect(r.court).toBeGreaterThanOrEqual(0);
 					expect(r.shuttle).toBeGreaterThanOrEqual(0);
 				}
-				// residual is the gap between exact expense and the 1,000-rounded collection
 				expect(out.roundingResidual).toBe(
 					out.courtCost + out.shuttleCost - out.grandTotal,
 				);
@@ -179,7 +166,24 @@ describe('computeSplit', () => {
 		);
 	});
 
-	it('handles the empty-session and all-discounted edge cases without throwing', () => {
+	it('documents that a zero-hoursPlayed session absorbs the entire court pot into roundingResidual (not just a rounding remainder)', () => {
+		const input: CalcInput = {
+			courtCost: 100_000,
+			shuttleUnitPrice: 1_000,
+			totalShuttleCount: 20,
+			participants: [
+				p('A', { hoursPlayed: 0, shuttleWeight: 1 }),
+				p('B', { hoursPlayed: 0, shuttleWeight: 1 }),
+			],
+		};
+		const out = computeSplit(input, AT);
+		const totalCollected = out.rows.reduce((a, r) => a + r.total, 0);
+		expect(totalCollected).toBe(20_000);
+		expect(out.grandTotal).toBe(120_000);
+		expect(out.roundingResidual).toBe(100_000);
+	});
+
+	it('handles the empty-session and zero-weight edge cases without throwing', () => {
 		expect(
 			computeSplit(
 				{
@@ -192,19 +196,16 @@ describe('computeSplit', () => {
 			).rows,
 		).toEqual([]);
 
-		const allFree = computeSplit(
+		const noShuttle = computeSplit(
 			{
 				courtCost: 50_000,
 				shuttleUnitPrice: 1_000,
 				totalShuttleCount: 5,
-				participants: [p('A', { shuttleFraction: 1, discount: 1 })],
+				participants: [p('A', { hoursPlayed: 1, shuttleWeight: 0 })],
 			},
 			AT,
 		);
-		// 100% discount → collects nothing; whole expense is the residual
-		expect(allFree.rows[0].total).toBe(0);
-		expect(allFree.roundingResidual).toBe(
-			allFree.courtCost + allFree.shuttleCost,
-		);
+		expect(noShuttle.rows[0].shuttle).toBe(0);
+		expect(noShuttle.rows[0].court).toBe(noShuttle.rows[0].total);
 	});
 });

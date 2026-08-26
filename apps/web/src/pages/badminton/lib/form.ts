@@ -2,17 +2,17 @@ import { computeSplit } from "@repo/badminton-calc"
 import type {
   BadmintonSession,
   CreateSessionIn,
+  ParticipantInput,
 } from "@/services/badminton/types"
 
-/** A player as edited in the form. Percentages are 0..100 (converted to 0..1 on save). */
+/** A player as edited in the form. hoursPlayed/shuttleWeight are raw units, not percentages. */
 export interface EditorPlayer {
   id: string
   userId?: string
   name: string
-  courtPercent: number
-  discountPercent: number
-  /** Weight for the shared shuttle pot, 0..100 (converted to a 0..1 fraction on save). */
-  shuttlePercent: number
+  hoursPlayed: number
+  shuttleWeight: number
+  gender?: "male" | "female"
 }
 
 export interface EditorValues {
@@ -29,18 +29,29 @@ const uid = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2)
 
-const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
+const nonNegative = (n: number) => Math.max(0, n || 0)
 const wholeShuttles = (n: unknown) => Math.max(0, Math.trunc(Number(n)) || 0)
 export const todayIso = () => new Date().toISOString().slice(0, 10)
+
+/**
+ * Starting weight before a gender is picked, on the 0-10 scale (10 = 100%).
+ * Set to the nam-equivalent (6), not a neutral value — most sessions are
+ * majority-male, so a new row only needs touching when it's actually nữ.
+ */
+export const DEFAULT_SHUTTLE_WEIGHT = 6
+
+/** nam:6 / nữ:4 out of 10, per docs/badminton-splitter-spec.md §3. Only called once a gender is picked — see PlayerRow.tsx. */
+export function defaultShuttleWeight(gender: "male" | "female"): number {
+  return gender === "male" ? DEFAULT_SHUTTLE_WEIGHT : 4
+}
 
 /** Random-keyed player for client-side adds (after mount). */
 export function newPlayer(name = ""): EditorPlayer {
   return {
     id: uid(),
     name,
-    courtPercent: 100,
-    discountPercent: 0,
-    shuttlePercent: 100,
+    hoursPlayed: 1,
+    shuttleWeight: DEFAULT_SHUTTLE_WEIGHT,
   }
 }
 
@@ -49,9 +60,8 @@ function seedPlayer(index: number): EditorPlayer {
   return {
     id: `seed-${index}`,
     name: "",
-    courtPercent: 100,
-    discountPercent: 0,
-    shuttlePercent: 100,
+    hoursPlayed: 1,
+    shuttleWeight: DEFAULT_SHUTTLE_WEIGHT,
   }
 }
 
@@ -77,9 +87,9 @@ export function sessionToValues(s: BadmintonSession): EditorValues {
       id: p.id,
       userId: p.userId ?? undefined,
       name: p.name,
-      courtPercent: Math.round(p.courtFraction * 100),
-      discountPercent: Math.round(p.discount * 100),
-      shuttlePercent: Math.round(p.shuttleFraction * 100),
+      hoursPlayed: p.hoursPlayed,
+      shuttleWeight: p.shuttleWeight,
+      gender: p.gender ?? undefined,
     })),
   }
 }
@@ -92,9 +102,8 @@ export function valuesToComputed(v: EditorValues) {
     participants: v.players.map((p) => ({
       id: p.id,
       name: p.name.trim() || "Unnamed",
-      courtFraction: clamp01((p.courtPercent || 0) / 100),
-      discount: clamp01((p.discountPercent || 0) / 100),
-      shuttleFraction: clamp01((p.shuttlePercent || 0) / 100),
+      hoursPlayed: nonNegative(p.hoursPlayed),
+      shuttleWeight: nonNegative(p.shuttleWeight),
     })),
   })
 }
@@ -106,7 +115,7 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
     courtCost: v.courtCost,
     shuttleUnitPrice: v.shuttleUnitPrice,
     totalShuttleCount: wholeShuttles(v.totalShuttleCount),
-    participants: v.players.reduce<any>((acc, p) => {
+    participants: v.players.reduce<ParticipantInput[]>((acc, p) => {
       const name = p.name.trim()
 
       if (!name) return acc
@@ -114,9 +123,9 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
       acc.push({
         userId: p.userId,
         name: name || "Unnamed",
-        courtFraction: clamp01(p.courtPercent / 100),
-        discount: clamp01(p.discountPercent / 100),
-        shuttleFraction: clamp01(p.shuttlePercent / 100),
+        hoursPlayed: nonNegative(p.hoursPlayed),
+        shuttleWeight: nonNegative(p.shuttleWeight),
+        gender: p.gender,
       })
 
       return acc

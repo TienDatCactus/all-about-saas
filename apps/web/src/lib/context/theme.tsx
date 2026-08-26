@@ -13,6 +13,7 @@ type ThemeProviderProps = {
 type ThemeProviderState = {
   theme: Theme
   setTheme: (theme: Theme) => void
+  isDarkMode: boolean
 }
 
 function getThemeScript(storageKey: string, defaultTheme: Theme) {
@@ -83,9 +84,9 @@ export function ThemeProvider({
     storage.set(storageKey, next)
     setThemeState(next)
   }
-
+  const isDarkMode = theme == "dark"
   return (
-    <ThemeProviderContext value={{ theme, setTheme }}>
+    <ThemeProviderContext value={{ theme, setTheme, isDarkMode }}>
       <ScriptOnce>{getThemeScript(storageKey, defaultTheme)}</ScriptOnce>
       {children}
     </ThemeProviderContext>

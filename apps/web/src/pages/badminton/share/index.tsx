@@ -15,9 +15,8 @@ function toComputed(session: PublicSession) {
     participants: session.participants.map((p) => ({
       id: p.id,
       name: p.name,
-      courtFraction: p.courtFraction,
-      discount: p.discount,
-      shuttleFraction: p.shuttleFraction,
+      hoursPlayed: p.hoursPlayed,
+      shuttleWeight: p.shuttleWeight,
     })),
   })
 }

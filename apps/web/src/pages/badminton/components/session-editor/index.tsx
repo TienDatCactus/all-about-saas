@@ -5,6 +5,7 @@ import {
 } from "@phosphor-icons/react"
 import { useForm } from "@tanstack/react-form"
 import { format, parseISO } from "date-fns"
+import { useState } from "react"
 import {
   defaultValues,
   hasNamedPlayer,
@@ -17,6 +18,7 @@ import type { BadmintonSession } from "@/services/badminton/types"
 import type { EditorValues } from "../../lib/form"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import DataCard from "@/components/custom/data/card"
+import DataDialog from "@/components/custom/data/dialog"
 import { FormField } from "@/components/custom/form-field"
 import { Button as StatefulButton } from "@/components/custom/stateful-button"
 import DatePicker from "@/components/date-picker"
@@ -27,6 +29,7 @@ import {
   useUpdateSessionMutation,
 } from "@/services/badminton/queries"
 import { ShuttlePriceCalc } from "./ShuttlePriceCalc"
+import { Button } from "@/components/ui/button"
 
 interface SessionEditorProps {
   sessionId?: string
@@ -42,6 +45,7 @@ export function SessionEditor({
   const create = useCreateSessionMutation()
   const update = useUpdateSessionMutation(sessionId ?? "")
   const status = sessionId ? update.status : create.status
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false)
 
   const form = useForm({
     defaultValues: initialValues ?? defaultValues(),
@@ -50,16 +54,45 @@ export function SessionEditor({
       const saved = sessionId
         ? await update.mutateAsync(payload)
         : await create.mutateAsync(payload)
+      setMobileSummaryOpen(false)
       onSaved?.(saved)
     },
   })
+
+  const summaryAndSave = (
+    <div className="space-y-4">
+      <form.Subscribe selector={(s: { values: EditorValues }) => s.values}>
+        {(values: EditorValues) => (
+          <BadmintonSummary
+            computed={valuesToComputed(values)}
+            meta={{ title: values.title, playedOn: values.playedOn }}
+          />
+        )}
+      </form.Subscribe>
+
+      <form.Subscribe
+        selector={(s: { values: EditorValues }) => hasNamedPlayer(s.values)}
+      >
+        {(canSave: boolean) => (
+          <StatefulButton
+            type="button"
+            size="lg"
+            className="w-full"
+            mutationState={status}
+            disabled={!canSave}
+            onClick={form.handleSubmit}
+          >
+            {sessionId ? "Save changes" : "Save session"}
+          </StatefulButton>
+        )}
+      </form.Subscribe>
+    </div>
+  )
+
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        // handleSubmit rejects when the save mutation fails; the failure is
-        // already surfaced through the mutation status (the save button's
-        // mutationState), so just keep the rejection from floating.
         form.handleSubmit().catch(() => undefined)
       }}
       className="grid gap-6 lg:grid-cols-5 lg:items-start"
@@ -183,39 +216,29 @@ export function SessionEditor({
         />
         <DataCard
           title="Players"
-          description="Court % is time played (100% = full session). Discount lowers the
-              whole bill and is shared by everyone else."
+          description="Hours played splits the court fee. Shuttle weight splits the shuttle pot — tap Male/Female for the 6/4 default."
           content={<PlayerEditor form={form} />}
         />
-      </div>
-
-      <div className="col-span-2 flex flex-col gap-4 lg:sticky lg:top-6">
-        <form.Subscribe selector={(s: { values: EditorValues }) => s.values}>
-          {(values: EditorValues) => (
-            <BadmintonSummary
-              computed={valuesToComputed(values)}
-              meta={{ title: values.title, playedOn: values.playedOn }}
-            />
-          )}
-        </form.Subscribe>
-
-        <form.Subscribe
-          selector={(s: { values: EditorValues }) => hasNamedPlayer(s.values)}
+        <Button
+          onClick={(e) => {
+            e.preventDefault()
+            setMobileSummaryOpen(true)
+          }}
+          className="w-full lg:hidden"
         >
-          {(canSave: boolean) => (
-            <StatefulButton
-              type="button"
-              size="lg"
-              className="w-full"
-              mutationState={status}
-              disabled={!canSave}
-              onClick={form.handleSubmit}
-            >
-              {sessionId ? "Save changes" : "Save session"}
-            </StatefulButton>
-          )}
-        </form.Subscribe>
+          View Changes
+        </Button>
       </div>
+      <div className="col-span-2 flex hidden flex-col gap-4 lg:sticky lg:top-6 lg:block">
+        {summaryAndSave}
+      </div>
+
+      <DataDialog
+        open={mobileSummaryOpen}
+        onOpenChange={setMobileSummaryOpen}
+        title="Split summary"
+        content={<div className="flex flex-col gap-4">{summaryAndSave}</div>}
+      />
     </form>
   )
 }
