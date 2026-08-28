@@ -25,7 +25,10 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
       {(session) => (
         <div className="space-y-4">
           <ShareLink shareToken={session.shareToken} />
-          <PaymentMethodPicker sessionId={sessionId} value={session.paymentMethodId} />
+          <PaymentMethodPicker
+            sessionId={sessionId}
+            value={session.paymentMethodId}
+          />
           <SessionEditor
             sessionId={sessionId}
             initialValues={sessionToValues(session)}

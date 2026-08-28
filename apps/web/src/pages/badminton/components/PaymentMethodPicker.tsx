@@ -47,18 +47,22 @@ export function PaymentMethodPicker({
                 updateSession.mutate(
                   { paymentMethodId: id },
                   {
-                    onError: () => toast.error("Không đổi được phương thức nhận tiền"),
+                    onError: () =>
+                      toast.error("Không đổi được phương thức nhận tiền"),
                   }
                 )
               }}
             >
               {methods.map((m) => (
-                <div key={m.id} className="flex items-center justify-between gap-2">
+                <div
+                  key={m.id}
+                  className="flex items-center justify-between gap-2"
+                >
                   <div className="flex items-center gap-2">
                     <RadioGroupItem value={m.id} id={m.id} />
                     <Label htmlFor={m.id}>
                       {m.label}
-                      <span className="text-muted-foreground ml-1 text-xs">
+                      <span className="ml-1 text-xs text-muted-foreground">
                         ({m.type === "image" ? "QR ảnh" : m.phoneNumber})
                       </span>
                     </Label>
@@ -83,7 +87,9 @@ export function PaymentMethodPicker({
                 </div>
               ))}
               {methods.length === 0 && (
-                <p className="text-muted-foreground text-sm">Chưa có phương thức nào.</p>
+                <p className="text-sm text-muted-foreground">
+                  Chưa có phương thức nào.
+                </p>
               )}
             </RadioGroup>
             <AddMethodForm />
@@ -102,7 +108,8 @@ function AddMethodForm() {
   const createMethod = useCreatePaymentMethodMutation()
 
   const canSubmit =
-    label.trim().length > 0 && (type === "phone" ? phoneNumber.trim().length > 0 : !!file)
+    label.trim().length > 0 &&
+    (type === "phone" ? phoneNumber.trim().length > 0 : !!file)
 
   return (
     <div className="border-t pt-4">
@@ -148,7 +155,12 @@ function AddMethodForm() {
           disabled={!canSubmit || createMethod.isPending}
           onClick={() => {
             createMethod.mutate(
-              { type, label, phoneNumber: type === "phone" ? phoneNumber : undefined, file },
+              {
+                type,
+                label,
+                phoneNumber: type === "phone" ? phoneNumber : undefined,
+                file,
+              },
               {
                 onSuccess: () => {
                   setLabel("")
