@@ -18,6 +18,7 @@ import { StorageService } from '../common/storage/storage.service';
 import {
 	CreateBadmintonSessionDto,
 	QueryBadmintonSessionDto,
+	SetParticipantPaidDto,
 	UpdateBadmintonSessionDto,
 } from './badminton.dto';
 import { BadmintonService } from './badminton.service';
@@ -79,6 +80,16 @@ export class BadmintonController {
 		@Body() dto: UpdateBadmintonSessionDto,
 	) {
 		return this.service.updateSession(requireUser(req).id, id, dto);
+	}
+
+	@Patch('/sessions/:id/participants/:participantId/payment')
+	setParticipantPaid(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Param('participantId', ParseUUIDPipe) participantId: string,
+		@Body() dto: SetParticipantPaidDto,
+	) {
+		return this.service.setParticipantPaid(requireUser(req).id, id, participantId, dto.paid);
 	}
 
 	@Delete('/sessions/:id')

@@ -62,6 +62,11 @@ export class BadmintonParticipant extends SoftDeleteBaseEntity {
 	@Column({ default: false })
 	paid!: boolean;
 
+	/**
+	 * Nullable (not just optional): TypeORM's save() omits `undefined` properties
+	 * from the generated UPDATE entirely, so clearing this on unmark-as-paid
+	 * requires writing an explicit SQL NULL via `null`, not leaving it `undefined`.
+	 */
 	@Column({ type: 'timestamptz', nullable: true })
-	paidAt?: Date;
+	paidAt?: Date | null;
 }

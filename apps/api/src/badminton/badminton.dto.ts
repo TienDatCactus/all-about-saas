@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
 	ArrayMinSize,
 	IsArray,
+	IsBoolean,
 	IsDateString,
 	IsInt,
 	IsOptional,
@@ -84,6 +85,11 @@ export class UpdateBadmintonSessionDto extends PartialType(
 	@IsOptional()
 	@IsUUID()
 	paymentMethodId?: string | null;
+}
+
+export class SetParticipantPaidDto {
+	@IsBoolean()
+	paid!: boolean;
 }
 
 export class QueryBadmintonSessionDto extends PaginationQueryDto {

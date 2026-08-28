@@ -397,4 +397,90 @@ describe('BadmintonService', () => {
 		expect(view.participants[0].gender).toBe(ParticipantGender.MALE);
 		expect(view.title).toBe('Friday');
 	});
+
+	it('setParticipantPaid: sets paid + paidAt when marking paid, scoped to the owner', async () => {
+		sessionRepo.findOne = jest.fn(async () => ({ id: 's', ownerId: 'owner-1' }));
+		participantRepo.findOne = jest.fn(async () => ({
+			id: 'p1',
+			sessionId: 's',
+			paid: false,
+			paidAt: null,
+		}));
+
+		const saved: any = await service.setParticipantPaid('owner-1', 's', 'p1', true);
+
+		expect(saved.paid).toBe(true);
+		expect(saved.paidAt).toBeInstanceOf(Date);
+	});
+
+	it('setParticipantPaid: clears paidAt when marking unpaid', async () => {
+		sessionRepo.findOne = jest.fn(async () => ({ id: 's', ownerId: 'owner-1' }));
+		participantRepo.findOne = jest.fn(async () => ({
+			id: 'p1',
+			sessionId: 's',
+			paid: true,
+			paidAt: new Date(),
+		}));
+
+		const saved: any = await service.setParticipantPaid('owner-1', 's', 'p1', false);
+
+		expect(saved.paid).toBe(false);
+		expect(saved.paidAt).toBeNull();
+	});
+
+	it('setParticipantPaid: 404s when the session is not owned by the caller', async () => {
+		sessionRepo.findOne = jest.fn(async () => null);
+		await expect(service.setParticipantPaid('owner-1', 's', 'p1', true)).rejects.toBeInstanceOf(
+			NotFoundException,
+		);
+	});
+
+	it('findByShareToken: exposes paid status and a PII-safe paymentMethod', async () => {
+		sessionRepo.findOne = jest.fn(async () => ({
+			title: 't',
+			playedOn: '2026-01-01',
+			courtCost: 0,
+			shuttleUnitPrice: 0,
+			totalShuttleCount: 0,
+			participants: [
+				{ id: 'p1', name: 'A', hoursPlayed: 1, shuttleWeight: 6, gender: null, paid: true, paidAt: new Date('2026-01-02') },
+			],
+			computed: null,
+			paymentMethod: {
+				id: 'm1',
+				userId: 'owner-1',
+				type: 'phone',
+				label: 'Cá nhân',
+				phoneNumber: '0338722615',
+			},
+		}));
+
+		const result: any = await service.findByShareToken('tok');
+
+		expect(result.participants[0].paid).toBe(true);
+		expect(typeof result.participants[0].paidAt).toBe('string');
+		expect(result.paymentMethod).toEqual({
+			type: 'phone',
+			label: 'Cá nhân',
+			imageUrl: undefined,
+			phoneNumber: '0338722615',
+		});
+		expect(result.paymentMethod.userId).toBeUndefined();
+	});
+
+	it('findByShareToken: paymentMethod is null when the session has none', async () => {
+		sessionRepo.findOne = jest.fn(async () => ({
+			title: 't',
+			playedOn: '2026-01-01',
+			courtCost: 0,
+			shuttleUnitPrice: 0,
+			totalShuttleCount: 0,
+			participants: [],
+			computed: null,
+			paymentMethod: undefined,
+		}));
+
+		const result: any = await service.findByShareToken('tok');
+		expect(result.paymentMethod).toBeNull();
+	});
 });

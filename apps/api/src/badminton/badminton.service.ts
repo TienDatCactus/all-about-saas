@@ -158,11 +158,30 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 		return { id };
 	}
 
+	async setParticipantPaid(
+		ownerId: string,
+		sessionId: string,
+		participantId: string,
+		paid: boolean,
+	) {
+		const session = await this.sessionRepo.findOne({ where: { id: sessionId, ownerId } });
+		if (!session) throw new NotFoundException('Session not found');
+
+		const participant = await this.participantRepo.findOne({
+			where: { id: participantId, sessionId },
+		});
+		if (!participant) throw new NotFoundException('Participant not found');
+
+		participant.paid = paid;
+		participant.paidAt = paid ? new Date() : null;
+		return this.participantRepo.save(participant);
+	}
+
 	/** Public, unauthenticated read via the share token. Never exposes owner/user PII. */
 	async findByShareToken(shareToken: string) {
 		const session = await this.sessionRepo.findOne({
 			where: { shareToken },
-			relations: { participants: true },
+			relations: { participants: true, paymentMethod: true },
 		});
 		if (!session) throw new NotFoundException('Session not found');
 		return {
@@ -177,8 +196,18 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 				hoursPlayed: p.hoursPlayed,
 				shuttleWeight: p.shuttleWeight,
 				gender: p.gender,
+				paid: p.paid,
+				paidAt: p.paidAt ? p.paidAt.toISOString() : null,
 			})),
 			computed: session.computed,
+			paymentMethod: session.paymentMethod
+				? {
+						type: session.paymentMethod.type,
+						label: session.paymentMethod.label,
+						imageUrl: session.paymentMethod.imageUrl,
+						phoneNumber: session.paymentMethod.phoneNumber,
+					}
+				: null,
 		};
 	}
 
