@@ -399,7 +399,10 @@ describe('BadmintonService', () => {
 	});
 
 	it('setParticipantPaid: sets paid + paidAt when marking paid, scoped to the owner', async () => {
-		sessionRepo.findOne = jest.fn(async () => ({ id: 's', ownerId: 'owner-1' }));
+		sessionRepo.findOne = jest.fn(async () => ({
+			id: 's',
+			ownerId: 'owner-1',
+		}));
 		participantRepo.findOne = jest.fn(async () => ({
 			id: 'p1',
 			sessionId: 's',
@@ -407,14 +410,22 @@ describe('BadmintonService', () => {
 			paidAt: null,
 		}));
 
-		const saved: any = await service.setParticipantPaid('owner-1', 's', 'p1', true);
+		const saved: any = await service.setParticipantPaid(
+			'owner-1',
+			's',
+			'p1',
+			true,
+		);
 
 		expect(saved.paid).toBe(true);
 		expect(saved.paidAt).toBeInstanceOf(Date);
 	});
 
 	it('setParticipantPaid: clears paidAt when marking unpaid', async () => {
-		sessionRepo.findOne = jest.fn(async () => ({ id: 's', ownerId: 'owner-1' }));
+		sessionRepo.findOne = jest.fn(async () => ({
+			id: 's',
+			ownerId: 'owner-1',
+		}));
 		participantRepo.findOne = jest.fn(async () => ({
 			id: 'p1',
 			sessionId: 's',
@@ -422,7 +433,12 @@ describe('BadmintonService', () => {
 			paidAt: new Date(),
 		}));
 
-		const saved: any = await service.setParticipantPaid('owner-1', 's', 'p1', false);
+		const saved: any = await service.setParticipantPaid(
+			'owner-1',
+			's',
+			'p1',
+			false,
+		);
 
 		expect(saved.paid).toBe(false);
 		expect(saved.paidAt).toBeNull();
@@ -430,9 +446,9 @@ describe('BadmintonService', () => {
 
 	it('setParticipantPaid: 404s when the session is not owned by the caller', async () => {
 		sessionRepo.findOne = jest.fn(async () => null);
-		await expect(service.setParticipantPaid('owner-1', 's', 'p1', true)).rejects.toBeInstanceOf(
-			NotFoundException,
-		);
+		await expect(
+			service.setParticipantPaid('owner-1', 's', 'p1', true),
+		).rejects.toBeInstanceOf(NotFoundException);
 	});
 
 	it('findByShareToken: exposes paid status and a PII-safe paymentMethod', async () => {
@@ -443,7 +459,15 @@ describe('BadmintonService', () => {
 			shuttleUnitPrice: 0,
 			totalShuttleCount: 0,
 			participants: [
-				{ id: 'p1', name: 'A', hoursPlayed: 1, shuttleWeight: 6, gender: null, paid: true, paidAt: new Date('2026-01-02') },
+				{
+					id: 'p1',
+					name: 'A',
+					hoursPlayed: 1,
+					shuttleWeight: 6,
+					gender: null,
+					paid: true,
+					paidAt: new Date('2026-01-02'),
+				},
 			],
 			computed: null,
 			paymentMethod: {

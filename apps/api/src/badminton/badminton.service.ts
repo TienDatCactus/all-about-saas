@@ -164,7 +164,9 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 		participantId: string,
 		paid: boolean,
 	) {
-		const session = await this.sessionRepo.findOne({ where: { id: sessionId, ownerId } });
+		const session = await this.sessionRepo.findOne({
+			where: { id: sessionId, ownerId },
+		});
 		if (!session) throw new NotFoundException('Session not found');
 
 		const participant = await this.participantRepo.findOne({

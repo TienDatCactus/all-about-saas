@@ -89,7 +89,12 @@ export class BadmintonController {
 		@Param('participantId', ParseUUIDPipe) participantId: string,
 		@Body() dto: SetParticipantPaidDto,
 	) {
-		return this.service.setParticipantPaid(requireUser(req).id, id, participantId, dto.paid);
+		return this.service.setParticipantPaid(
+			requireUser(req).id,
+			id,
+			participantId,
+			dto.paid,
+		);
 	}
 
 	@Delete('/sessions/:id')
