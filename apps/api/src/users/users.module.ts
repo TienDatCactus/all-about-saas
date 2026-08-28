@@ -6,11 +6,12 @@ import { Role } from '../roles/entities/role.entity';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { UserProfile } from './entities/user-profile.entity';
 import { UsersService } from './users.service';
+import { StorageService } from '../common/storage/storage.service';
 
 @Module({
 	imports: [TypeOrmModule.forFeature([User, Role, OAuthAccount, UserProfile])],
 	controllers: [UsersController],
-	providers: [UsersService],
+	providers: [UsersService, StorageService],
 	exports: [UsersService],
 })
 export class UsersModule {}

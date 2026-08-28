@@ -31,7 +31,7 @@
 		#   and breaking every page load.
 		# - form-action/base-uri/frame-ancestors close the non-script exfil and
 		#   clickjacking routes; object-src kills plugin containers outright.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN}; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		X-Frame-Options DENY
 		# helmet sets the rest at the app level; don't advertise the proxy.
 		-Server
@@ -50,6 +50,11 @@
 # FRONTEND_URL/VITE_API_BASE_URL accordingly.
 {$API_DOMAIN} {
 	encode zstd gzip
+
+	handle_path /storage/* {
+		reverse_proxy minio:9000
+	}
+
 	reverse_proxy api:8000
 
 	header {

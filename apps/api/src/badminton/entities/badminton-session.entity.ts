@@ -10,6 +10,7 @@ import { User } from '../../users/entities/user.entity';
 import { BadmintonParticipant } from './badminton-participant.entity';
 import type { ComputedSnapshot } from '@repo/badminton-calc';
 import { SoftDeleteBaseEntity } from '../../common/entities/base.entity';
+import { PaymentMethod } from '../../payment-methods/entities/payment-method.entity';
 
 /**
  * A single badminton money-split session, owned by the authenticated organizer.
@@ -48,6 +49,15 @@ export class BadmintonSession extends SoftDeleteBaseEntity {
 	@Index({ unique: true })
 	@Column()
 	shareToken!: string;
+
+	/** Reusable payment method to show on the share page. SET NULL on delete — a
+	 *  session with no method just renders no payment block, never a broken FK. */
+	@ManyToOne(() => PaymentMethod, { nullable: true, onDelete: 'SET NULL' })
+	@JoinColumn({ name: 'paymentMethodId' })
+	paymentMethod?: PaymentMethod;
+
+	@Column('uuid', { nullable: true })
+	paymentMethodId?: string;
 
 	/** Frozen split result, recomputed on every save; served to the share link. */
 	@Column({ type: 'jsonb', nullable: true })

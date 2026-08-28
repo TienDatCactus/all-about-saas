@@ -36,6 +36,8 @@ secrets:
     file: ./secrets/db_password
   jwt_secret:
     file: ./secrets/jwt_secret
+  minio_root_password:
+    file: ./secrets/minio_root_password
   # Compose refuses to start a service whose listed secret file is missing,
   # even when the app would never read it. For a provider you don't use,
   # `touch` an empty placeholder — its *_FILE variable stays unset (see the
@@ -126,6 +128,42 @@ services:
           sleep "$$BACKUP_INTERVAL_SECONDS"
         done
 
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_root_password
+    secrets: [minio_root_password]
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks: [internal]
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # One-shot: creates the bucket and makes it anonymously readable (GET only —
+  # write still requires the root credentials). Runs once per deploy; mc
+  # commands are idempotent so re-running on redeploy is harmless.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks: [internal]
+    secrets: [minio_root_password]
+    entrypoint:
+      - /bin/sh
+      - -ceu
+      - |
+        export MC_HOST_local="http://${MINIO_ROOT_USER}:$$(cat /run/secrets/minio_root_password)@minio:9000"
+        mc mb -p local/aas-uploads
+        mc anonymous set download local/aas-uploads
+    restart: 'no'
   # One-shot: applies migrations, then exits. `depends_on: service_completed_successfully`
   # on the api means the app never starts against an un-migrated schema.
   migrate:
@@ -344,6 +382,7 @@ volumes:
   pgdata:
   caddy_data:
   caddy_config:
+  minio_data:
 
 networks:
   internal:

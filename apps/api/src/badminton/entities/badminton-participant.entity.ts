@@ -57,4 +57,11 @@ export class BadmintonParticipant extends SoftDeleteBaseEntity {
 	/** UI convenience only — sets the default shuttleWeight (6 nam / 4 nữ). Never read by the calc package. */
 	@Column({ type: 'enum', enum: ParticipantGender, nullable: true })
 	gender?: ParticipantGender;
+
+	/** Host-confirmed payment status. Toggled only via the owner-scoped payment endpoint. */
+	@Column({ default: false })
+	paid!: boolean;
+
+	@Column({ type: 'timestamptz', nullable: true })
+	paidAt?: Date;
 }

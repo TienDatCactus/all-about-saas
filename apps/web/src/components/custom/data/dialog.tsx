@@ -48,7 +48,7 @@ export default function DataDialog({
               <DrawerDescription>{description}</DrawerDescription>
             )}
           </DrawerHeader>
-          <div className="overflow-y-auto px-4 pb-4">{content}</div>
+          <div className="overflow-y-auto px-4 py-4">{content}</div>
         </DrawerContent>
       </Drawer>
     )
