@@ -353,10 +353,16 @@ describe('BadmintonService', () => {
 	});
 
 	it('findOneOwned: includes the paymentMethod relation', async () => {
-		sessionRepo.findOne = jest.fn(async () => ({ id: 's', ownerId: 'owner-1', participants: [] }));
+		sessionRepo.findOne = jest.fn(async () => ({
+			id: 's',
+			ownerId: 'owner-1',
+			participants: [],
+		}));
 		await service.findOneOwned('owner-1', 's');
 		expect(sessionRepo.findOne).toHaveBeenCalledWith(
-			expect.objectContaining({ relations: { participants: true, paymentMethod: true } }),
+			expect.objectContaining({
+				relations: { participants: true, paymentMethod: true },
+			}),
 		);
 	});
 
