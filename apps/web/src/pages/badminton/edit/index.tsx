@@ -4,10 +4,14 @@ import { SessionEditor } from "../components/session-editor"
 import { sessionToValues } from "../lib/form"
 import DataPage from "@/components/custom/data/page"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSessionQuery } from "@/services/badminton/queries"
+import {
+  useSessionQuery,
+  useSetParticipantPaidMutation,
+} from "@/services/badminton/queries"
 
 export default function EditSessionPage({ sessionId }: { sessionId: string }) {
   const sessionQuery = useSessionQuery(sessionId)
+  const setPaid = useSetParticipantPaidMutation(sessionId)
 
   return (
     <DataPage
@@ -32,6 +36,13 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
           <SessionEditor
             sessionId={sessionId}
             initialValues={sessionToValues(session)}
+            paymentMethod={session.paymentMethod ?? null}
+            paymentStatus={Object.fromEntries(
+              (session.participants ?? []).map((p) => [p.id, { paid: p.paid }])
+            )}
+            onTogglePaid={(participantId, paid) =>
+              setPaid.mutate({ participantId, paid })
+            }
           />
         </div>
       )}

@@ -35,12 +35,21 @@ interface SessionEditorProps {
   sessionId?: string
   initialValues?: EditorValues
   onSaved?: (session: BadmintonSession) => void
+  /** Owner-selected payment method for this session, or `null`/absent if none is set. */
+  paymentMethod?: BadmintonSession["paymentMethod"]
+  /** Per-participant paid status, keyed by participant id. */
+  paymentStatus?: Record<string, { paid: boolean }>
+  /** Omit to render the summary's payment status read-only (public share view). */
+  onTogglePaid?: (participantId: string, paid: boolean) => void
 }
 
 export function SessionEditor({
   sessionId,
   initialValues,
   onSaved,
+  paymentMethod,
+  paymentStatus,
+  onTogglePaid,
 }: SessionEditorProps) {
   const create = useCreateSessionMutation()
   const update = useUpdateSessionMutation(sessionId ?? "")
@@ -66,6 +75,9 @@ export function SessionEditor({
           <BadmintonSummary
             computed={valuesToComputed(values)}
             meta={{ title: values.title, playedOn: values.playedOn }}
+            paymentMethod={paymentMethod}
+            paymentStatus={paymentStatus}
+            onTogglePaid={onTogglePaid}
           />
         )}
       </form.Subscribe>
