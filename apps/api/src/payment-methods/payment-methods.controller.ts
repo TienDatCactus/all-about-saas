@@ -35,7 +35,10 @@ export class PaymentMethodsController {
 			storage: memoryStorage(),
 			limits: { fileSize: 2 * 1024 * 1024 },
 			fileFilter: (_req, file, cb) => {
-				cb(null, ['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype));
+				cb(
+					null,
+					['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype),
+				);
 			},
 		}),
 	)

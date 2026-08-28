@@ -13,7 +13,9 @@ function mockRepo() {
 }
 
 function mockStorage() {
-	return { uploadImage: jest.fn(async () => 'https://minio.local/x/momo-qr/abc') };
+	return {
+		uploadImage: jest.fn(async () => 'https://minio.local/x/momo-qr/abc'),
+	};
 }
 
 describe('PaymentMethodsService', () => {
@@ -30,7 +32,11 @@ describe('PaymentMethodsService', () => {
 	it('create: type=phone stores the phone number, no upload call', async () => {
 		const result = await service.create(
 			'user-1',
-			{ type: PaymentMethodType.PHONE, label: 'Cá nhân', phoneNumber: '0338722615' },
+			{
+				type: PaymentMethodType.PHONE,
+				label: 'Cá nhân',
+				phoneNumber: '0338722615',
+			},
 			undefined,
 		);
 		expect(storage.uploadImage).not.toHaveBeenCalled();
@@ -40,34 +46,53 @@ describe('PaymentMethodsService', () => {
 
 	it('create: type=phone with no phoneNumber throws', async () => {
 		await expect(
-			service.create('user-1', { type: PaymentMethodType.PHONE, label: 'x' }, undefined),
+			service.create(
+				'user-1',
+				{ type: PaymentMethodType.PHONE, label: 'x' },
+				undefined,
+			),
 		).rejects.toBeInstanceOf(BadRequestException);
 	});
 
 	it('create: type=image uploads the file and stores the returned URL', async () => {
-		const file = { buffer: Buffer.from('fake'), mimetype: 'image/png' } as Express.Multer.File;
+		const file = {
+			buffer: Buffer.from('fake'),
+			mimetype: 'image/png',
+		} as Express.Multer.File;
 		const result = await service.create(
 			'user-1',
 			{ type: PaymentMethodType.IMAGE, label: 'QR nhóm' },
 			file,
 		);
-		expect(storage.uploadImage).toHaveBeenCalledWith(file.buffer, file.mimetype);
+		expect(storage.uploadImage).toHaveBeenCalledWith(
+			file.buffer,
+			file.mimetype,
+		);
 		expect((result as any).imageUrl).toBe('https://minio.local/x/momo-qr/abc');
 	});
 
 	it('create: type=image with no file throws', async () => {
 		await expect(
-			service.create('user-1', { type: PaymentMethodType.IMAGE, label: 'x' }, undefined),
+			service.create(
+				'user-1',
+				{ type: PaymentMethodType.IMAGE, label: 'x' },
+				undefined,
+			),
 		).rejects.toBeInstanceOf(BadRequestException);
 	});
 
 	it('remove: deletes only when owned by the caller', async () => {
 		await service.remove('user-1', 'method-1');
-		expect(repo.delete).toHaveBeenCalledWith({ id: 'method-1', userId: 'user-1' });
+		expect(repo.delete).toHaveBeenCalledWith({
+			id: 'method-1',
+			userId: 'user-1',
+		});
 	});
 
 	it('remove: throws NotFoundException when nothing was deleted', async () => {
 		repo.delete = jest.fn(async () => ({ affected: 0 }));
-		await expect(service.remove('user-1', 'missing')).rejects.toBeInstanceOf(NotFoundException);
+		await expect(service.remove('user-1', 'missing')).rejects.toBeInstanceOf(
+			NotFoundException,
+		);
 	});
 });

@@ -7,7 +7,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StorageService } from '../common/storage/storage.service';
 import { CreatePaymentMethodDto } from './payment-methods.dto';
-import { PaymentMethod, PaymentMethodType } from './entities/payment-method.entity';
+import {
+	PaymentMethod,
+	PaymentMethodType,
+} from './entities/payment-method.entity';
 
 @Injectable()
 export class PaymentMethodsService {
@@ -42,7 +45,10 @@ export class PaymentMethodsService {
 		if (!file) {
 			throw new BadRequestException('file is required for type=image');
 		}
-		const imageUrl = await this.storageService.uploadImage(file.buffer, file.mimetype);
+		const imageUrl = await this.storageService.uploadImage(
+			file.buffer,
+			file.mimetype,
+		);
 		const entity = this.repo.create({
 			userId,
 			type: PaymentMethodType.IMAGE,
