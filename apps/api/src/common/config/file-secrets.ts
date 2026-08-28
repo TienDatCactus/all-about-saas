@@ -29,6 +29,10 @@ const FILE_BACKED = [
 	'JWT_SECRET',
 	'BASE_PASSWORD',
 	'EMAIL_PASS',
+	// The api reads the object store with the MinIO root credentials, and the
+	// prod stack already delivers that password as the `minio_root_password`
+	// secret for the minio service itself. Same file, one reader more.
+	'MINIO_SECRET_KEY',
 	'GOOGLE_CLIENT_SECRET',
 	'GITHUB_CLIENT_SECRET',
 	'FACEBOOK_CLIENT_SECRET',

@@ -71,6 +71,21 @@ const baseSchema = z.looseObject({
 	...oauthProvider('GITHUB'),
 	...oauthProvider('FACEBOOK'),
 
+	// Object store for the MoMo QR upload. Required, like DATABASE_*, rather than
+	// optional: with any one of these missing the S3 client still constructs and
+	// the upload still returns a URL — just one built from the string
+	// "undefined", pointing at nothing. That is a broken payment method the host
+	// only discovers when a participant cannot pay.
+	//
+	// MINIO_SECRET_KEY also accepts the MINIO_SECRET_KEY_FILE form (see
+	// file-secrets.ts), which is how the production stack passes it.
+	MINIO_ENDPOINT: z.string().url(),
+	MINIO_ACCESS_KEY: z.string().min(1),
+	MINIO_SECRET_KEY: z.string().min(1),
+	MINIO_BUCKET: z.string().min(1),
+	/** Public base URL the uploaded object is served from, WITHOUT a trailing slash. */
+	MINIO_PUBLIC_URL: z.string().url(),
+
 	EMAIL_HOST: z.string().min(1).optional(),
 	EMAIL_PORT: z.string().regex(/^\d+$/).optional(),
 	EMAIL_SECURE: z.enum(['true', 'false']).optional(),
