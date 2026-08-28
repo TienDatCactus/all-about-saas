@@ -128,10 +128,15 @@ export function BadmintonSummary({
                           <PaymentCell
                             row={row}
                             method={paymentMethod}
-                            paid={row.participantId ? paymentStatus?.[row.participantId]?.paid : undefined}
+                            paid={
+                              row.participantId
+                                ? paymentStatus?.[row.participantId]?.paid
+                                : undefined
+                            }
                             onTogglePaid={
                               row.participantId && onTogglePaid
-                                ? (paid) => onTogglePaid(row.participantId!, paid)
+                                ? (paid) =>
+                                    onTogglePaid(row.participantId!, paid)
                                 : undefined
                             }
                           />
@@ -158,7 +163,9 @@ export function BadmintonSummary({
             </div>
             {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
               <div className="flex flex-col items-center gap-2 border-t pt-4">
-                <p className="text-muted-foreground text-sm">{paymentMethod.label}</p>
+                <p className="text-sm text-muted-foreground">
+                  {paymentMethod.label}
+                </p>
                 <img
                   src={paymentMethod.imageUrl}
                   alt={`QR nhận tiền: ${paymentMethod.label}`}
