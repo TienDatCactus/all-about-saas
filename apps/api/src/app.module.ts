@@ -20,6 +20,7 @@ import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { CustomeThrottlerGuard } from './common/guard/throttler.guard';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { MailModule } from './mail/mail.module';
+import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 
@@ -75,6 +76,7 @@ resolveFileSecrets();
 
 		MailModule,
 		BadmintonModule,
+		PaymentMethodsModule,
 	],
 	controllers: [AppController],
 	providers: [
