@@ -213,6 +213,7 @@ function PaymentCell({
       )}
       {paid === undefined ? null : onTogglePaid ? (
         <Button
+          type="button"
           variant={paid ? "default" : "outline"}
           size="sm"
           onClick={() => onTogglePaid(!paid)}
