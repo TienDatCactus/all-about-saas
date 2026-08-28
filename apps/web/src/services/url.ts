@@ -23,6 +23,11 @@ export const BADMINTON = {
   publicSession: (shareToken: string) => `/badminton/public/${shareToken}`,
 }
 
+export const PAYMENT_METHODS = {
+  list: "/payment-methods",
+  byId: (id: string) => `/payment-methods/${id}`,
+}
+
 export const USERS = {
   me: "/users/me",
 }
