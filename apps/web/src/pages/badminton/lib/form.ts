@@ -29,6 +29,21 @@ const uid = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2)
 
+/**
+ * `EditorPlayer.id` does double duty: for a loaded session it is the real
+ * participant id, but for a row added in the browser it is only a React key —
+ * `seed-0`/`seed-1` on the first render, and `uid()`'s `Math.random()` fallback
+ * on a browser without `crypto.randomUUID`.
+ *
+ * Only the UUID-shaped ones may go out on the wire. The API validates
+ * `participants[].id` with `@IsUUID()`, so sending `seed-0` would reject the
+ * entire save; and a client-minted UUID is harmless because the API only reuses
+ * an id that already names a row in this session, generating its own otherwise.
+ */
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const persistedId = (id: string) => (UUID_RE.test(id) ? id : undefined)
+
 const nonNegative = (n: number) => Math.max(0, n || 0)
 const wholeShuttles = (n: unknown) => Math.max(0, Math.trunc(Number(n)) || 0)
 export const todayIso = () => new Date().toISOString().slice(0, 10)
@@ -121,6 +136,10 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
       if (!name) return acc
 
       acc.push({
+        // Without this the API saw every row as new on each save, deleted the
+        // stored ones and reinserted them unpaid — so "Save changes" wiped
+        // every participant's paid status.
+        id: persistedId(p.id),
         userId: p.userId,
         name: name || "Unnamed",
         hoursPlayed: nonNegative(p.hoursPlayed),

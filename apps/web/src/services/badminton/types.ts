@@ -11,6 +11,12 @@ export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc"
 // ---------------------------------------------------------------------------
 
 export const ParticipantInputSchema = z.object({
+  /**
+   * The id of the participant row this entry edits, on update. Sending it is
+   * what lets the API update that row in place and so keep its `paid`/`paidAt`;
+   * omitting it asks for a new, unpaid participant. Ignored on create.
+   */
+  id: z.uuid().optional(),
   userId: z.uuid().optional(),
   name: z.string().min(1, "Name is required").max(120),
   hoursPlayed: z.number().min(0).optional(),
