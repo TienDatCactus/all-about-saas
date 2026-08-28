@@ -28,11 +28,32 @@ export function PaymentMethodPicker({
   const methods = methodsQuery.data ?? []
   const current = methods.find((m) => m.id === value)
 
+  /**
+   * While the list is still loading there is no way to resolve `value` to a
+   * label, and falling back to the "nothing selected" prompt actively lied: a
+   * session that HAS a method flashed "Chọn phương thức nhận tiền" and then
+   * swapped to the real label. A session id we already know is set gets a
+   * neutral placeholder instead, and only a settled empty list says "none".
+   */
+  const triggerLabel = current
+    ? current.label
+    : methodsQuery.isPending && value
+      ? "Đang tải…"
+      : "Chọn phương thức nhận tiền"
+
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        // Defensive: this picker is not inside a <form> today, but every other
+        // button in this feature declares its type, and a stray submit here
+        // would save the session as a side effect of opening a dialog.
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+      >
         <WalletIcon data-icon="inline-start" />
-        {current ? current.label : "Chọn phương thức nhận tiền"}
+        {triggerLabel}
       </Button>
       <DataDialog
         open={open}
@@ -68,6 +89,7 @@ export function PaymentMethodPicker({
                     </Label>
                   </div>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
                     aria-label={`Xoá ${m.label}`}
@@ -111,6 +133,18 @@ function AddMethodForm() {
     label.trim().length > 0 &&
     (type === "phone" ? phoneNumber.trim().length > 0 : !!file)
 
+  /**
+   * Switching branches drops the abandoned branch's value. Its input is
+   * unmounted, so whatever is left in state is invisible but still submitted —
+   * a picked file would be uploaded with a `type: "phone"` method the API then
+   * ignores, and a half-typed number would linger behind the file picker.
+   */
+  const switchType = (next: "image" | "phone") => {
+    setType(next)
+    if (next === "phone") setFile(undefined)
+    else setPhoneNumber("")
+  }
+
   return (
     <div className="border-t pt-4">
       <div className="mb-2 flex gap-2">
@@ -118,7 +152,7 @@ function AddMethodForm() {
           type="button"
           size="sm"
           variant={type === "phone" ? "default" : "outline"}
-          onClick={() => setType("phone")}
+          onClick={() => switchType("phone")}
         >
           SĐT MoMo
         </Button>
@@ -126,7 +160,7 @@ function AddMethodForm() {
           type="button"
           size="sm"
           variant={type === "image" ? "default" : "outline"}
-          onClick={() => setType("image")}
+          onClick={() => switchType("image")}
         >
           Upload ảnh QR
         </Button>

@@ -157,6 +157,10 @@ export function BadmintonSummary({
                     <TableCell className="text-right tabular-nums">
                       {formatVnd(computed.grandTotal)}
                     </TableCell>
+                    {/* Keeps the footer's cell count equal to the header's and
+                        the body's — one short, the browser drops the footer's
+                        last column out from under the Payment header. */}
+                    {paymentMethod && <TableCell />}
                   </TableRow>
                 </TableFooter>
               </Table>
@@ -197,9 +201,13 @@ function PaymentCell({
   paid: boolean | undefined
   onTogglePaid?: (paid: boolean) => void
 }) {
+  // Both interpolations are encoded: the phone number is a path segment, so an
+  // unexpected `/` or `?` in it would rewrite the rest of the URL rather than
+  // just producing a dead link. (The API constrains the field to digits too —
+  // this is the second of the two locks, for methods stored before that landed.)
   const payUrl =
     method.type === "phone" && method.phoneNumber
-      ? `https://nhantien.momo.vn/${method.phoneNumber}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
+      ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
       : undefined
 
   return (
@@ -216,6 +224,10 @@ function PaymentCell({
           type="button"
           variant={paid ? "default" : "outline"}
           size="sm"
+          // The label alone reads as a statement ("Đã trả"), not as a control
+          // whose state can be flipped. aria-pressed is what tells a screen
+          // reader this is a toggle and which way it currently sits.
+          aria-pressed={paid}
           onClick={() => onTogglePaid(!paid)}
         >
           {paid ? "Đã trả" : "Chưa trả"}
