@@ -1,10 +1,12 @@
 import { NotFoundException } from '@nestjs/common';
+import { In } from 'typeorm';
 import { BadmintonService } from './badminton.service';
 import {
 	BadmintonParticipant,
 	ParticipantGender,
 } from './entities/badminton-participant.entity';
 import { BadmintonSession } from './entities/badminton-session.entity';
+import { PaymentMethod } from '../payment-methods/entities/payment-method.entity';
 import { CreateBadmintonSessionDto } from './badminton.dto';
 
 /** Minimal TypeORM Repository stub — create() echoes its input, save() echoes the entity. */
@@ -27,7 +29,9 @@ function mockRepo() {
 function mockDataSource() {
 	const manager = {
 		findOne: jest.fn(),
-		findBy: jest.fn(async () => []),
+		// The return type is widened by hand: `async () => []` infers `never[]`,
+		// which then refuses the concrete participant rows the upsert tests supply.
+		findBy: jest.fn(async (): Promise<unknown[]> => []),
 		delete: jest.fn(),
 		save: jest.fn(async (x: unknown) => x),
 	};
@@ -207,7 +211,7 @@ describe('BadmintonService', () => {
 		);
 	});
 
-	it('update: replaces participants inside a single transaction (delete + save share the manager)', async () => {
+	it('update: swaps participants inside a single transaction (delete + save share the manager)', async () => {
 		const existing = {
 			id: 's1',
 			ownerId: 'o1',
@@ -219,12 +223,17 @@ describe('BadmintonService', () => {
 			computed: undefined,
 		};
 		manager.findOne.mockResolvedValue(existing);
+		// One stored participant, absent from the payload below, so the delete leg
+		// of the transaction actually has something to do.
+		manager.findBy.mockResolvedValue([
+			{ id: 'p-gone', name: 'Gone', hoursPlayed: 1, shuttleWeight: 6 },
+		]);
 
 		await service.updateSession('o1', 's1', { participants: [{ name: 'X' }] });
 
 		expect(dataSource.transaction).toHaveBeenCalledTimes(1);
 		expect(manager.delete).toHaveBeenCalledWith(BadmintonParticipant, {
-			sessionId: 's1',
+			id: In(['p-gone']),
 		});
 		expect(manager.save).toHaveBeenCalledTimes(1);
 		// Nothing may bypass the transaction boundary.
@@ -336,9 +345,10 @@ describe('BadmintonService', () => {
 	});
 
 	it('updateSession: accepts paymentMethodId and passes it straight through to save', async () => {
-		// updateSession() now re-reads the row after save() (see the next test for
-		// why), so manager.findOne is called twice: once for the locked read, once
-		// for the post-save re-fetch. mockResolvedValueOnce pins each call's shape.
+		// updateSession() makes three manager.findOne calls for this payload: the
+		// locked session read, the payment-method ownership check, then the
+		// post-save re-fetch (see the next test for why that one exists).
+		// mockResolvedValueOnce pins each call's shape in order.
 		const locked = {
 			id: 'session-1',
 			ownerId: 'owner-1',
@@ -350,6 +360,7 @@ describe('BadmintonService', () => {
 		manager.findOne = jest
 			.fn()
 			.mockResolvedValueOnce(locked)
+			.mockResolvedValueOnce({ id: 'method-1', userId: 'owner-1' })
 			.mockResolvedValueOnce({ ...locked, paymentMethodId: 'method-1' });
 
 		const saved: any = await service.updateSession('owner-1', 'session-1', {
@@ -382,6 +393,7 @@ describe('BadmintonService', () => {
 		manager.findOne = jest
 			.fn()
 			.mockResolvedValueOnce(locked)
+			.mockResolvedValueOnce({ id: 'method-1', userId: 'owner-1' })
 			.mockResolvedValueOnce(populated);
 
 		const saved: any = await service.updateSession('owner-1', 'session-1', {
@@ -389,10 +401,225 @@ describe('BadmintonService', () => {
 		});
 
 		expect(saved.paymentMethod).toEqual(populated.paymentMethod);
-		expect(manager.findOne).toHaveBeenCalledTimes(2);
+		expect(manager.findOne).toHaveBeenCalledTimes(3);
 		expect(manager.findOne).toHaveBeenLastCalledWith(BadmintonSession, {
 			where: { id: 'session-1' },
 			relations: { participants: true, paymentMethod: true },
+		});
+	});
+
+	// Saving a session used to DELETE every participant row and re-INSERT the
+	// payload with fresh randomUUID()s, so pressing "Save changes" after nudging
+	// one player's hours silently reset everyone to unpaid. These pin the upsert
+	// that replaced it.
+	describe('updateSession: participant upsert', () => {
+		const paidAt = new Date('2026-08-01T10:00:00.000Z');
+
+		/** Two stored participants: A has been marked paid, B has not. */
+		const stored = () => [
+			{
+				id: 'p-a',
+				sessionId: 's1',
+				userId: null,
+				name: 'A',
+				hoursPlayed: 1,
+				shuttleWeight: 6,
+				gender: null,
+				paid: true,
+				paidAt,
+			},
+			{
+				id: 'p-b',
+				sessionId: 's1',
+				userId: null,
+				name: 'B',
+				hoursPlayed: 2,
+				shuttleWeight: 4,
+				gender: null,
+				paid: false,
+				paidAt: null,
+			},
+		];
+
+		const locked = () => ({
+			id: 's1',
+			ownerId: 'o1',
+			playedOn: '2026-07-25',
+			courtCost: 90_000,
+			shuttleUnitPrice: 1_000,
+			totalShuttleCount: 9,
+			participants: [],
+			computed: undefined,
+		});
+
+		it('keeps paid/paidAt and the id for reused participants, inserts new ones unpaid', async () => {
+			manager.findOne.mockResolvedValue(locked());
+			manager.findBy.mockResolvedValue(stored());
+
+			const res: any = await service.updateSession('o1', 's1', {
+				participants: [
+					// A: same id, hours changed.
+					{ id: 'p-a', name: 'A', hoursPlayed: 3, shuttleWeight: 6 },
+					// B: same id, untouched.
+					{ id: 'p-b', name: 'B', hoursPlayed: 2, shuttleWeight: 4 },
+					// C: brand new, no id.
+					{ name: 'C' },
+				],
+			});
+
+			const byName: Record<string, any> = Object.fromEntries(
+				res.participants.map((p: any) => [p.name, p]),
+			);
+
+			// A: the edit lands, the id does not move, the payment status survives.
+			expect(byName.A.id).toBe('p-a');
+			expect(byName.A.hoursPlayed).toBe(3);
+			expect(byName.A.paid).toBe(true);
+			expect(byName.A.paidAt).toBe(paidAt);
+
+			// B: untouched in every respect, including still being unpaid.
+			expect(byName.B.id).toBe('p-b');
+			expect(byName.B.hoursPlayed).toBe(2);
+			expect(byName.B.paid).toBe(false);
+			expect(byName.B.paidAt).toBeNull();
+
+			// C: a generated id, and no payment status of its own — the column
+			// default (false) is what applies at INSERT.
+			expect(typeof byName.C.id).toBe('string');
+			expect(byName.C.id).not.toBe('p-a');
+			expect(byName.C.id).not.toBe('p-b');
+			expect(byName.C).not.toHaveProperty('paid');
+			expect(byName.C.hoursPlayed).toBe(1);
+			expect(byName.C.shuttleWeight).toBe(6);
+
+			// Nobody was dropped, so nothing may be deleted.
+			expect(manager.delete).not.toHaveBeenCalled();
+			// The snapshot still references the ids the rows are stored under, and
+			// reused ids are exactly what makes the paid toggles keep working.
+			expect(res.computed.rows.map((r: any) => r.participantId)).toEqual([
+				'p-a',
+				'p-b',
+				byName.C.id,
+			]);
+		});
+
+		it('deletes only the participants the payload dropped', async () => {
+			manager.findOne.mockResolvedValue(locked());
+			manager.findBy.mockResolvedValue(stored());
+
+			const res: any = await service.updateSession('o1', 's1', {
+				participants: [{ id: 'p-a', name: 'A', hoursPlayed: 1 }],
+			});
+
+			expect(manager.delete).toHaveBeenCalledTimes(1);
+			expect(manager.delete).toHaveBeenCalledWith(BadmintonParticipant, {
+				id: In(['p-b']),
+			});
+			expect(res.participants.map((p: any) => p.id)).toEqual(['p-a']);
+			// Removing someone else must not disturb the survivor's payment status.
+			expect(res.participants[0].paid).toBe(true);
+		});
+
+		it('inserts a fresh row for an id that names no participant of this session', async () => {
+			manager.findOne.mockResolvedValue(locked());
+			manager.findBy.mockResolvedValue(stored());
+
+			const res: any = await service.updateSession('o1', 's1', {
+				participants: [
+					{ id: 'p-a', name: 'A' },
+					{ id: 'p-b', name: 'B' },
+					// Belongs to a different session (or nothing at all). Reusing it
+					// verbatim would let a cascading save re-parent that row, so the
+					// service generates its own id instead.
+					{ id: '11111111-2222-3333-4444-555555555555', name: 'Stranger' },
+				],
+			});
+
+			const stranger = res.participants.find((p: any) => p.name === 'Stranger');
+			expect(stranger.id).not.toBe('11111111-2222-3333-4444-555555555555');
+			expect(typeof stranger.id).toBe('string');
+		});
+
+		it('gives a repeated id one updated row and one new row, never the same entity twice', async () => {
+			manager.findOne.mockResolvedValue(locked());
+			manager.findBy.mockResolvedValue(stored());
+
+			const res: any = await service.updateSession('o1', 's1', {
+				participants: [
+					{ id: 'p-a', name: 'A' },
+					{ id: 'p-a', name: 'A again' },
+					{ id: 'p-b', name: 'B' },
+				],
+			});
+
+			const ids = res.participants.map((p: any) => p.id);
+			expect(new Set(ids).size).toBe(ids.length);
+			expect(res.participants[0]).not.toBe(res.participants[1]);
+		});
+	});
+
+	// A paymentMethodId reached the column through Object.assign() with no check
+	// at all, so any authenticated host could attach someone else's QR image or
+	// phone number to their own share page, and a made-up id 500'd on the foreign
+	// key instead of 404-ing. The lookup is owner-scoped, so both cases now look
+	// identical from outside.
+	describe('updateSession: paymentMethodId ownership', () => {
+		const locked = () => ({
+			id: 's1',
+			ownerId: 'o1',
+			courtCost: 0,
+			shuttleUnitPrice: 0,
+			totalShuttleCount: 0,
+			participants: [],
+		});
+
+		it("404s when the method belongs to another user (or doesn't exist)", async () => {
+			manager.findOne = jest.fn(async (entity: unknown) =>
+				entity === BadmintonSession ? locked() : null,
+			);
+
+			await expect(
+				service.updateSession('o1', 's1', {
+					paymentMethodId: 'someone-elses-method',
+				}),
+			).rejects.toBeInstanceOf(NotFoundException);
+			// The lookup must be scoped to the caller, not a bare findOne by id.
+			expect(manager.findOne).toHaveBeenCalledWith(PaymentMethod, {
+				where: { id: 'someone-elses-method', userId: 'o1' },
+			});
+			// Rejected before anything was written.
+			expect(manager.save).not.toHaveBeenCalled();
+			expect(manager.delete).not.toHaveBeenCalled();
+		});
+
+		it('still accepts a method the caller owns', async () => {
+			const session = locked();
+			manager.findOne = jest.fn(async (entity: unknown) =>
+				entity === BadmintonSession ? session : { id: 'm1', userId: 'o1' },
+			);
+
+			const saved: any = await service.updateSession('o1', 's1', {
+				paymentMethodId: 'm1',
+			});
+
+			expect(saved.paymentMethodId).toBe('m1');
+			expect(manager.save).toHaveBeenCalledTimes(1);
+		});
+
+		it('skips the lookup entirely when clearing the method with null', async () => {
+			const session = locked();
+			manager.findOne = jest.fn(async () => session);
+
+			const saved: any = await service.updateSession('o1', 's1', {
+				paymentMethodId: null,
+			});
+
+			// null is a legitimate value meaning "detach", not an id to authorize.
+			expect(manager.findOne).not.toHaveBeenCalledWith(
+				PaymentMethod,
+				expect.anything(),
+			);
+			expect(saved.paymentMethodId).toBeNull();
 		});
 	});
 

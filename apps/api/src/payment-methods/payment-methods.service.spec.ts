@@ -26,7 +26,7 @@ describe('PaymentMethodsService', () => {
 	beforeEach(() => {
 		repo = mockRepo();
 		storage = mockStorage();
-		service = new PaymentMethodsService(repo as never, storage as never);
+		service = new PaymentMethodsService(repo as never, storage);
 	});
 
 	it('create: type=phone stores the phone number, no upload call', async () => {

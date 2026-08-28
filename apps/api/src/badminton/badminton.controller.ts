@@ -14,7 +14,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
 import { requireUser } from '../common/request-user';
-import { StorageService } from '../common/storage/storage.service';
 import {
 	CreateBadmintonSessionDto,
 	QueryBadmintonSessionDto,

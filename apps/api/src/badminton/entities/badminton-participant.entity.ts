@@ -34,9 +34,11 @@ export class BadmintonParticipant extends SoftDeleteBaseEntity {
 	@JoinColumn({ name: 'userId' })
 	user?: User;
 
+	/** Nullable, not just optional — see the note on {@link paidAt}. Un-linking a
+	 *  participant from an account has to write an explicit SQL NULL. */
 	@Column('uuid', { nullable: true })
 	@Index()
-	userId?: string;
+	userId?: string | null;
 
 	/** Display name: free-text guest name, or a snapshot of the linked user's name. */
 	@Column()
@@ -54,9 +56,10 @@ export class BadmintonParticipant extends SoftDeleteBaseEntity {
 	@Column('float', { default: 6 })
 	shuttleWeight!: number;
 
-	/** UI convenience only — sets the default shuttleWeight (6 nam / 4 nữ). Never read by the calc package. */
+	/** UI convenience only — sets the default shuttleWeight (6 nam / 4 nữ). Never read by the calc package.
+	 *  Nullable, not just optional, for the same reason as {@link userId}. */
 	@Column({ type: 'enum', enum: ParticipantGender, nullable: true })
-	gender?: ParticipantGender;
+	gender?: ParticipantGender | null;
 
 	/** Host-confirmed payment status. Toggled only via the owner-scoped payment endpoint. */
 	@Column({ default: false })

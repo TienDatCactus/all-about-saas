@@ -1,14 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes, randomUUID } from 'crypto';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { computeSplit } from '@repo/badminton-calc';
+import { PaymentMethod } from '../payment-methods/entities/payment-method.entity';
 import { BadmintonParticipant } from './entities/badminton-participant.entity';
 import { BadmintonSession } from './entities/badminton-session.entity';
 import { BaseService } from '../common/services/base.service';
 import {
 	CreateBadmintonSessionDto,
+	ParticipantInputDto,
 	UpdateBadmintonSessionDto,
 } from './badminton.dto';
 
@@ -102,9 +104,23 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			});
 			if (!session) throw new NotFoundException('Session not found');
 
-			session.participants = await manager.findBy(BadmintonParticipant, {
+			const existingParticipants = await manager.findBy(BadmintonParticipant, {
 				sessionId: id,
 			});
+			session.participants = existingParticipants;
+
+			// A foreign or unknown paymentMethodId used to reach Object.assign()
+			// unchecked: the column would take any uuid the caller sent, so a host
+			// could attach a stranger's QR image / phone number to their own share
+			// page (and a nonexistent id 500'd on the FK instead of 404-ing). Scoped
+			// to the owner, so someone else's method is indistinguishable from a
+			// missing one — the same rule the session itself follows.
+			if (rest.paymentMethodId !== undefined && rest.paymentMethodId !== null) {
+				const method = await manager.findOne(PaymentMethod, {
+					where: { id: rest.paymentMethodId, userId: ownerId },
+				});
+				if (!method) throw new NotFoundException('Payment method not found');
+			}
 
 			Object.assign(
 				session,
@@ -113,21 +129,18 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 				),
 			);
 
+			// Rows to hard-delete after the snapshot is recomputed. Empty unless the
+			// payload actually drops someone.
+			let removedParticipantIds: string[] = [];
+
 			if (participants !== undefined) {
-				// Same id + default discipline as createSession(): the snapshot is
-				// computed before the INSERT, so rows must reference ids we choose
-				// up front.
-				session.participants = participants.map((p) =>
-					this.participantRepo.create({
-						id: randomUUID(),
-						userId: p.userId,
-						name: p.name,
-						hoursPlayed: p.hoursPlayed ?? 1,
-						shuttleWeight: p.shuttleWeight ?? 6,
-						gender: p.gender,
-						sessionId: session.id,
-					}),
+				const reconciled = this.reconcileParticipants(
+					session,
+					existingParticipants,
+					participants,
 				);
+				session.participants = reconciled.participants;
+				removedParticipantIds = reconciled.removedIds;
 			}
 
 			session.computed = computeSplit(
@@ -145,8 +158,13 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 				new Date().toISOString(),
 			);
 
-			if (participants !== undefined) {
-				await manager.delete(BadmintonParticipant, { sessionId: session.id });
+			// Only the rows the payload actually dropped. This used to delete every
+			// participant of the session unconditionally, which is what discarded
+			// `paid`/`paidAt` on an ordinary "Save changes".
+			if (removedParticipantIds.length > 0) {
+				await manager.delete(BadmintonParticipant, {
+					id: In(removedParticipantIds),
+				});
 			}
 			await manager.save(session);
 
@@ -163,6 +181,67 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			if (!updated) throw new NotFoundException('Session not found');
 			return updated;
 		});
+	}
+
+	/**
+	 * Diffs an incoming participants payload against the rows already stored for
+	 * the session, instead of replacing the lot.
+	 *
+	 * Matching is by id, and matched rows are MUTATED IN PLACE — which is the
+	 * whole point: `paid` and `paidAt` are deliberately absent from the
+	 * assignments below, so a host pressing "Save changes" after editing an hour
+	 * count no longer wipes everyone's payment status (the previous
+	 * delete-all-then-reinsert did exactly that, handing every participant a new
+	 * id and a fresh `paid: false`).
+	 *
+	 * Rows that don't match are INSERTED with an id generated here, never the
+	 * client's: an id we don't recognise may well name a participant of somebody
+	 * else's session, and TypeORM's cascading save would then re-parent that row
+	 * rather than create one. Generating up front is also what lets `computed` be
+	 * built before anything is written — the snapshot has to reference the ids the
+	 * rows will actually be stored under.
+	 *
+	 * Nullable-not-undefined assignments for `userId`/`gender`: save() omits
+	 * `undefined` properties from the UPDATE, so un-linking a participant from an
+	 * account (the web app clears `userId` when you type over a picked name) has
+	 * to write an explicit SQL NULL. Same distinction as `paidAt`.
+	 */
+	private reconcileParticipants(
+		session: BadmintonSession,
+		existing: BadmintonParticipant[],
+		incoming: ParticipantInputDto[],
+	): { participants: BadmintonParticipant[]; removedIds: string[] } {
+		const unclaimed = new Map(existing.map((p) => [p.id, p]));
+
+		const participants = incoming.map((input) => {
+			const match = input.id ? unclaimed.get(input.id) : undefined;
+			if (match) {
+				// Claimed, so a payload that repeats one id twice gets one updated row
+				// and one new row rather than the same entity aliased into two slots.
+				unclaimed.delete(match.id);
+				match.userId = input.userId ?? null;
+				match.name = input.name;
+				match.hoursPlayed = input.hoursPlayed ?? 1;
+				match.shuttleWeight = input.shuttleWeight ?? 6;
+				match.gender = input.gender ?? null;
+				return match;
+			}
+			return this.participantRepo.create({
+				id: randomUUID(),
+				userId: input.userId ?? null,
+				name: input.name,
+				hoursPlayed: input.hoursPlayed ?? 1,
+				shuttleWeight: input.shuttleWeight ?? 6,
+				gender: input.gender ?? null,
+				sessionId: session.id,
+			});
+		});
+
+		return {
+			participants,
+			// Whatever no incoming row claimed was removed by the host.
+			removedIds: [...unclaimed.keys()],
+		};
 	}
 
 	async removeSession(ownerId: string, id: string) {
