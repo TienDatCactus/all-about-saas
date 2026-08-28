@@ -81,6 +81,17 @@ export const useUpdateSessionMutation = (id: string) => {
   })
 }
 
+export const useSetParticipantPaidMutation = (sessionId: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ participantId, paid }: { participantId: string; paid: boolean }) =>
+      badmintonApi.setParticipantPaid(sessionId, participantId, paid),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: badmintonKeys.session(sessionId) })
+    },
+  })
+}
+
 export const useDeleteSessionMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({

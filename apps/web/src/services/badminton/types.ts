@@ -1,4 +1,5 @@
 import * as z from "zod"
+import { PaymentMethodSchema, PublicPaymentMethodSchema } from "../payment-methods/types"
 
 export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc"
 
@@ -28,7 +29,9 @@ export const CreateSessionSchema = z.object({
 })
 
 export type CreateSessionIn = z.infer<typeof CreateSessionSchema>
-export type UpdateSessionIn = Partial<CreateSessionIn>
+export type UpdateSessionIn = Partial<CreateSessionIn> & {
+  paymentMethodId?: string | null
+}
 
 // ---------------------------------------------------------------------------
 // Responses
@@ -66,6 +69,8 @@ export const SessionParticipantSchema = z.object({
   hoursPlayed: z.number(),
   shuttleWeight: z.number(),
   gender: z.enum(["male", "female"]).nullish(),
+  paid: z.boolean(),
+  paidAt: z.string().nullish(),
 })
 
 export type SessionParticipant = z.infer<typeof SessionParticipantSchema>
@@ -80,6 +85,8 @@ export const BadmintonSessionSchema = z.object({
   shuttleUnitPrice: z.number(),
   totalShuttleCount: z.number(),
   shareToken: z.string(),
+  paymentMethodId: z.string().nullish(),
+  paymentMethod: PaymentMethodSchema.nullish(),
   computed: ComputedSnapshotSchema.nullish(),
   participants: z.array(SessionParticipantSchema).optional(),
   createdAt: z.string(),
@@ -117,6 +124,7 @@ export const PublicSessionSchema = z.object({
   totalShuttleCount: z.number(),
   participants: z.array(SessionParticipantSchema.omit({ userId: true })),
   computed: ComputedSnapshotSchema.nullish(),
+  paymentMethod: PublicPaymentMethodSchema.nullish(),
 })
 
 export type PublicSession = z.infer<typeof PublicSessionSchema>
