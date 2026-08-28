@@ -336,20 +336,64 @@ describe('BadmintonService', () => {
 	});
 
 	it('updateSession: accepts paymentMethodId and passes it straight through to save', async () => {
-		manager.findOne = jest.fn(async () => ({
+		// updateSession() now re-reads the row after save() (see the next test for
+		// why), so manager.findOne is called twice: once for the locked read, once
+		// for the post-save re-fetch. mockResolvedValueOnce pins each call's shape.
+		const locked = {
 			id: 'session-1',
 			ownerId: 'owner-1',
 			courtCost: 0,
 			shuttleUnitPrice: 0,
 			totalShuttleCount: 0,
 			participants: [],
-		}));
+		};
+		manager.findOne = jest
+			.fn()
+			.mockResolvedValueOnce(locked)
+			.mockResolvedValueOnce({ ...locked, paymentMethodId: 'method-1' });
 
 		const saved: any = await service.updateSession('owner-1', 'session-1', {
 			paymentMethodId: 'method-1',
 		});
 
 		expect(saved.paymentMethodId).toBe('method-1');
+	});
+
+	it('updateSession: re-fetches with relations so paymentMethod comes back populated, not just the raw id', async () => {
+		const locked = {
+			id: 'session-1',
+			ownerId: 'owner-1',
+			courtCost: 0,
+			shuttleUnitPrice: 0,
+			totalShuttleCount: 0,
+			participants: [],
+		};
+		const populated = {
+			...locked,
+			paymentMethodId: 'method-1',
+			paymentMethod: {
+				id: 'method-1',
+				type: 'phone',
+				label: 'Cá nhân',
+				imageUrl: null,
+				phoneNumber: '0338722615',
+			},
+		};
+		manager.findOne = jest
+			.fn()
+			.mockResolvedValueOnce(locked)
+			.mockResolvedValueOnce(populated);
+
+		const saved: any = await service.updateSession('owner-1', 'session-1', {
+			paymentMethodId: 'method-1',
+		});
+
+		expect(saved.paymentMethod).toEqual(populated.paymentMethod);
+		expect(manager.findOne).toHaveBeenCalledTimes(2);
+		expect(manager.findOne).toHaveBeenLastCalledWith(BadmintonSession, {
+			where: { id: 'session-1' },
+			relations: { participants: true, paymentMethod: true },
+		});
 	});
 
 	it('findOneOwned: includes the paymentMethod relation', async () => {

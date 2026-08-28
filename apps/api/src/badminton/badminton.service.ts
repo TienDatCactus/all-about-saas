@@ -148,7 +148,20 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			if (participants !== undefined) {
 				await manager.delete(BadmintonParticipant, { sessionId: session.id });
 			}
-			return manager.save(session);
+			await manager.save(session);
+
+			// The locked read above can't carry `relations` (see the comment on that
+			// query), so `session.paymentMethod` was never populated — only the raw
+			// `paymentMethodId` column gets set by the Object.assign above. Re-read
+			// within the same transaction so the response reflects the persisted
+			// relation the same way findOneOwned() does, instead of leaving callers
+			// with a stale `paymentMethod: undefined`.
+			const updated = await manager.findOne(BadmintonSession, {
+				where: { id: session.id },
+				relations: { participants: true, paymentMethod: true },
+			});
+			if (!updated) throw new NotFoundException('Session not found');
+			return updated;
 		});
 	}
 
