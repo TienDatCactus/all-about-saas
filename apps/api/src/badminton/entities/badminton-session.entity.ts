@@ -56,8 +56,15 @@ export class BadmintonSession extends SoftDeleteBaseEntity {
 	@JoinColumn({ name: 'paymentMethodId' })
 	paymentMethod?: PaymentMethod;
 
+	/**
+	 * Nullable (not just optional), for the same reason as
+	 * {@link BadmintonParticipant.paidAt}: save() drops `undefined` properties
+	 * from the generated UPDATE, so detaching a method needs an explicit SQL NULL.
+	 * `PATCH /badminton/sessions/:id` with `paymentMethodId: null` is the only way
+	 * to clear it, and that value has to survive all the way to the column.
+	 */
 	@Column('uuid', { nullable: true })
-	paymentMethodId?: string;
+	paymentMethodId?: string | null;
 
 	/** Frozen split result, recomputed on every save; served to the share link. */
 	@Column({ type: 'jsonb', nullable: true })
