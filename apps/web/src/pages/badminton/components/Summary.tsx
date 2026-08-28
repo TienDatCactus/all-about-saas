@@ -4,6 +4,7 @@ import DataCard from "@/components/custom/data/card"
 import DataEmpty from "@/components/custom/data/empty"
 import { toast } from "@/components/custom/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -34,12 +35,28 @@ export type DisplaySnapshot = Omit<ComputedSnapshot, "rows"> & {
   >
 }
 
+interface PaymentMethodDisplay {
+  type: "image" | "phone"
+  label: string
+  imageUrl?: string | null
+  phoneNumber?: string | null
+}
+
 interface SummaryProps {
   computed: DisplaySnapshot
   meta?: { title?: string | null; playedOn?: string }
+  paymentMethod?: PaymentMethodDisplay | null
+  paymentStatus?: Record<string, { paid: boolean }>
+  onTogglePaid?: (participantId: string, paid: boolean) => void
 }
 
-export function BadmintonSummary({ computed, meta }: SummaryProps) {
+export function BadmintonSummary({
+  computed,
+  meta,
+  paymentMethod,
+  paymentStatus,
+  onTogglePaid,
+}: SummaryProps) {
   const hasRows = computed.rows.length > 0
 
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -90,6 +107,7 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
                     <TableHead className="text-right">Court</TableHead>
                     <TableHead className="text-right">Shuttle</TableHead>
                     <TableHead className="text-right">Total</TableHead>
+                    {paymentMethod && <TableHead>Payment</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -105,6 +123,20 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
                       <TableCell className="text-right font-semibold tabular-nums">
                         {formatDong(row.total)}
                       </TableCell>
+                      {paymentMethod && (
+                        <TableCell>
+                          <PaymentCell
+                            row={row}
+                            method={paymentMethod}
+                            paid={row.participantId ? paymentStatus?.[row.participantId]?.paid : undefined}
+                            onTogglePaid={
+                              row.participantId && onTogglePaid
+                                ? (paid) => onTogglePaid(row.participantId!, paid)
+                                : undefined
+                            }
+                          />
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -124,6 +156,16 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
                 </TableFooter>
               </Table>
             </div>
+            {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
+              <div className="flex flex-col items-center gap-2 border-t pt-4">
+                <p className="text-muted-foreground text-sm">{paymentMethod.label}</p>
+                <img
+                  src={paymentMethod.imageUrl}
+                  alt={`QR nhận tiền: ${paymentMethod.label}`}
+                  className="h-64 w-64 rounded-lg border object-contain"
+                />
+              </div>
+            )}
           </div>
         ) : (
           <DataEmpty
@@ -134,5 +176,47 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
         )
       }
     />
+  )
+}
+
+function PaymentCell({
+  row,
+  method,
+  paid,
+  onTogglePaid,
+}: {
+  row: DisplaySnapshot["rows"][number]
+  method: PaymentMethodDisplay
+  paid: boolean | undefined
+  onTogglePaid?: (paid: boolean) => void
+}) {
+  const payUrl =
+    method.type === "phone" && method.phoneNumber
+      ? `https://nhantien.momo.vn/${method.phoneNumber}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
+      : undefined
+
+  return (
+    <div className="flex items-center justify-end gap-2">
+      {payUrl && (
+        <Button variant="outline" size="sm" asChild>
+          <a href={payUrl} target="_blank" rel="noopener noreferrer">
+            Thanh toán
+          </a>
+        </Button>
+      )}
+      {paid === undefined ? null : onTogglePaid ? (
+        <Button
+          variant={paid ? "default" : "outline"}
+          size="sm"
+          onClick={() => onTogglePaid(!paid)}
+        >
+          {paid ? "Đã trả" : "Chưa trả"}
+        </Button>
+      ) : (
+        <Badge variant={paid ? "default" : "secondary"}>
+          {paid ? "Đã trả" : "Chưa trả"}
+        </Badge>
+      )}
+    </div>
   )
 }
