@@ -79,7 +79,12 @@ export class ParticipantInputDto {
 
 export class UpdateBadmintonSessionDto extends PartialType(
 	CreateBadmintonSessionDto,
-) {}
+) {
+	/** Reusable payment method to show on this session's share page. Pass null to clear. */
+	@IsOptional()
+	@IsUUID()
+	paymentMethodId?: string | null;
+}
 
 export class QueryBadmintonSessionDto extends PaginationQueryDto {
 	@IsOptional()

@@ -130,7 +130,7 @@ describe('BadmintonService', () => {
 		).rejects.toBeInstanceOf(NotFoundException);
 		expect(sessionRepo.findOne).toHaveBeenCalledWith({
 			where: { id: 'sess-1', ownerId: 'owner-1' },
-			relations: { participants: true },
+			relations: { participants: true, paymentMethod: true },
 		});
 	});
 
@@ -314,7 +314,7 @@ describe('BadmintonService', () => {
 			).rejects.toBeInstanceOf(NotFoundException);
 			expect(sessionRepo.findOne).toHaveBeenCalledWith({
 				where: { id: 's1', ownerId: 'intruder' },
-				relations: { participants: true },
+				relations: { participants: true, paymentMethod: true },
 			});
 		});
 
@@ -333,6 +333,31 @@ describe('BadmintonService', () => {
 			).rejects.toBeInstanceOf(NotFoundException);
 			expect(sessionRepo.softRemove).not.toHaveBeenCalled();
 		});
+	});
+
+	it('updateSession: accepts paymentMethodId and passes it straight through to save', async () => {
+		manager.findOne = jest.fn(async () => ({
+			id: 'session-1',
+			ownerId: 'owner-1',
+			courtCost: 0,
+			shuttleUnitPrice: 0,
+			totalShuttleCount: 0,
+			participants: [],
+		}));
+
+		const saved: any = await service.updateSession('owner-1', 'session-1', {
+			paymentMethodId: 'method-1',
+		});
+
+		expect(saved.paymentMethodId).toBe('method-1');
+	});
+
+	it('findOneOwned: includes the paymentMethod relation', async () => {
+		sessionRepo.findOne = jest.fn(async () => ({ id: 's', ownerId: 'owner-1', participants: [] }));
+		await service.findOneOwned('owner-1', 's');
+		expect(sessionRepo.findOne).toHaveBeenCalledWith(
+			expect.objectContaining({ relations: { participants: true, paymentMethod: true } }),
+		);
 	});
 
 	it('findByShareToken: returns a PII-safe view without owner/userId', async () => {
