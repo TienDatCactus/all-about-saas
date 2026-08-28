@@ -1,5 +1,8 @@
 import * as z from "zod"
-import { PaymentMethodSchema, PublicPaymentMethodSchema } from "../payment-methods/types"
+import {
+  PaymentMethodSchema,
+  PublicPaymentMethodSchema,
+} from "../payment-methods/types"
 
 export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc"
 

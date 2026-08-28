@@ -61,10 +61,16 @@ export const badmintonApi = {
       PublicSessionSchema,
       http.get(BADMINTON.publicSession(shareToken))
     ),
-  setParticipantPaid: (sessionId: string, participantId: string, paid: boolean) =>
+  setParticipantPaid: (
+    sessionId: string,
+    participantId: string,
+    paid: boolean
+  ) =>
     parseResponse(
       "badminton.setParticipantPaid",
       SessionParticipantSchema,
-      http.patch(BADMINTON.participantPayment(sessionId, participantId), { paid })
+      http.patch(BADMINTON.participantPayment(sessionId, participantId), {
+        paid,
+      })
     ),
 }
