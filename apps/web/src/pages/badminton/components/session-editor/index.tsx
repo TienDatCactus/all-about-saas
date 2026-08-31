@@ -12,6 +12,7 @@ import {
   valuesToComputed,
   valuesToPayload,
 } from "../../lib/form"
+import { CurrencyInput } from "../CurrencyInput"
 import { HoursStepperInput } from "../HoursStepperInput"
 import { PlayerEditor } from "../player-editor"
 import { BadmintonSummary } from "../Summary"
@@ -157,20 +158,16 @@ export function SessionEditor({
                   description="Total cost for the court, shared by all players."
                 >
                   {({ field }) => (
-                    <Input
+                    <CurrencyInput
                       id="courtCost"
-                      inputMode="numeric"
                       aria-label="Court cost"
-                      placeholder="0"
                       className="text-right tabular-nums"
                       startAddon={<CurrencyCircleDollarIcon />}
                       endAddon="₫"
-                      value={
-                        field.state.value ? formatVnd(field.state.value) : ""
-                      }
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        field.handleChange(parseVnd(e.target.value))
-                      }
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                      format={formatVnd}
+                      parse={parseVnd}
                     />
                   )}
                 </FormField>
@@ -182,20 +179,16 @@ export function SessionEditor({
                 >
                   {({ field }) => (
                     <div className="stack-row gap-2">
-                      <Input
+                      <CurrencyInput
                         id="shuttleUnitPrice"
-                        inputMode="numeric"
                         aria-label="Shuttle price per shuttle"
-                        placeholder="0"
                         className="text-right tabular-nums"
                         startAddon={<CoinsIcon />}
                         endAddon="₫"
-                        value={
-                          field.state.value ? formatVnd(field.state.value) : ""
-                        }
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          field.handleChange(parseVnd(e.target.value))
-                        }
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        format={formatVnd}
+                        parse={parseVnd}
                       />
                       <ShuttlePriceCalc onApply={field.handleChange} />
                     </div>
@@ -231,8 +224,8 @@ export function SessionEditor({
                 <FormField
                   form={form}
                   name="defaultHoursPlayed"
-                  label="Thời gian chơi mặc định"
-                  description="Áp dụng cho mọi người chơi hiện tại và người thêm mới."
+                  label="Default play time"
+                  description="Applies to every current player and anyone added after."
                 >
                   {({ field }) => (
                     <HoursStepperInput

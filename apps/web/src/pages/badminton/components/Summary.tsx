@@ -96,17 +96,20 @@ export function BadmintonSummary({
       content={
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile label="Tiền sân" value={formatDong(computed.courtCost)} />
             <StatTile
-              label="Tiền cầu"
+              label="Court fee"
+              value={formatDong(computed.courtCost)}
+            />
+            <StatTile
+              label="Shuttle fee"
               value={formatDong(computed.shuttleCost)}
             />
             <StatTile
-              label="Số lượng cầu"
-              value={`${meta?.totalShuttleCount ?? 0} quả`}
+              label="Shuttle count"
+              value={`${meta?.totalShuttleCount ?? 0} shuttles`}
             />
             <StatTile
-              label="TG chơi mặc định"
+              label="Default play time"
               value={`${meta?.defaultHoursPlayed ?? 1}h`}
             />
           </div>
@@ -197,7 +200,7 @@ export function BadmintonSummary({
                   </p>
                   <img
                     src={paymentMethod.imageUrl}
-                    alt={`QR nhận tiền: ${paymentMethod.label}`}
+                    alt={`Payment QR: ${paymentMethod.label}`}
                     className="h-64 w-64 rounded-lg border object-contain"
                   />
                 </div>
@@ -250,7 +253,7 @@ function PaymentCell({
       {payUrl && (
         <Button variant="outline" size="sm" asChild>
           <a href={payUrl} target="_blank" rel="noopener noreferrer">
-            Thanh toán
+            Pay
           </a>
         </Button>
       )}
@@ -259,17 +262,17 @@ function PaymentCell({
           type="button"
           variant={paid ? "default" : "outline"}
           size="sm"
-          // The label alone reads as a statement ("Đã trả"), not as a control
+          // The label alone reads as a statement ("Paid"), not as a control
           // whose state can be flipped. aria-pressed is what tells a screen
           // reader this is a toggle and which way it currently sits.
           aria-pressed={paid}
           onClick={() => onTogglePaid(!paid)}
         >
-          {paid ? "Đã trả" : "Chưa trả"}
+          {paid ? "Paid" : "Unpaid"}
         </Button>
       ) : (
         <Badge variant={paid ? "default" : "secondary"}>
-          {paid ? "Đã trả" : "Chưa trả"}
+          {paid ? "Paid" : "Unpaid"}
         </Badge>
       )}
     </div>

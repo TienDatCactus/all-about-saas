@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { PlusIcon, TrashIcon, WalletIcon } from "@phosphor-icons/react"
+import { useForm } from "@tanstack/react-form"
 import DataDialog from "@/components/custom/data/dialog"
+import { FormField } from "@/components/custom/form-field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,25 +30,15 @@ export function PaymentMethodPicker({
   const methods = methodsQuery.data ?? []
   const current = methods.find((m) => m.id === value)
 
-  /**
-   * While the list is still loading there is no way to resolve `value` to a
-   * label, and falling back to the "nothing selected" prompt actively lied: a
-   * session that HAS a method flashed "Chọn phương thức nhận tiền" and then
-   * swapped to the real label. A session id we already know is set gets a
-   * neutral placeholder instead, and only a settled empty list says "none".
-   */
   const triggerLabel = current
     ? current.label
     : methodsQuery.isPending && value
-      ? "Đang tải…"
-      : "Chọn phương thức nhận tiền"
+      ? "Loading…"
+      : "Choose a payment method"
 
   return (
     <>
       <Button
-        // Defensive: this picker is not inside a <form> today, but every other
-        // button in this feature declares its type, and a stray submit here
-        // would save the session as a side effect of opening a dialog.
         type="button"
         variant="outline"
         size="sm"
@@ -58,8 +50,8 @@ export function PaymentMethodPicker({
       <DataDialog
         open={open}
         onOpenChange={setOpen}
-        title="Phương thức nhận tiền"
-        description="Chọn hoặc thêm QR/SĐT MoMo để hiện trên trang chia sẻ."
+        title="Payment method"
+        description="Choose or add a MoMo QR/phone number to show on the share page."
         content={
           <div className="flex flex-col gap-4">
             <RadioGroup
@@ -69,7 +61,7 @@ export function PaymentMethodPicker({
                   { paymentMethodId: id },
                   {
                     onError: () =>
-                      toast.error("Không đổi được phương thức nhận tiền"),
+                      toast.error("Couldn't change the payment method"),
                   }
                 )
               }}
@@ -84,7 +76,7 @@ export function PaymentMethodPicker({
                     <Label htmlFor={m.id}>
                       {m.label}
                       <span className="ml-1 text-xs text-muted-foreground">
-                        ({m.type === "image" ? "QR ảnh" : m.phoneNumber})
+                        ({m.type === "image" ? "QR image" : m.phoneNumber})
                       </span>
                     </Label>
                   </div>
@@ -92,7 +84,7 @@ export function PaymentMethodPicker({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label={`Xoá ${m.label}`}
+                    aria-label={`Delete ${m.label}`}
                     onClick={() => {
                       deleteMethod.mutate(m.id, {
                         onSuccess: () => {
@@ -100,7 +92,7 @@ export function PaymentMethodPicker({
                             updateSession.mutate({ paymentMethodId: null })
                           }
                         },
-                        onError: () => toast.error("Xoá thất bại"),
+                        onError: () => toast.error("Delete failed"),
                       })
                     }}
                   >
@@ -110,7 +102,7 @@ export function PaymentMethodPicker({
               ))}
               {methods.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Chưa có phương thức nào.
+                  No payment methods yet.
                 </p>
               )}
             </RadioGroup>
@@ -123,15 +115,38 @@ export function PaymentMethodPicker({
 }
 
 function AddMethodForm() {
-  const [type, setType] = useState<"image" | "phone">("phone")
-  const [label, setLabel] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [file, setFile] = useState<File | undefined>(undefined)
   const createMethod = useCreatePaymentMethodMutation()
 
-  const canSubmit =
-    label.trim().length > 0 &&
-    (type === "phone" ? phoneNumber.trim().length > 0 : !!file)
+  const form = useForm({
+    defaultValues: {
+      type: "phone" as "image" | "phone",
+      label: "",
+      phoneNumber: "",
+      file: undefined as File | undefined,
+    },
+    onSubmit: ({ value }) => {
+      createMethod.mutate(
+        {
+          type: value.type,
+          label: value.label,
+          phoneNumber: value.type === "phone" ? value.phoneNumber : undefined,
+          file: value.file,
+        },
+        {
+          onSuccess: () => {
+            // Not form.reset() — that would also snap `type` back to "phone",
+            // dropping the host onto the wrong tab if they just added an
+            // image method and want to add another one right after.
+            form.setFieldValue("label", "")
+            form.setFieldValue("phoneNumber", "")
+            form.setFieldValue("file", undefined)
+            toast.success("Payment method added")
+          },
+          onError: () => toast.error("Add failed"),
+        }
+      )
+    },
+  })
 
   /**
    * Switching branches drops the abandoned branch's value. Its input is
@@ -139,77 +154,95 @@ function AddMethodForm() {
    * a picked file would be uploaded with a `type: "phone"` method the API then
    * ignores, and a half-typed number would linger behind the file picker.
    */
-  const switchType = (next: "image" | "phone") => {
-    setType(next)
-    if (next === "phone") setFile(undefined)
-    else setPhoneNumber("")
+  const switchType = (field: any, next: "image" | "phone") => {
+    field.handleChange(next)
+    if (next === "phone") form.setFieldValue("file", undefined)
+    else form.setFieldValue("phoneNumber", "")
   }
 
   return (
     <div className="border-t pt-4">
-      <div className="mb-2 flex gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant={type === "phone" ? "default" : "outline"}
-          onClick={() => switchType("phone")}
-        >
-          SĐT MoMo
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={type === "image" ? "default" : "outline"}
-          onClick={() => switchType("image")}
-        >
-          Upload ảnh QR
-        </Button>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Input
-          placeholder="Tên gợi nhớ (vd: MoMo cá nhân)"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-        />
-        {type === "phone" ? (
-          <Input
-            placeholder="Số điện thoại MoMo"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-        ) : (
-          <Input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={(e) => setFile(e.target.files?.[0])}
-          />
+      <FormField form={form} name="type">
+        {({ field }) => (
+          <div className="mb-2 flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={field.state.value === "phone" ? "default" : "outline"}
+              onClick={() => switchType(field, "phone")}
+            >
+              MoMo phone number
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={field.state.value === "image" ? "default" : "outline"}
+              onClick={() => switchType(field, "image")}
+            >
+              Upload QR image
+            </Button>
+          </div>
         )}
-        <Button
-          type="button"
-          disabled={!canSubmit || createMethod.isPending}
-          onClick={() => {
-            createMethod.mutate(
-              {
-                type,
-                label,
-                phoneNumber: type === "phone" ? phoneNumber : undefined,
-                file,
-              },
-              {
-                onSuccess: () => {
-                  setLabel("")
-                  setPhoneNumber("")
-                  setFile(undefined)
-                  toast.success("Đã thêm phương thức nhận tiền")
-                },
-                onError: () => toast.error("Thêm thất bại"),
-              }
-            )
-          }}
+      </FormField>
+      <div className="flex flex-col gap-2">
+        <FormField form={form} name="label">
+          {({ inputProps }) => (
+            <Input placeholder="Label (e.g. Personal MoMo)" {...inputProps} />
+          )}
+        </FormField>
+        <form.Subscribe
+          selector={(s: { values: { type: "image" | "phone" } }) =>
+            s.values.type
+          }
         >
-          <PlusIcon data-icon="inline-start" />
-          Thêm
-        </Button>
+          {(type: "image" | "phone") =>
+            type === "phone" ? (
+              <FormField form={form} name="phoneNumber">
+                {({ inputProps }) => (
+                  <Input placeholder="MoMo phone number" {...inputProps} />
+                )}
+              </FormField>
+            ) : (
+              <FormField form={form} name="file">
+                {({ field }) => (
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => field.handleChange(e.target.files?.[0])}
+                  />
+                )}
+              </FormField>
+            )
+          }
+        </form.Subscribe>
+        <form.Subscribe
+          selector={(s: {
+            values: {
+              type: "image" | "phone"
+              label: string
+              phoneNumber: string
+              file: File | undefined
+            }
+          }) =>
+            s.values.label.trim().length > 0 &&
+            (s.values.type === "phone"
+              ? s.values.phoneNumber.trim().length > 0
+              : !!s.values.file)
+          }
+        >
+          {(canSubmit: boolean) => (
+            <Button
+              type="button"
+              disabled={!canSubmit || createMethod.isPending}
+              onClick={() => {
+                form.handleSubmit().catch(() => undefined)
+              }}
+            >
+              <PlusIcon data-icon="inline-start" />
+              Add
+            </Button>
+          )}
+        </form.Subscribe>
       </div>
     </div>
   )

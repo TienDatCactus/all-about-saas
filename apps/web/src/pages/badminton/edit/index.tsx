@@ -48,8 +48,7 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
                   // The button's label comes from the query, so a failed
                   // mutation just left it showing the old status — silently
                   // indistinguishable from "the toggle didn't register".
-                  onError: () =>
-                    toast.error("Không cập nhật được trạng thái thanh toán"),
+                  onError: () => toast.error("Couldn't update payment status"),
                 }
               )
             }

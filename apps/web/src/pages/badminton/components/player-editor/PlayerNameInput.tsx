@@ -3,7 +3,6 @@ import { useDebounce } from "ahooks"
 import type { DataAutocompleteGroup } from "@/components/custom/data/autocomplete"
 import DataAutocomplete from "@/components/custom/data/autocomplete"
 import { useParticipantSuggestions } from "@/services/badminton/queries"
-/** Below this the server match is too broad to be useful. */
 const MIN_QUERY = 2
 
 /** Identity carried on each suggestion — a guest has no account behind it. */
@@ -36,10 +35,6 @@ export function PlayerNameInput({
   "aria-invalid": ariaInvalid,
 }: PlayerNameInputProps) {
   const [query, setQuery] = React.useState("")
-  // Debounced, so a request is sent per typing pause rather than per keystroke.
-  // Undebounced, "Nguyen" keyed six separate queries — each one a real round
-  // trip counted against the API's per-IP rate limit, which two players' worth
-  // of typing was enough to exhaust.
   const debouncedQuery = useDebounce(query, {
     wait: 300,
   })
@@ -53,12 +48,6 @@ export function PlayerNameInput({
     if (!data) return []
     const out: Array<DataAutocompleteGroup<Suggestion>> = []
 
-    // The account id travels on the option itself. Keying it by display name
-    // would mislink whenever a guest happens to share a name with an account.
-    //
-    // flatMap, not map: a suggestion with no label is unpickable, so it is dropped
-    // rather than rendered as a blank row. (The API used to produce these — see
-    // ParticipantSuggestionSchema.)
     const userOptions = data.users.flatMap((u) =>
       u.name ? [{ value: u.name, meta: { userId: u.userId } }] : []
     )
