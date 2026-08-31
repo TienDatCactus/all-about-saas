@@ -1,10 +1,11 @@
-import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react"
-import { useEffect, useReducer, useRef } from "react"
-import useImage from "use-image"
-import { imageReducer } from "./reducer"
-import { cn } from "@/lib/utils"
-import { Skeleton } from "@/components/ui/skeleton"
-import DataEmpty from "@/components/custom/data/empty"
+import { ImageBrokenIcon, ImageIcon } from "@phosphor-icons/react";
+import { useEffect, useReducer, useRef } from "react";
+import useImage from "use-image";
+import { imageReducer } from "./reducer";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import DataEmpty from "@/components/custom/data/empty";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // ─── Installation ─────────────────────────────────────────────────────────────
 // npm install use-image
@@ -13,75 +14,75 @@ import DataEmpty from "@/components/custom/data/empty"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type AspectRatio = "square" | "4/3" | "16/9" | "3/4" | "2/1" | (string & {})
-type ObjectFit = "cover" | "contain" | "fill" | "none" | "scale-down"
+type AspectRatio = "square" | "4/3" | "16/9" | "3/4" | "2/1" | (string & {});
+type ObjectFit = "cover" | "contain" | "fill" | "none" | "scale-down";
 
 export interface ImageProps {
   /** Source URL. Undefined/empty shows the empty state. */
-  src?: string
+  src?: string;
 
   /**
    * Shown when src fails to load.
    * Falls back to the error empty state if also absent.
    */
-  fallbackSrc?: string
+  fallbackSrc?: string;
 
   /** Required for accessibility. Pass "" for decorative images. */
-  alt: string
+  alt: string;
 
   /**
    * Locks the container aspect ratio to prevent layout shift.
    * Accepts preset names or any valid CSS aspect-ratio string e.g. "3/1".
    * @default "square"
    */
-  aspectRatio?: AspectRatio
+  aspectRatio?: AspectRatio;
 
   /** @default "cover" */
-  objectFit?: ObjectFit
+  objectFit?: ObjectFit;
 
   /** CSS object-position. @default "center" */
-  objectPosition?: string
+  objectPosition?: string;
 
   /**
    * Disables lazy loading — use for hero / LCP images.
    * @default false
    */
-  priority?: boolean
+  priority?: boolean;
 
   /**
    * Retry the original src N times (exp. backoff) before falling
    * through to fallbackSrc and then the error empty state.
    * @default 0
    */
-  retries?: number
+  retries?: number;
 
   /** Base delay (ms) between retries. Doubles each attempt. @default 1000 */
-  retryDelay?: number
+  retryDelay?: number;
 
   /**
    * Show a blurred CSS placeholder while loading.
    * Combine with blurDataURL for a dominant-color / tiny-thumbnail effect.
    * @default false
    */
-  blurPlaceholder?: boolean
+  blurPlaceholder?: boolean;
 
   /** Tiny base64 image rendered blurred behind the main image during load. */
-  blurDataURL?: string
+  blurDataURL?: string;
 
   /** Fills the container before the image loads (e.g. dominant color). */
-  placeholderColor?: string
+  placeholderColor?: string;
 
   /** Fires once the image loads successfully. */
-  onLoad?: () => void
+  onLoad?: () => void;
 
   /** Fires after all retries + fallback are exhausted. */
-  onError?: () => void
+  onError?: () => void;
 
   /**
    * CORS attribute passthrough — needed when using the image on a canvas
    * (WebGL, color extraction, etc.).
    */
-  crossOrigin?: "anonymous" | "use-credentials"
+  crossOrigin?: "anonymous" | "use-credentials";
 
   /** Referrer policy forwarded to use-image. */
   referrerPolicy?:
@@ -92,7 +93,7 @@ export interface ImageProps {
     | "same-origin"
     | "strict-origin"
     | "strict-origin-when-cross-origin"
-    | "unsafe-url"
+    | "unsafe-url";
 
   // ── Slots ────────────────────────────────────────────────────────────────
 
@@ -100,40 +101,43 @@ export interface ImageProps {
    * Replaces the default shadcn <Skeleton> shown while loading.
    * Receives the same size as the image container.
    */
-  loadingSlot?: React.ReactNode
+  loadingSlot?: React.ReactNode;
 
   /**
    * Replaces the default shadcn <Empty> shown when src is undefined/empty.
    * Use to provide a branded "no image yet" state.
    */
-  emptySlot?: React.ReactNode
+  emptySlot?: React.ReactNode;
 
   /**
    * Replaces the default shadcn <Empty> shown after all load attempts fail.
    */
-  errorSlot?: React.ReactNode
+  errorSlot?: React.ReactNode;
 
   /** Applied to the outer container div. */
-  className?: string
+  className?: string;
 
   /** Applied to the <img> element. */
-  imgClassName?: string
+  imgClassName?: string;
 
-  style?: React.CSSProperties
+  style?: React.CSSProperties;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const ASPECT_MAP: Record<string, string> = {
-  square: "1 / 1",
-  "4/3": "4 / 3",
-  "16/9": "16 / 9",
-  "3/4": "3 / 4",
-  "2/1": "2 / 1",
-}
+const ASPECT_MAP: Record<string, number> = {
+  square: 1,
+  "4/3": 4 / 3,
+  "16/9": 16 / 9,
+  "3/4": 3 / 4,
+  "2/1": 2 / 1,
+};
 
-function toAspect(value: AspectRatio = "square") {
-  return ASPECT_MAP[value] ?? value
+/** Radix's `AspectRatio.ratio` takes a number, not a CSS `aspect-ratio` string. */
+function toAspect(value: AspectRatio = "square"): number {
+  if (value in ASPECT_MAP) return ASPECT_MAP[value] ?? 1;
+  const [w, h] = value.split("/").map(Number);
+  return w && h ? w / h : 1;
 }
 
 // ─── Inner loader (uses use-image, conditionally rendered) ────────────────────
@@ -142,17 +146,17 @@ function toAspect(value: AspectRatio = "square") {
 // that is only mounted when we actually have a src to load.
 
 interface LoaderProps {
-  src: string
-  fallbackSrc?: string
-  alt: string
-  objectFit: ObjectFit
-  objectPosition: string
-  priority: boolean
-  retries: number
-  retryDelay: number
-  blurPlaceholder: boolean
-  blurDataURL?: string
-  crossOrigin?: "anonymous" | "use-credentials"
+  src: string;
+  fallbackSrc?: string;
+  alt: string;
+  objectFit: ObjectFit;
+  objectPosition: string;
+  priority: boolean;
+  retries: number;
+  retryDelay: number;
+  blurPlaceholder: boolean;
+  blurDataURL?: string;
+  crossOrigin?: "anonymous" | "use-credentials";
   referrerPolicy?:
     | "no-referrer"
     | "no-referrer-when-downgrade"
@@ -161,12 +165,12 @@ interface LoaderProps {
     | "same-origin"
     | "strict-origin"
     | "strict-origin-when-cross-origin"
-    | "unsafe-url"
-  onLoad?: () => void
-  onError?: () => void
-  loadingSlot?: React.ReactNode
-  errorSlot?: React.ReactNode
-  imgClassName?: string
+    | "unsafe-url";
+  onLoad?: () => void;
+  onError?: () => void;
+  loadingSlot?: React.ReactNode;
+  errorSlot?: React.ReactNode;
+  imgClassName?: string;
 }
 
 function ImageLoader({
@@ -190,69 +194,73 @@ function ImageLoader({
 }: LoaderProps) {
   // ── Retry logic —————————————————————————————————————————————————————————
   // use-image has no built-in retry, so we manage the active URL ourselves.
-  const retryCount = useRef(0)
-  const retryTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const isMounted = useRef(true)
+  const retryCount = useRef(0);
+  const retryTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const isMounted = useRef(true);
   const [state, dispatch] = useReducer(imageReducer, {
     activeSrc: src,
     usedFallback: false,
     visible: false,
     retryCount: 0,
-  })
+  });
   // Reset when the prop src changes
   useEffect(() => {
-    retryCount.current = 0
-    clearTimeout(retryTimer.current)
+    retryCount.current = 0;
+    clearTimeout(retryTimer.current);
     dispatch({
       type: "reset",
       src,
-    })
-  }, [src])
+    });
+  }, [src]);
 
   useEffect(() => {
-    isMounted.current = true
+    isMounted.current = true;
     return () => {
-      isMounted.current = false
-      clearTimeout(retryTimer.current)
-    }
-  }, [])
+      isMounted.current = false;
+      clearTimeout(retryTimer.current);
+    };
+  }, []);
 
   // ── use-image ────────────────────────────────────────────────────────────
-  const [image, status] = useImage(state.activeSrc, crossOrigin, referrerPolicy)
+  const [image, status] = useImage(
+    state.activeSrc,
+    crossOrigin,
+    referrerPolicy,
+  );
 
   useEffect(() => {
     if (status === "loaded") {
       dispatch({
         type: "loaded",
-      })
-      onLoad?.()
-      return
+      });
+      onLoad?.();
+      return;
     }
 
-    if (status !== "failed") return
+    if (status !== "failed") return;
 
     // Still have retries on the original src
     if (!state.usedFallback && retryCount.current < retries) {
-      retryCount.current += 1
+      retryCount.current += 1;
       // Mirrored into state in the same tick the ref changes — not inside the
       // setTimeout below, which fires only after the backoff delay. Splitting
       // them left a window where the ref already reflected the new count but
       // a re-render (from an unrelated prop change) would still see the old
       // state.retryCount, changing isFailed's render-time value from what it
       // would have been reading the ref directly.
-      dispatch({ type: "retrying", retryCount: retryCount.current })
-      const delay = retryDelay * Math.pow(2, retryCount.current - 1)
+      dispatch({ type: "retrying", retryCount: retryCount.current });
+      const delay = retryDelay * Math.pow(2, retryCount.current - 1);
       retryTimer.current = setTimeout(() => {
-        if (!isMounted.current) return
+        if (!isMounted.current) return;
         // Append timestamp to bust the browser cache
-        const busted = new URL(src, window.location.href)
-        busted.searchParams.set("_retry", String(retryCount.current))
+        const busted = new URL(src, window.location.href);
+        busted.searchParams.set("_retry", String(retryCount.current));
         dispatch({
           type: "retry",
           src: busted.toString(),
-        })
-      }, delay)
-      return () => clearTimeout(retryTimer.current)
+        });
+      }, delay);
+      return () => clearTimeout(retryTimer.current);
     }
 
     // Try fallbackSrc once
@@ -260,12 +268,12 @@ function ImageLoader({
       dispatch({
         type: "fallback",
         src: fallbackSrc,
-      })
-      return
+      });
+      return;
     }
 
     // All options exhausted
-    onError?.()
+    onError?.();
   }, [
     status,
     state.usedFallback,
@@ -275,18 +283,18 @@ function ImageLoader({
     fallbackSrc,
     onLoad,
     onError,
-  ])
+  ]);
 
   // ── Render ───────────────────────────────────────────────────────────────
 
-  const isLoading = status === "loading"
+  const isLoading = status === "loading";
   // Reads state.retryCount, not the ref — React Compiler flags reading
   // ref.current during render (see the retryCount ref's usage in the effect
   // above, and the reducer for how this mirror stays in sync with it).
   const isFailed =
     status === "failed" &&
     (state.usedFallback || !fallbackSrc) &&
-    state.retryCount >= retries
+    state.retryCount >= retries;
 
   return (
     <>
@@ -322,13 +330,13 @@ function ImageLoader({
           className={cn(
             "absolute inset-0 h-full w-full transition-opacity duration-300",
             state.visible ? "opacity-100" : "opacity-0",
-            imgClassName
+            imgClassName,
           )}
           style={{ objectFit, objectPosition }}
         />
       )}
     </>
-  )
+  );
 }
 
 // ─── Default empty-state slots ────────────────────────────────────────────────
@@ -341,7 +349,7 @@ function DefaultNoSrcEmpty() {
       title="No image"
       description="No image source provided."
     />
-  )
+  );
 }
 
 function DefaultErrorEmpty() {
@@ -352,7 +360,7 @@ function DefaultErrorEmpty() {
       title="Image unavailable"
       description="This image could not be loaded."
     />
-  )
+  );
 }
 
 // ─── SmartImage ───────────────────────────────────────────────────────────────
@@ -381,13 +389,13 @@ export function Image({
   imgClassName,
   style,
 }: ImageProps) {
-  const hasSrc = Boolean(src)
+  const hasSrc = Boolean(src);
 
   return (
-    <div
+    <AspectRatio
+      ratio={toAspect(aspectRatio)}
       className={cn("relative overflow-hidden", className)}
       style={{
-        aspectRatio: toAspect(aspectRatio),
         backgroundColor: placeholderColor,
         ...style,
       }}
@@ -419,11 +427,11 @@ export function Image({
           imgClassName={imgClassName}
         />
       )}
-    </div>
-  )
+    </AspectRatio>
+  );
 }
 
-export default Image
+export default Image;
 
 // ─── Usage examples ───────────────────────────────────────────────────────────
 //
