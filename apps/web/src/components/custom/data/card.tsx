@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 
 interface DataCardProp {
   title: string
-  description?: string
+  description?: string | React.ReactNode
   action?: React.ReactNode
   className?: string
   content: React.ReactNode | string

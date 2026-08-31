@@ -82,9 +82,21 @@ export function BadmintonSummary({
   return (
     <DataCard
       title="Split summary"
-      description="
-          Collected always equals the total expense.
-    "
+      description={
+        <p className="text-sm text-muted-foreground">
+          Court fee{" "}
+          <span className="font-medium text-foreground">
+            {formatDong(computed.courtCost)}
+          </span>
+          {" · "}Shuttle fee{" "}
+          <span className="font-medium text-foreground">
+            {formatDong(computed.shuttleCost)}
+          </span>
+          {" · "}
+          {meta?.totalShuttleCount ?? 0} shuttles
+          {" · "}Default {meta?.defaultHoursPlayed ?? 1}h
+        </p>
+      }
       action={
         <div className="flex gap-2">
           {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
@@ -115,19 +127,6 @@ export function BadmintonSummary({
       }
       content={
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            Court fee{" "}
-            <span className="font-medium text-foreground">
-              {formatDong(computed.courtCost)}
-            </span>
-            {" · "}Shuttle fee{" "}
-            <span className="font-medium text-foreground">
-              {formatDong(computed.shuttleCost)}
-            </span>
-            {" · "}
-            {meta?.totalShuttleCount ?? 0} shuttles
-            {" · "}Default {meta?.defaultHoursPlayed ?? 1}h
-          </p>
           {hasRows ? (
             <div className="flex flex-col gap-4">
               {Math.abs(computed.roundingResidual) > 999 && (
@@ -233,10 +232,6 @@ function PaymentCell({
   paid: boolean | undefined
   onTogglePaid?: (paid: boolean) => void
 }) {
-  // Both interpolations are encoded: the phone number is a path segment, so an
-  // unexpected `/` or `?` in it would rewrite the rest of the URL rather than
-  // just producing a dead link. (The API constrains the field to digits too —
-  // this is the second of the two locks, for methods stored before that landed.)
   const payUrl =
     method.type === "phone" && method.phoneNumber
       ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
