@@ -5,6 +5,7 @@ import { imageReducer } from "./reducer"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import DataEmpty from "@/components/custom/data/empty"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 // ─── Installation ─────────────────────────────────────────────────────────────
 // npm install use-image
@@ -124,16 +125,19 @@ export interface ImageProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const ASPECT_MAP: Record<string, string> = {
-  square: "1 / 1",
-  "4/3": "4 / 3",
-  "16/9": "16 / 9",
-  "3/4": "3 / 4",
-  "2/1": "2 / 1",
+const ASPECT_MAP: Record<string, number> = {
+  square: 1,
+  "4/3": 4 / 3,
+  "16/9": 16 / 9,
+  "3/4": 3 / 4,
+  "2/1": 2 / 1,
 }
 
-function toAspect(value: AspectRatio = "square") {
-  return ASPECT_MAP[value] ?? value
+/** Radix's `AspectRatio.ratio` takes a number, not a CSS `aspect-ratio` string. */
+function toAspect(value: AspectRatio = "square"): number {
+  if (value in ASPECT_MAP) return ASPECT_MAP[value] ?? 1
+  const [w, h] = value.split("/").map(Number)
+  return w && h ? w / h : 1
 }
 
 // ─── Inner loader (uses use-image, conditionally rendered) ────────────────────
@@ -384,10 +388,10 @@ export function Image({
   const hasSrc = Boolean(src)
 
   return (
-    <div
+    <AspectRatio
+      ratio={toAspect(aspectRatio)}
       className={cn("relative overflow-hidden", className)}
       style={{
-        aspectRatio: toAspect(aspectRatio),
         backgroundColor: placeholderColor,
         ...style,
       }}
@@ -419,7 +423,7 @@ export function Image({
           imgClassName={imgClassName}
         />
       )}
-    </div>
+    </AspectRatio>
   )
 }
 

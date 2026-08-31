@@ -17,6 +17,45 @@ import {
 /** Mirrors MIN_QUERY in the web autocomplete; enforced here so it cannot be skipped. */
 const MIN_SUGGEST_QUERY = 2;
 
+/**
+ * Best-effort name out of one linked OAuthAccount's raw provider payload.
+ *
+ * The three providers wired up today (`google.strategy.ts`,
+ * `github.strategy.ts`, `facebook.strategy.ts`) don't agree on shape: GitHub
+ * and Facebook stash a combined `displayName`, all three can carry
+ * `firstName`/`lastName`, and GitHub alone falls back to a bare `username`.
+ * Kept as a pure function, isolated from the query-building code, so the
+ * provider-specific field names live in one testable place instead of being
+ * scattered across a query builder or a raw-row mapper.
+ */
+export function resolveOAuthDisplayName(
+	profileData: unknown,
+): string | undefined {
+	if (typeof profileData !== 'object' || profileData === null) {
+		return undefined;
+	}
+	const data = profileData as Record<string, unknown>;
+
+	const displayName = data.displayName;
+	if (typeof displayName === 'string' && displayName.trim()) {
+		return displayName.trim();
+	}
+
+	const firstName = typeof data.firstName === 'string' ? data.firstName : '';
+	const lastName = typeof data.lastName === 'string' ? data.lastName : '';
+	const fullName = `${firstName} ${lastName}`.trim();
+	if (fullName) {
+		return fullName;
+	}
+
+	const username = data.username;
+	if (typeof username === 'string' && username.trim()) {
+		return username.trim();
+	}
+
+	return undefined;
+}
+
 @Injectable()
 export class BadmintonService extends BaseService<BadmintonSession> {
 	constructor(
@@ -326,25 +365,60 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 		const users = await this.usersRepo
 			.createQueryBuilder('u')
 			.leftJoin('u.profile', 'profile')
+			// `oauthAccounts` is a mapped OneToMany, so a user with several linked
+			// providers produces several joined rows here. getMany()'s hydration
+			// groups those back into one User with an `oauthAccounts` array (keyed
+			// off `u.id`), so this stays a single row per matched user in the
+			// response below — no manual group-by needed.
+			.leftJoin('u.oauthAccounts', 'oauth')
 			.where('u.email ILIKE :pattern', { pattern })
 			.orWhere('profile.displayName ILIKE :pattern', { pattern })
+			// profile.displayName is essentially always empty (nothing ever writes
+			// it), so without these a registered user could only be found by email
+			// even though their real name is sitting unused in the OAuth provider's
+			// profileData — matching resolveOAuthDisplayName's own field order.
+			.orWhere(`oauth."profileData"->>'displayName' ILIKE :pattern`, {
+				pattern,
+			})
+			.orWhere(
+				`CONCAT(oauth."profileData"->>'firstName', ' ', oauth."profileData"->>'lastName') ILIKE :pattern`,
+				{ pattern },
+			)
+			.orWhere(`oauth."profileData"->>'username' ILIKE :pattern`, { pattern })
 			// u.email was missing from this list while the mapping below used it as
 			// the fallback label, so a user with no display name came back with
 			// `name: undefined` and the autocomplete rendered a blank, unpickable row.
-			.select(['u.id', 'u.email', 'profile.displayName'])
-			.limit(8)
+			.select([
+				'u.id',
+				'u.email',
+				'profile.displayName',
+				'oauth.id',
+				'oauth.profileData',
+			])
+			// take()/skip() (not limit()/offset()) so TypeORM paginates by distinct
+			// root entity: a plain LIMIT is applied to the flat SQL row set, and
+			// with the one-to-many oauth join above that would cut a multi-provider
+			// user's rows mid-way — or drop matched users entirely — well before 8
+			// distinct people are collected.
+			.take(8)
 			.getMany();
 
 		return {
-			users: users.map((u) => ({
-				userId: u.id,
-				// The email is used as a label of last resort, but is not returned as
-				// its own field — it was always undefined there anyway, and nothing
-				// consumes it. Note this endpoint still reveals an address to any
-				// authenticated caller who guesses part of it; narrowing that to exact
-				// email match is a product decision, not a bug fix.
-				name: u.profile?.displayName ?? u.email,
-			})),
+			users: users.map((u) => {
+				const oauthName = (u.oauthAccounts ?? [])
+					.map((account) => resolveOAuthDisplayName(account.profileData))
+					.find((name): name is string => Boolean(name));
+
+				return {
+					userId: u.id,
+					// The email is used as a label of last resort, but is not returned
+					// as its own field — it was always undefined there anyway, and
+					// nothing consumes it. Note this endpoint still reveals an address
+					// to any authenticated caller who guesses part of it; narrowing
+					// that to exact email match is a product decision, not a bug fix.
+					name: u.profile?.displayName ?? oauthName ?? u.email,
+				};
+			}),
 		};
 	}
 

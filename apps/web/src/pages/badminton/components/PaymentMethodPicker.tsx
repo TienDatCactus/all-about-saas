@@ -1,6 +1,14 @@
-import { useState } from "react"
-import { PlusIcon, TrashIcon, WalletIcon } from "@phosphor-icons/react"
+import { useEffect, useState } from "react"
+import {
+  PlusIcon,
+  QrCodeIcon,
+  TrashIcon,
+  WalletIcon,
+} from "@phosphor-icons/react"
+import { useForm } from "@tanstack/react-form"
 import DataDialog from "@/components/custom/data/dialog"
+import { FormField } from "@/components/custom/form-field"
+import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,6 +20,15 @@ import {
   usePaymentMethodsQuery,
 } from "@/services/payment-methods/queries"
 import { useUpdateSessionMutation } from "@/services/badminton/queries"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Image } from "@/components/custom/image"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export function PaymentMethodPicker({
   sessionId,
@@ -28,25 +45,15 @@ export function PaymentMethodPicker({
   const methods = methodsQuery.data ?? []
   const current = methods.find((m) => m.id === value)
 
-  /**
-   * While the list is still loading there is no way to resolve `value` to a
-   * label, and falling back to the "nothing selected" prompt actively lied: a
-   * session that HAS a method flashed "Chọn phương thức nhận tiền" and then
-   * swapped to the real label. A session id we already know is set gets a
-   * neutral placeholder instead, and only a settled empty list says "none".
-   */
   const triggerLabel = current
     ? current.label
     : methodsQuery.isPending && value
-      ? "Đang tải…"
-      : "Chọn phương thức nhận tiền"
+      ? "Loading…"
+      : "Choose a payment method"
 
   return (
     <>
       <Button
-        // Defensive: this picker is not inside a <form> today, but every other
-        // button in this feature declares its type, and a stray submit here
-        // would save the session as a side effect of opening a dialog.
         type="button"
         variant="outline"
         size="sm"
@@ -58,8 +65,8 @@ export function PaymentMethodPicker({
       <DataDialog
         open={open}
         onOpenChange={setOpen}
-        title="Phương thức nhận tiền"
-        description="Chọn hoặc thêm QR/SĐT MoMo để hiện trên trang chia sẻ."
+        title="Payment method"
+        description="Choose or add a MoMo QR/phone number to show on the share page."
         content={
           <div className="flex flex-col gap-4">
             <RadioGroup
@@ -69,7 +76,7 @@ export function PaymentMethodPicker({
                   { paymentMethodId: id },
                   {
                     onError: () =>
-                      toast.error("Không đổi được phương thức nhận tiền"),
+                      toast.error("Couldn't change the payment method"),
                   }
                 )
               }}
@@ -84,33 +91,51 @@ export function PaymentMethodPicker({
                     <Label htmlFor={m.id}>
                       {m.label}
                       <span className="ml-1 text-xs text-muted-foreground">
-                        ({m.type === "image" ? "QR ảnh" : m.phoneNumber})
+                        ({m.type === "image" ? "QR image" : m.phoneNumber})
                       </span>
                     </Label>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Xoá ${m.label}`}
-                    onClick={() => {
-                      deleteMethod.mutate(m.id, {
-                        onSuccess: () => {
-                          if (value === m.id) {
-                            updateSession.mutate({ paymentMethodId: null })
-                          }
-                        },
-                        onError: () => toast.error("Xoá thất bại"),
-                      })
-                    }}
-                  >
-                    <TrashIcon />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {m.type === "image" && m.imageUrl && (
+                      <QrPreviewDialog
+                        label={m.label}
+                        imageUrl={m.imageUrl}
+                        trigger={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Preview ${m.label}`}
+                          >
+                            <QrCodeIcon />
+                          </Button>
+                        }
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Delete ${m.label}`}
+                      onClick={() => {
+                        deleteMethod.mutate(m.id, {
+                          onSuccess: () => {
+                            if (value === m.id) {
+                              updateSession.mutate({ paymentMethodId: null })
+                            }
+                          },
+                          onError: () => toast.error("Delete failed"),
+                        })
+                      }}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  </div>
                 </div>
               ))}
               {methods.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Chưa có phương thức nào.
+                  No payment methods yet.
                 </p>
               )}
             </RadioGroup>
@@ -123,94 +148,171 @@ export function PaymentMethodPicker({
 }
 
 function AddMethodForm() {
-  const [type, setType] = useState<"image" | "phone">("phone")
-  const [label, setLabel] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [file, setFile] = useState<File | undefined>(undefined)
   const createMethod = useCreatePaymentMethodMutation()
 
-  const canSubmit =
-    label.trim().length > 0 &&
-    (type === "phone" ? phoneNumber.trim().length > 0 : !!file)
+  const form = useForm({
+    defaultValues: {
+      type: "phone" as "image" | "phone",
+      label: "",
+      phoneNumber: "",
+      file: undefined as File | undefined,
+    },
+    onSubmit: ({ value }) => {
+      createMethod.mutate(
+        {
+          type: value.type,
+          label: value.label,
+          phoneNumber: value.type === "phone" ? value.phoneNumber : undefined,
+          file: value.file,
+        },
+        {
+          onSuccess: () => {
+            // Not form.reset() — that would also snap `type` back to "phone",
+            // dropping the host onto the wrong tab if they just added an
+            // image method and want to add another one right after.
+            form.setFieldValue("label", "")
+            form.setFieldValue("phoneNumber", "")
+            form.setFieldValue("file", undefined)
+            toast.success("Payment method added")
+          },
+          onError: () => toast.error("Add failed"),
+        }
+      )
+    },
+  })
 
-  /**
-   * Switching branches drops the abandoned branch's value. Its input is
-   * unmounted, so whatever is left in state is invisible but still submitted —
-   * a picked file would be uploaded with a `type: "phone"` method the API then
-   * ignores, and a half-typed number would linger behind the file picker.
-   */
-  const switchType = (next: "image" | "phone") => {
-    setType(next)
-    if (next === "phone") setFile(undefined)
-    else setPhoneNumber("")
+  const switchType = (field: any, next: "image" | "phone") => {
+    field.handleChange(next)
+    if (next === "phone") form.setFieldValue("file", undefined)
+    else form.setFieldValue("phoneNumber", "")
   }
 
   return (
     <div className="border-t pt-4">
-      <div className="mb-2 flex gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant={type === "phone" ? "default" : "outline"}
-          onClick={() => switchType("phone")}
-        >
-          SĐT MoMo
+      <Tabs defaultValue="phone">
+        <FormField form={form} name="type">
+          {({ field }) => (
+            <TabsList>
+              <TabsTrigger
+                onClick={() => switchType(field, "phone")}
+                value="phone"
+              >
+                MoMo phone number
+              </TabsTrigger>
+              <TabsTrigger
+                onClick={() => switchType(field, "image")}
+                value="image"
+              >
+                Upload QR image
+              </TabsTrigger>
+            </TabsList>
+          )}
+        </FormField>
+        <div className="flex flex-col gap-2">
+          <FormField form={form} name="label">
+            {({ inputProps }) => (
+              <Input placeholder="Label (e.g. Personal MoMo)" {...inputProps} />
+            )}
+          </FormField>
+          <form.Subscribe
+            selector={(s: { values: { type: "image" | "phone" } }) =>
+              s.values.type
+            }
+          >
+            <TabsContent value="phone">
+              <FormField form={form} name="phoneNumber">
+                {({ inputProps }) => (
+                  <Input placeholder="MoMo phone number" {...inputProps} />
+                )}
+              </FormField>
+            </TabsContent>
+            <TabsContent value="image" className="flex items-center gap-2">
+              <FormField form={form} name="file">
+                {({ field }) => (
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => field.handleChange(e.target.files?.[0])}
+                  />
+                )}
+              </FormField>
+              <form.Subscribe
+                selector={(s: { values: { file: File | undefined } }) =>
+                  s.values.file
+                }
+              >
+                {(file: File | undefined) => <ImagePreview file={file} />}
+              </form.Subscribe>
+            </TabsContent>
+          </form.Subscribe>
+          <form.Subscribe
+            selector={(s: {
+              values: {
+                type: "image" | "phone"
+                label: string
+                phoneNumber: string
+                file: File | undefined
+              }
+            }) =>
+              s.values.label.trim().length > 0 &&
+              (s.values.type === "phone"
+                ? s.values.phoneNumber.trim().length > 0
+                : !!s.values.file)
+            }
+          >
+            {(canSubmit: boolean) => (
+              <Button
+                type="button"
+                disabled={!canSubmit || createMethod.isPending}
+                onClick={() => {
+                  form.handleSubmit().catch(() => undefined)
+                }}
+              >
+                <PlusIcon data-icon="inline-start" />
+                Add
+              </Button>
+            )}
+          </form.Subscribe>
+        </div>
+      </Tabs>
+    </div>
+  )
+}
+
+function ImagePreview({ file }: { file: File | undefined }) {
+  const [url, setUrl] = useState<string>()
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!file) {
+      setUrl(undefined)
+      return
+    }
+    const objectUrl = URL.createObjectURL(file)
+    setUrl(objectUrl)
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [file])
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm" disabled={!url}>
+          Preview
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={type === "image" ? "default" : "outline"}
-          onClick={() => switchType("image")}
-        >
-          Upload ảnh QR
-        </Button>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Input
-          placeholder="Tên gợi nhớ (vd: MoMo cá nhân)"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-        />
-        {type === "phone" ? (
-          <Input
-            placeholder="Số điện thoại MoMo"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-        ) : (
-          <Input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={(e) => setFile(e.target.files?.[0])}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>QR code preview</DialogTitle>
+        </DialogHeader>
+        {url && (
+          <Image
+            src={url}
+            alt="QR code preview"
+            aspectRatio="square"
+            objectFit="contain"
           />
         )}
-        <Button
-          type="button"
-          disabled={!canSubmit || createMethod.isPending}
-          onClick={() => {
-            createMethod.mutate(
-              {
-                type,
-                label,
-                phoneNumber: type === "phone" ? phoneNumber : undefined,
-                file,
-              },
-              {
-                onSuccess: () => {
-                  setLabel("")
-                  setPhoneNumber("")
-                  setFile(undefined)
-                  toast.success("Đã thêm phương thức nhận tiền")
-                },
-                onError: () => toast.error("Thêm thất bại"),
-              }
-            )
-          }}
-        >
-          <PlusIcon data-icon="inline-start" />
-          Thêm
-        </Button>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

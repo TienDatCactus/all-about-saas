@@ -1,5 +1,11 @@
-import { CalculatorIcon, CopyIcon, WarningIcon } from "@phosphor-icons/react"
+import {
+  CalculatorIcon,
+  CopyIcon,
+  QrCodeIcon,
+  WarningIcon,
+} from "@phosphor-icons/react"
 import type { ComputedSnapshot } from "@/services/badminton/types"
+import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
 import DataCard from "@/components/custom/data/card"
 import DataEmpty from "@/components/custom/data/empty"
 import { toast } from "@/components/custom/toast"
@@ -76,40 +82,51 @@ export function BadmintonSummary({
   return (
     <DataCard
       title="Split summary"
-      description="
-          Collected always equals the total expense.
-    "
+      description={
+        <p className="text-sm text-muted-foreground">
+          Court fee{" "}
+          <span className="font-medium text-foreground">
+            {formatDong(computed.courtCost)}
+          </span>
+          {" · "}Shuttle fee{" "}
+          <span className="font-medium text-foreground">
+            {formatDong(computed.shuttleCost)}
+          </span>
+          {" · "}
+          {meta?.totalShuttleCount ?? 0} shuttles
+          {" · "}Default {meta?.defaultHoursPlayed ?? 1}h
+        </p>
+      }
       action={
-        <Button
-          tabIndex={-1}
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            void handleCopy(e)
-          }}
-          disabled={!hasRows}
-        >
-          <CopyIcon data-icon="inline-start" />
-          Copy
-        </Button>
+        <div className="flex gap-2">
+          {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
+            <QrPreviewDialog
+              label={paymentMethod.label}
+              imageUrl={paymentMethod.imageUrl}
+              trigger={
+                <Button tabIndex={-1} variant="outline" size="sm">
+                  <QrCodeIcon data-icon="inline-start" />
+                  QR code
+                </Button>
+              }
+            />
+          )}
+          <Button
+            tabIndex={-1}
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              void handleCopy(e)
+            }}
+            disabled={!hasRows}
+          >
+            <CopyIcon data-icon="inline-start" />
+            Copy
+          </Button>
+        </div>
       }
       content={
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile label="Tiền sân" value={formatDong(computed.courtCost)} />
-            <StatTile
-              label="Tiền cầu"
-              value={formatDong(computed.shuttleCost)}
-            />
-            <StatTile
-              label="Số lượng cầu"
-              value={`${meta?.totalShuttleCount ?? 0} quả`}
-            />
-            <StatTile
-              label="TG chơi mặc định"
-              value={`${meta?.defaultHoursPlayed ?? 1}h`}
-            />
-          </div>
           {hasRows ? (
             <div className="flex flex-col gap-4">
               {Math.abs(computed.roundingResidual) > 999 && (
@@ -190,18 +207,6 @@ export function BadmintonSummary({
                   </TableFooter>
                 </Table>
               </div>
-              {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
-                <div className="flex flex-col items-center gap-2 border-t pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    {paymentMethod.label}
-                  </p>
-                  <img
-                    src={paymentMethod.imageUrl}
-                    alt={`QR nhận tiền: ${paymentMethod.label}`}
-                    className="h-64 w-64 rounded-lg border object-contain"
-                  />
-                </div>
-              )}
             </div>
           ) : (
             <DataEmpty
@@ -216,15 +221,6 @@ export function BadmintonSummary({
   )
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border bg-muted/40 p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
-    </div>
-  )
-}
-
 function PaymentCell({
   row,
   method,
@@ -236,10 +232,6 @@ function PaymentCell({
   paid: boolean | undefined
   onTogglePaid?: (paid: boolean) => void
 }) {
-  // Both interpolations are encoded: the phone number is a path segment, so an
-  // unexpected `/` or `?` in it would rewrite the rest of the URL rather than
-  // just producing a dead link. (The API constrains the field to digits too —
-  // this is the second of the two locks, for methods stored before that landed.)
   const payUrl =
     method.type === "phone" && method.phoneNumber
       ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
@@ -250,7 +242,7 @@ function PaymentCell({
       {payUrl && (
         <Button variant="outline" size="sm" asChild>
           <a href={payUrl} target="_blank" rel="noopener noreferrer">
-            Thanh toán
+            Pay
           </a>
         </Button>
       )}
@@ -259,17 +251,17 @@ function PaymentCell({
           type="button"
           variant={paid ? "default" : "outline"}
           size="sm"
-          // The label alone reads as a statement ("Đã trả"), not as a control
+          // The label alone reads as a statement ("Paid"), not as a control
           // whose state can be flipped. aria-pressed is what tells a screen
           // reader this is a toggle and which way it currently sits.
           aria-pressed={paid}
           onClick={() => onTogglePaid(!paid)}
         >
-          {paid ? "Đã trả" : "Chưa trả"}
+          {paid ? "Paid" : "Unpaid"}
         </Button>
       ) : (
         <Badge variant={paid ? "default" : "secondary"}>
-          {paid ? "Đã trả" : "Chưa trả"}
+          {paid ? "Paid" : "Unpaid"}
         </Badge>
       )}
     </div>

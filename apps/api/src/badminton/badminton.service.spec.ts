@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { In } from 'typeorm';
-import { BadmintonService } from './badminton.service';
+import { BadmintonService, resolveOAuthDisplayName } from './badminton.service';
 import {
 	BadmintonParticipant,
 	ParticipantGender,
@@ -39,6 +39,28 @@ function mockDataSource() {
 		transaction: jest.fn(async (cb: (m: unknown) => unknown) => cb(manager)),
 	};
 	return { manager, dataSource };
+}
+
+/**
+ * Chainable stand-in for the QueryBuilder `suggestParticipants()` builds.
+ * Every method needed on the chain returns the same object so calls can be
+ * ordered any way the implementation likes; `getMany` is the only one that
+ * actually resolves to data.
+ */
+function mockQueryBuilder(users: unknown[]) {
+	const qb: Record<string, jest.Mock> = {};
+	for (const method of [
+		'leftJoin',
+		'where',
+		'orWhere',
+		'select',
+		'take',
+		'limit',
+	]) {
+		qb[method] = jest.fn(() => qb);
+	}
+	qb.getMany = jest.fn(async () => users);
+	return qb;
 }
 
 describe('BadmintonService', () => {
@@ -859,5 +881,170 @@ describe('BadmintonService', () => {
 
 		const result: any = await service.findByShareToken('tok');
 		expect(result.paymentMethod).toBeNull();
+	});
+
+	describe('suggestParticipants: name resolution', () => {
+		it('prefers profile.displayName over any linked OAuth data', async () => {
+			const qb = mockQueryBuilder([
+				{
+					id: 'u1',
+					email: 'jane@example.com',
+					profile: { displayName: 'Jane Profile Name' },
+					oauthAccounts: [{ profileData: { displayName: 'Jane OAuth Name' } }],
+				},
+			]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			const res = await service.suggestParticipants('jane');
+
+			expect(res.users).toEqual([{ userId: 'u1', name: 'Jane Profile Name' }]);
+		});
+
+		it('reconstructs a name from a linked OAuth account when profile.displayName is unset', async () => {
+			const qb = mockQueryBuilder([
+				{
+					id: 'u1',
+					email: 'jane@example.com',
+					profile: { displayName: undefined },
+					oauthAccounts: [
+						{ profileData: { firstName: 'Jane', lastName: 'Doe' } },
+					],
+				},
+			]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			const res = await service.suggestParticipants('jane');
+
+			expect(res.users).toEqual([{ userId: 'u1', name: 'Jane Doe' }]);
+		});
+
+		it('checks multiple linked OAuth accounts and uses the first one with a usable name', async () => {
+			const qb = mockQueryBuilder([
+				{
+					id: 'u1',
+					email: 'jane@example.com',
+					profile: undefined,
+					oauthAccounts: [
+						{ profileData: {} }, // linked but nothing usable
+						{ profileData: { username: 'janedoe' } },
+					],
+				},
+			]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			const res = await service.suggestParticipants('jane');
+
+			expect(res.users).toEqual([{ userId: 'u1', name: 'janedoe' }]);
+		});
+
+		it('falls back to email when there is no displayName and no usable OAuth profileData', async () => {
+			const qb = mockQueryBuilder([
+				{
+					id: 'u1',
+					email: 'jane@example.com',
+					profile: undefined,
+					oauthAccounts: [{ profileData: {} }],
+				},
+				{
+					id: 'u2',
+					email: 'noaccounts@example.com',
+					profile: undefined,
+					oauthAccounts: [],
+				},
+			]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			const res = await service.suggestParticipants('jane');
+
+			expect(res.users).toEqual([
+				{ userId: 'u1', name: 'jane@example.com' },
+				{ userId: 'u2', name: 'noaccounts@example.com' },
+			]);
+		});
+
+		it('returns no users and never queries when the query is below the minimum length', async () => {
+			const res = await service.suggestParticipants('j');
+
+			expect(res).toEqual({ users: [] });
+			expect(usersRepo.createQueryBuilder).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('suggestParticipants: search matching', () => {
+		it('matches on OAuth-derived name fields, not just email and profile.displayName', async () => {
+			const qb = mockQueryBuilder([]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			await service.suggestParticipants('jane');
+
+			const pattern = '%jane%';
+			expect(qb.where).toHaveBeenCalledWith('u.email ILIKE :pattern', {
+				pattern,
+			});
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				'profile.displayName ILIKE :pattern',
+				{ pattern },
+			);
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				`oauth."profileData"->>'displayName' ILIKE :pattern`,
+				{ pattern },
+			);
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				`CONCAT(oauth."profileData"->>'firstName', ' ', oauth."profileData"->>'lastName') ILIKE :pattern`,
+				{ pattern },
+			);
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				`oauth."profileData"->>'username' ILIKE :pattern`,
+				{ pattern },
+			);
+		});
+
+		it('finds a user by their OAuth-linked real name even without a matching email or profile.displayName', async () => {
+			const qb = mockQueryBuilder([
+				{
+					id: 'u1',
+					email: 'random-handle-42@example.com',
+					profile: undefined,
+					oauthAccounts: [
+						{ profileData: { firstName: 'Jane', lastName: 'Doe' } },
+					],
+				},
+			]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			const res = await service.suggestParticipants('jane');
+
+			expect(res.users).toEqual([{ userId: 'u1', name: 'Jane Doe' }]);
+		});
+	});
+
+	describe('resolveOAuthDisplayName', () => {
+		it('prefers a provider displayName when present', () => {
+			expect(
+				resolveOAuthDisplayName({
+					displayName: 'Jane OAuth Name',
+					firstName: 'Jane',
+					lastName: 'Doe',
+					username: 'janedoe',
+				}),
+			).toBe('Jane OAuth Name');
+		});
+
+		it('falls back to firstName + lastName when displayName is absent', () => {
+			expect(
+				resolveOAuthDisplayName({ firstName: 'Jane', lastName: 'Doe' }),
+			).toBe('Jane Doe');
+		});
+
+		it('falls back to username when only that is present', () => {
+			expect(resolveOAuthDisplayName({ username: 'janedoe' })).toBe('janedoe');
+		});
+
+		it('returns undefined when nothing usable is present', () => {
+			expect(resolveOAuthDisplayName({})).toBeUndefined();
+			expect(resolveOAuthDisplayName(null)).toBeUndefined();
+			expect(resolveOAuthDisplayName(undefined)).toBeUndefined();
+			expect(resolveOAuthDisplayName('not an object')).toBeUndefined();
+		});
 	});
 });
