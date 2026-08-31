@@ -25,7 +25,6 @@ import { FormField } from "@/components/custom/form-field"
 import { Button as StatefulButton } from "@/components/custom/stateful-button"
 import DatePicker from "@/components/date-picker"
 import { FieldGroup } from "@/components/ui/field"
-import { formatVnd, parseVnd } from "@/pages/badminton/lib/format"
 import {
   useCreateSessionMutation,
   useUpdateSessionMutation,
@@ -166,8 +165,6 @@ export function SessionEditor({
                       endAddon="₫"
                       value={field.state.value}
                       onChange={field.handleChange}
-                      format={formatVnd}
-                      parse={parseVnd}
                     />
                   )}
                 </FormField>
@@ -187,8 +184,6 @@ export function SessionEditor({
                         endAddon="₫"
                         value={field.state.value}
                         onChange={field.handleChange}
-                        format={formatVnd}
-                        parse={parseVnd}
                       />
                       <ShuttlePriceCalc onApply={field.handleChange} />
                     </div>
