@@ -14,12 +14,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Public } from '../common/decorator/is-public.decorator';
 import { requireUser } from '../common/request-user';
-import { BadmintonService } from './badminton.service';
 import {
 	CreateBadmintonSessionDto,
 	QueryBadmintonSessionDto,
+	SetParticipantPaidDto,
 	UpdateBadmintonSessionDto,
 } from './badminton.dto';
+import { BadmintonService } from './badminton.service';
 
 @Controller('badminton')
 @ApiTags('Badminton')
@@ -78,6 +79,21 @@ export class BadmintonController {
 		@Body() dto: UpdateBadmintonSessionDto,
 	) {
 		return this.service.updateSession(requireUser(req).id, id, dto);
+	}
+
+	@Patch('/sessions/:id/participants/:participantId/payment')
+	setParticipantPaid(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Param('participantId', ParseUUIDPipe) participantId: string,
+		@Body() dto: SetParticipantPaidDto,
+	) {
+		return this.service.setParticipantPaid(
+			requireUser(req).id,
+			id,
+			participantId,
+			dto.paid,
+		);
 	}
 
 	@Delete('/sessions/:id')

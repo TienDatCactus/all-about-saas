@@ -35,6 +35,21 @@ services:
 
   # Fake SMTP server so you can test the transactional emails without a real
   # provider. SMTP on 1025, web inbox UI at http://localhost:8025
+
+  minio:
+    image: minio/minio:latest
+    container_name: aas-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    ports:
+      - '${MINIO_API_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio_data:/data
+
   mailpit:
     image: axllent/mailpit:latest
     container_name: aas-mailpit
@@ -45,3 +60,4 @@ services:
 
 volumes:
   pgdata:
+  minio_data:

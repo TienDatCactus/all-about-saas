@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
 	ArrayMinSize,
 	IsArray,
+	IsBoolean,
 	IsDateString,
 	IsInt,
 	IsOptional,
@@ -40,6 +41,12 @@ export class CreateBadmintonSessionDto {
 	@Min(0)
 	totalShuttleCount!: number;
 
+	/** Session-wide default hoursPlayed, applied to any participant that omits its own. Defaults to 1. */
+	@IsOptional()
+	@IsNumber()
+	@Min(0)
+	defaultHoursPlayed?: number;
+
 	@IsArray()
 	@ArrayMinSize(1)
 	@ValidateNested({ each: true })
@@ -48,6 +55,16 @@ export class CreateBadmintonSessionDto {
 }
 
 export class ParticipantInputDto {
+	/**
+	 * The id of an existing participant row to update in place. Only meaningful on
+	 * update: an id matching a row already in the session updates that row and so
+	 * PRESERVES its `paid`/`paidAt`, while an absent or unrecognised id inserts a
+	 * fresh unpaid participant. `createSession()` ignores it and assigns its own.
+	 */
+	@IsOptional()
+	@IsUUID()
+	id?: string;
+
 	/** Linked app user id, if this participant is a registered account. Omit for a free-text guest. */
 	@IsOptional()
 	@IsUUID()
@@ -79,7 +96,17 @@ export class ParticipantInputDto {
 
 export class UpdateBadmintonSessionDto extends PartialType(
 	CreateBadmintonSessionDto,
-) {}
+) {
+	/** Reusable payment method to show on this session's share page. Pass null to clear. */
+	@IsOptional()
+	@IsUUID()
+	paymentMethodId?: string | null;
+}
+
+export class SetParticipantPaidDto {
+	@IsBoolean()
+	paid!: boolean;
+}
 
 export class QueryBadmintonSessionDto extends PaginationQueryDto {
 	@IsOptional()

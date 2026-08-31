@@ -1,12 +1,18 @@
+import { PaymentMethodPicker } from "../components/PaymentMethodPicker"
 import { ShareLink } from "../components/ShareLink"
 import { SessionEditor } from "../components/session-editor"
 import { sessionToValues } from "../lib/form"
 import DataPage from "@/components/custom/data/page"
+import { toast } from "@/components/custom/toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSessionQuery } from "@/services/badminton/queries"
+import {
+  useSessionQuery,
+  useSetParticipantPaidMutation,
+} from "@/services/badminton/queries"
 
 export default function EditSessionPage({ sessionId }: { sessionId: string }) {
   const sessionQuery = useSessionQuery(sessionId)
+  const setPaid = useSetParticipantPaidMutation(sessionId)
 
   return (
     <DataPage
@@ -24,9 +30,29 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
       {(session) => (
         <div className="space-y-4">
           <ShareLink shareToken={session.shareToken} />
+          <PaymentMethodPicker
+            sessionId={sessionId}
+            value={session.paymentMethodId}
+          />
           <SessionEditor
             sessionId={sessionId}
             initialValues={sessionToValues(session)}
+            paymentMethod={session.paymentMethod ?? null}
+            paymentStatus={Object.fromEntries(
+              (session.participants ?? []).map((p) => [p.id, { paid: p.paid }])
+            )}
+            onTogglePaid={(participantId, paid) =>
+              setPaid.mutate(
+                { participantId, paid },
+                {
+                  // The button's label comes from the query, so a failed
+                  // mutation just left it showing the old status — silently
+                  // indistinguishable from "the toggle didn't register".
+                  onError: () =>
+                    toast.error("Không cập nhật được trạng thái thanh toán"),
+                }
+              )
+            }
           />
         </div>
       )}

@@ -19,8 +19,15 @@ export const AUTH = {
 export const BADMINTON = {
   sessions: "/badminton/sessions",
   session: (id: string) => `/badminton/sessions/${id}`,
+  participantPayment: (sessionId: string, participantId: string) =>
+    `/badminton/sessions/${sessionId}/participants/${participantId}/payment`,
   suggest: "/badminton/participants/suggest",
   publicSession: (shareToken: string) => `/badminton/public/${shareToken}`,
+}
+
+export const PAYMENT_METHODS = {
+  list: "/payment-methods",
+  byId: (id: string) => `/payment-methods/${id}`,
 }
 
 export const USERS = {

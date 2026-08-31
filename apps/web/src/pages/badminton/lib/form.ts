@@ -21,6 +21,7 @@ export interface EditorValues {
   courtCost: number
   shuttleUnitPrice: number
   totalShuttleCount: number
+  defaultHoursPlayed: number
   players: Array<EditorPlayer>
 }
 
@@ -28,6 +29,21 @@ const uid = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2)
+
+/**
+ * `EditorPlayer.id` does double duty: for a loaded session it is the real
+ * participant id, but for a row added in the browser it is only a React key —
+ * `seed-0`/`seed-1` on the first render, and `uid()`'s `Math.random()` fallback
+ * on a browser without `crypto.randomUUID`.
+ *
+ * Only the UUID-shaped ones may go out on the wire. The API validates
+ * `participants[].id` with `@IsUUID()`, so sending `seed-0` would reject the
+ * entire save; and a client-minted UUID is harmless because the API only reuses
+ * an id that already names a row in this session, generating its own otherwise.
+ */
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const persistedId = (id: string) => (UUID_RE.test(id) ? id : undefined)
 
 const nonNegative = (n: number) => Math.max(0, n || 0)
 const wholeShuttles = (n: unknown) => Math.max(0, Math.trunc(Number(n)) || 0)
@@ -46,21 +62,21 @@ export function defaultShuttleWeight(gender: "male" | "female"): number {
 }
 
 /** Random-keyed player for client-side adds (after mount). */
-export function newPlayer(name = ""): EditorPlayer {
+export function newPlayer(name = "", hoursPlayed = 1): EditorPlayer {
   return {
     id: uid(),
     name,
-    hoursPlayed: 1,
+    hoursPlayed,
     shuttleWeight: DEFAULT_SHUTTLE_WEIGHT,
   }
 }
 
 /** Deterministic-keyed player for the initial render, so SSR and client match. */
-function seedPlayer(index: number): EditorPlayer {
+function seedPlayer(index: number, hoursPlayed = 1): EditorPlayer {
   return {
     id: `seed-${index}`,
     name: "",
-    hoursPlayed: 1,
+    hoursPlayed,
     shuttleWeight: DEFAULT_SHUTTLE_WEIGHT,
   }
 }
@@ -72,7 +88,8 @@ export function defaultValues(): EditorValues {
     courtCost: 0,
     shuttleUnitPrice: 0,
     totalShuttleCount: 0,
-    players: [seedPlayer(0), seedPlayer(1)],
+    defaultHoursPlayed: 1,
+    players: [seedPlayer(0, 1), seedPlayer(1, 1)],
   }
 }
 
@@ -83,6 +100,7 @@ export function sessionToValues(s: BadmintonSession): EditorValues {
     courtCost: s.courtCost,
     shuttleUnitPrice: s.shuttleUnitPrice,
     totalShuttleCount: s.totalShuttleCount,
+    defaultHoursPlayed: s.defaultHoursPlayed,
     players: (s.participants ?? []).map((p) => ({
       id: p.id,
       userId: p.userId ?? undefined,
@@ -115,12 +133,17 @@ export function valuesToPayload(v: EditorValues): CreateSessionIn {
     courtCost: v.courtCost,
     shuttleUnitPrice: v.shuttleUnitPrice,
     totalShuttleCount: wholeShuttles(v.totalShuttleCount),
+    defaultHoursPlayed: v.defaultHoursPlayed,
     participants: v.players.reduce<ParticipantInput[]>((acc, p) => {
       const name = p.name.trim()
 
       if (!name) return acc
 
       acc.push({
+        // Without this the API saw every row as new on each save, deleted the
+        // stored ones and reinserted them unpaid — so "Save changes" wiped
+        // every participant's paid status.
+        id: persistedId(p.id),
         userId: p.userId,
         name: name || "Unnamed",
         hoursPlayed: nonNegative(p.hoursPlayed),

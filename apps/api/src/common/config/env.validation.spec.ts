@@ -9,6 +9,11 @@ const valid = () => ({
 	DATABASE_PORT: '5432',
 	DATABASE_NAME: 'aas',
 	JWT_SECRET: 'a'.repeat(32),
+	MINIO_ENDPOINT: 'http://localhost:9000',
+	MINIO_ACCESS_KEY: 'minioadmin',
+	MINIO_SECRET_KEY: 'minioadmin',
+	MINIO_BUCKET: 'aas-uploads',
+	MINIO_PUBLIC_URL: 'http://localhost:9000/aas-uploads',
 });
 
 describe('validateEnv', () => {
@@ -38,6 +43,20 @@ describe('validateEnv', () => {
 		delete (env as Record<string, unknown>).DATABASE_NAME;
 		// One restart per variable is the failure mode this avoids.
 		expect(() => validateEnv(env)).toThrow(/DATABASE_HOST[\s\S]*DATABASE_NAME/);
+	});
+
+	it('rejects a missing object-store variable instead of uploading into the void', () => {
+		const env = valid();
+		delete (env as Record<string, unknown>).MINIO_BUCKET;
+		// Unset, StorageService still "succeeds" and hands back a URL built from
+		// the string "undefined" — a payment QR nobody can load.
+		expect(() => validateEnv(env)).toThrow(/MINIO_BUCKET/);
+	});
+
+	it('rejects an object-store URL that is not a URL', () => {
+		expect(() =>
+			validateEnv({ ...valid(), MINIO_PUBLIC_URL: 'api.example.com/storage' }),
+		).toThrow(/MINIO_PUBLIC_URL/);
 	});
 
 	it('rejects a duration string where seconds are expected', () => {

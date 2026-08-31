@@ -85,7 +85,11 @@ export default function DataCombobox({
   // Keyed on the latest callback via a ref so a new `onSearch` identity each
   // render doesn't restart the timer.
   const searchRef = React.useRef(onSearch)
-  searchRef.current = onSearch
+  // Synced in an effect, not during render — React Compiler flags reading or
+  // writing ref.current in the render body (refs are for effects/handlers).
+  React.useEffect(() => {
+    searchRef.current = onSearch
+  })
 
   const debouncedSearchValue = useDebounce(value.trim(), {
     wait: debounceMs,

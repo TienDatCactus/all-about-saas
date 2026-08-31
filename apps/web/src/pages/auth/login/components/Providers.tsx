@@ -1,9 +1,8 @@
-import React, { useCallback } from "react"
-import { ReactSVG } from "react-svg"
 import { Button } from "@/components/ui/button"
-import { loadAsset } from "@/lib/utils"
+import { cn, loadAsset } from "@/lib/utils"
 import { authApi } from "@/services/auth"
-import { useTheme } from "@/lib/context/theme"
+import React from "react"
+import { ReactSVG } from "react-svg"
 
 interface Provider {
   name: string
@@ -33,6 +32,7 @@ const providers: Array<Provider> = [
   {
     name: "Github",
     iconUrl: loadAsset("github.svg", "svg"),
+    darkIconUrl: loadAsset("github-dark.svg", "svg"),
     callback: authApi.loginWithGithub,
   },
   {
@@ -42,17 +42,6 @@ const providers: Array<Provider> = [
   },
 ]
 const Providers: React.FC = () => {
-  const { isDarkMode } = useTheme()
-  const deriveAsset = useCallback(
-    (provider: Pick<Provider, "iconUrl" | "darkIconUrl">) => {
-      return isDarkMode
-        ? provider.iconUrl
-        : provider?.darkIconUrl
-          ? provider.darkIconUrl
-          : provider.iconUrl
-    },
-    [isDarkMode]
-  )
   return (
     <ul className="space-y-4">
       {providers.map((provider) => (
@@ -65,7 +54,14 @@ const Providers: React.FC = () => {
             void provider.callback(currentReturnTo())
           }}
         >
-          <ReactSVG src={deriveAsset(provider)} aria-hidden={true} />
+          <ReactSVG
+            src={provider.iconUrl}
+            aria-hidden={true}
+            className={cn("", { "dark:hidden": !!provider.darkIconUrl })}
+          />
+          {provider?.darkIconUrl && (
+            <ReactSVG src={provider.darkIconUrl} aria-hidden={true} />
+          )}
           <span className="text-sm font-medium">
             Sign in with {provider.name}
           </span>

@@ -4,6 +4,7 @@ import DataCard from "@/components/custom/data/card"
 import DataEmpty from "@/components/custom/data/empty"
 import { toast } from "@/components/custom/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -34,12 +35,33 @@ export type DisplaySnapshot = Omit<ComputedSnapshot, "rows"> & {
   >
 }
 
-interface SummaryProps {
-  computed: DisplaySnapshot
-  meta?: { title?: string | null; playedOn?: string }
+interface PaymentMethodDisplay {
+  type: "image" | "phone"
+  label: string
+  imageUrl?: string | null
+  phoneNumber?: string | null
 }
 
-export function BadmintonSummary({ computed, meta }: SummaryProps) {
+interface SummaryProps {
+  computed: DisplaySnapshot
+  meta?: {
+    title?: string | null
+    playedOn?: string
+    totalShuttleCount?: number
+    defaultHoursPlayed?: number
+  }
+  paymentMethod?: PaymentMethodDisplay | null
+  paymentStatus?: Record<string, { paid: boolean }>
+  onTogglePaid?: (participantId: string, paid: boolean) => void
+}
+
+export function BadmintonSummary({
+  computed,
+  meta,
+  paymentMethod,
+  paymentStatus,
+  onTogglePaid,
+}: SummaryProps) {
   const hasRows = computed.rows.length > 0
 
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -72,67 +94,184 @@ export function BadmintonSummary({ computed, meta }: SummaryProps) {
         </Button>
       }
       content={
-        hasRows ? (
-          <div className="flex flex-col gap-4">
-            {Math.abs(computed.roundingResidual) > 999 && (
-              <Alert variant="destructive">
-                <WarningIcon />
-                <AlertDescription>
-                  {`${formatDong(computed.roundingResidual)} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.`}
-                </AlertDescription>
-              </Alert>
-            )}
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Player</TableHead>
-                    <TableHead className="text-right">Court</TableHead>
-                    <TableHead className="text-right">Shuttle</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {computed.rows.map((row, index) => (
-                    <TableRow key={row.participantId ?? `${index}-${row.name}`}>
-                      <TableCell className="font-medium">{row.name}</TableCell>
-                      <TableCell className="text-right text-muted-foreground tabular-nums">
-                        {formatDong(row.court)}
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground tabular-nums">
-                        {formatDong(row.shuttle)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums">
-                        {formatDong(row.total)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell>Total collected</TableCell>
-                    <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatVnd(computed.courtCost)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatVnd(computed.shuttleCost)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVnd(computed.grandTotal)}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </div>
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatTile label="Tiền sân" value={formatDong(computed.courtCost)} />
+            <StatTile
+              label="Tiền cầu"
+              value={formatDong(computed.shuttleCost)}
+            />
+            <StatTile
+              label="Số lượng cầu"
+              value={`${meta?.totalShuttleCount ?? 0} quả`}
+            />
+            <StatTile
+              label="TG chơi mặc định"
+              value={`${meta?.defaultHoursPlayed ?? 1}h`}
+            />
           </div>
-        ) : (
-          <DataEmpty
-            media={{ variant: "icon", icon: <CalculatorIcon /> }}
-            title="Nothing to split yet"
-            description="Add players and costs to see each person's share."
-          />
-        )
+          {hasRows ? (
+            <div className="flex flex-col gap-4">
+              {Math.abs(computed.roundingResidual) > 999 && (
+                <Alert variant="destructive">
+                  <WarningIcon />
+                  <AlertDescription>
+                    {`${formatDong(computed.roundingResidual)} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.`}
+                  </AlertDescription>
+                </Alert>
+              )}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Player</TableHead>
+                      <TableHead className="text-right">Court</TableHead>
+                      <TableHead className="text-right">Shuttle</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      {paymentMethod && <TableHead>Payment</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {computed.rows.map((row, index) => (
+                      <TableRow
+                        key={row.participantId ?? `${index}-${row.name}`}
+                      >
+                        <TableCell className="font-medium">
+                          {row.name}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground tabular-nums">
+                          {formatDong(row.court)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground tabular-nums">
+                          {formatDong(row.shuttle)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">
+                          {formatDong(row.total)}
+                        </TableCell>
+                        {paymentMethod && (
+                          <TableCell>
+                            <PaymentCell
+                              row={row}
+                              method={paymentMethod}
+                              paid={
+                                row.participantId
+                                  ? paymentStatus?.[row.participantId]?.paid
+                                  : undefined
+                              }
+                              onTogglePaid={
+                                row.participantId && onTogglePaid
+                                  ? (paid) =>
+                                      onTogglePaid(row.participantId!, paid)
+                                  : undefined
+                              }
+                            />
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell>Total collected</TableCell>
+                      <TableCell className="text-right text-muted-foreground tabular-nums">
+                        {formatVnd(computed.courtCost)}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground tabular-nums">
+                        {formatVnd(computed.shuttleCost)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatVnd(computed.grandTotal)}
+                      </TableCell>
+                      {/* Keeps the footer's cell count equal to the header's and
+                          the body's — one short, the browser drops the footer's
+                          last column out from under the Payment header. */}
+                      {paymentMethod && <TableCell />}
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              </div>
+              {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
+                <div className="flex flex-col items-center gap-2 border-t pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    {paymentMethod.label}
+                  </p>
+                  <img
+                    src={paymentMethod.imageUrl}
+                    alt={`QR nhận tiền: ${paymentMethod.label}`}
+                    className="h-64 w-64 rounded-lg border object-contain"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <DataEmpty
+              media={{ variant: "icon", icon: <CalculatorIcon /> }}
+              title="Nothing to split yet"
+              description="Add players and costs to see each person's share."
+            />
+          )}
+        </div>
       }
     />
+  )
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border bg-muted/40 p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-lg font-semibold tabular-nums">{value}</div>
+    </div>
+  )
+}
+
+function PaymentCell({
+  row,
+  method,
+  paid,
+  onTogglePaid,
+}: {
+  row: DisplaySnapshot["rows"][number]
+  method: PaymentMethodDisplay
+  paid: boolean | undefined
+  onTogglePaid?: (paid: boolean) => void
+}) {
+  // Both interpolations are encoded: the phone number is a path segment, so an
+  // unexpected `/` or `?` in it would rewrite the rest of the URL rather than
+  // just producing a dead link. (The API constrains the field to digits too —
+  // this is the second of the two locks, for methods stored before that landed.)
+  const payUrl =
+    method.type === "phone" && method.phoneNumber
+      ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
+      : undefined
+
+  return (
+    <div className="flex items-center justify-end gap-2">
+      {payUrl && (
+        <Button variant="outline" size="sm" asChild>
+          <a href={payUrl} target="_blank" rel="noopener noreferrer">
+            Thanh toán
+          </a>
+        </Button>
+      )}
+      {paid === undefined ? null : onTogglePaid ? (
+        <Button
+          type="button"
+          variant={paid ? "default" : "outline"}
+          size="sm"
+          // The label alone reads as a statement ("Đã trả"), not as a control
+          // whose state can be flipped. aria-pressed is what tells a screen
+          // reader this is a toggle and which way it currently sits.
+          aria-pressed={paid}
+          onClick={() => onTogglePaid(!paid)}
+        >
+          {paid ? "Đã trả" : "Chưa trả"}
+        </Button>
+      ) : (
+        <Badge variant={paid ? "default" : "secondary"}>
+          {paid ? "Đã trả" : "Chưa trả"}
+        </Badge>
+      )}
+    </div>
   )
 }

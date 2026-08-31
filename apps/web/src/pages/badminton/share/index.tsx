@@ -44,7 +44,16 @@ export default function BadmintonSummaryPage({
         <div className="w-full">
           <BadmintonSummary
             computed={toComputed(session)}
-            meta={{ title: session.title, playedOn: session.playedOn }}
+            meta={{
+              title: session.title,
+              playedOn: session.playedOn,
+              totalShuttleCount: session.totalShuttleCount,
+              defaultHoursPlayed: session.defaultHoursPlayed,
+            }}
+            paymentMethod={session.paymentMethod ?? null}
+            paymentStatus={Object.fromEntries(
+              session.participants.map((p) => [p.id, { paid: p.paid }])
+            )}
           />
         </div>
       )}

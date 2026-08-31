@@ -5,6 +5,7 @@ import {
   ParticipantSuggestionSchema,
   PublicSessionSchema,
   SessionListItemSchema,
+  SessionParticipantSchema,
 } from "./types"
 import type { CreateSessionIn, UpdateSessionIn } from "./types"
 import type { PageParams } from "../utils"
@@ -59,5 +60,17 @@ export const badmintonApi = {
       "badminton.getByShareToken",
       PublicSessionSchema,
       http.get(BADMINTON.publicSession(shareToken))
+    ),
+  setParticipantPaid: (
+    sessionId: string,
+    participantId: string,
+    paid: boolean
+  ) =>
+    parseResponse(
+      "badminton.setParticipantPaid",
+      SessionParticipantSchema,
+      http.patch(BADMINTON.participantPayment(sessionId, participantId), {
+        paid,
+      })
     ),
 }

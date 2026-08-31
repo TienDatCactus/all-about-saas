@@ -166,7 +166,11 @@ export function DataDropdown<T>({
   let cursor = 0
 
   const renderMenuItem = (item: T): React.ReactNode => {
-    const index = cursor++
+    // Assignment, not `cursor++` — React Compiler doesn't yet handle an
+    // UpdateExpression on a variable captured by a lambda
+    // (BuildHIR::lowerExpression); the equivalent reassignment is supported.
+    const index = cursor
+    cursor = cursor + 1
     const key = String(getKey ? getKey(item, index) : index)
     const disabled = isDisabled?.(item)
     const shortcut = getShortcut?.(item)

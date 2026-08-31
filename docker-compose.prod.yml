@@ -36,6 +36,8 @@ secrets:
     file: ./secrets/db_password
   jwt_secret:
     file: ./secrets/jwt_secret
+  minio_root_password:
+    file: ./secrets/minio_root_password
   # Compose refuses to start a service whose listed secret file is missing,
   # even when the app would never read it. For a provider you don't use,
   # `touch` an empty placeholder — its *_FILE variable stays unset (see the
@@ -126,6 +128,51 @@ services:
           sleep "$$BACKUP_INTERVAL_SECONDS"
         done
 
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_root_password
+    secrets: [minio_root_password]
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    # Loopback ONLY, and only the S3 API port — never the :9001 console. See the
+    # note on the api service for why the explicit 127.0.0.1 matters.
+    #
+    # Caddy does not need this (it shares the internal network and proxies to
+    # `minio:9000`), but the nginx deployment in deploy/nginx/ runs on the HOST,
+    # where docker service names do not resolve. Its `location /storage/` block
+    # proxies here, the same way it reaches the api on 127.0.0.1:8000.
+    ports:
+      - '127.0.0.1:${MINIO_HOST_PORT:-9000}:9000'
+    networks: [internal]
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # One-shot: creates the bucket and makes it anonymously readable (GET only —
+  # write still requires the root credentials). Runs once per deploy; mc
+  # commands are idempotent so re-running on redeploy is harmless.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks: [internal]
+    secrets: [minio_root_password]
+    entrypoint:
+      - /bin/sh
+      - -ceu
+      - |
+        export MC_HOST_local="http://${MINIO_ROOT_USER}:$$(cat /run/secrets/minio_root_password)@minio:9000"
+        mc mb -p local/aas-uploads
+        mc anonymous set download local/aas-uploads
+    restart: 'no'
   # One-shot: applies migrations, then exits. `depends_on: service_completed_successfully`
   # on the api means the app never starts against an un-migrated schema.
   migrate:
@@ -218,6 +265,34 @@ services:
       FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
       FACEBOOK_CLIENT_SECRET_FILE: ${FACEBOOK_CLIENT_ID:+/run/secrets/facebook_client_secret}
       FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL:-}
+      # --- Object store (MoMo QR uploads) ---
+      # Without these the api booted with an unconfigured S3 client: uploads
+      # "succeeded" and returned a URL built from the string "undefined".
+      # Env validation now refuses to boot without all five.
+      #
+      # Service name, not the public hostname — the api reaches minio over the
+      # internal network, exactly as it reaches postgres.
+      MINIO_ENDPOINT: http://minio:9000
+      # The bucket is created by the minio-init one-shot above; keep in step.
+      MINIO_BUCKET: aas-uploads
+      # The api reads and writes with the MinIO root credentials, so the access
+      # key IS the root user and the secret comes from the same mounted file the
+      # minio service itself uses. `_FILE` for the same reason as the database
+      # password: a secret in `environment:` shows up in `docker inspect`,
+      # /proc/<pid>/environ and every child process.
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
+      # PUBLIC URL, and it must be reachable from a participant's browser — the
+      # QR <img> on the share page points here. Both reverse-proxy configs map
+      # /storage/* onto minio; see the `handle_path /storage/*` block in the
+      # Caddyfile and the `location /storage/` blocks in deploy/nginx/.
+      #
+      # Overridable because the two deployment shapes differ: the two-domain
+      # variant serves it from API_DOMAIN (the default below), while the
+      # single-domain nginx variant has no API_DOMAIN at all and wants
+      # https://<DOMAIN>/storage/aas-uploads. No trailing slash — StorageService
+      # appends `/<key>`.
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-https://${API_DOMAIN}/storage/aas-uploads}
       # Same Docker network, no TLS between api and postgres. Turn on the moment
       # the database lives anywhere else.
       DATABASE_SSL: ${DATABASE_SSL:-false}
@@ -226,6 +301,7 @@ services:
       [
         db_password,
         jwt_secret,
+        minio_root_password,
         base_password,
         google_client_secret,
         github_client_secret,
@@ -344,6 +420,7 @@ volumes:
   pgdata:
   caddy_data:
   caddy_config:
+  minio_data:
 
 networks:
   internal:

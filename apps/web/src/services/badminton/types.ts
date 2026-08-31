@@ -1,4 +1,8 @@
 import * as z from "zod"
+import {
+  PaymentMethodSchema,
+  PublicPaymentMethodSchema,
+} from "../payment-methods/types"
 
 export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc"
 
@@ -7,6 +11,12 @@ export type { ComputedRow, ComputedSnapshot } from "@repo/badminton-calc"
 // ---------------------------------------------------------------------------
 
 export const ParticipantInputSchema = z.object({
+  /**
+   * The id of the participant row this entry edits, on update. Sending it is
+   * what lets the API update that row in place and so keep its `paid`/`paidAt`;
+   * omitting it asks for a new, unpaid participant. Ignored on create.
+   */
+  id: z.uuid().optional(),
   userId: z.uuid().optional(),
   name: z.string().min(1, "Name is required").max(120),
   hoursPlayed: z.number().min(0).optional(),
@@ -22,13 +32,16 @@ export const CreateSessionSchema = z.object({
   courtCost: z.number().int().min(0),
   shuttleUnitPrice: z.number().int().min(0),
   totalShuttleCount: z.number().int().min(0),
+  defaultHoursPlayed: z.number().min(0),
   participants: z
     .array(ParticipantInputSchema)
     .min(1, "Add at least one player"),
 })
 
 export type CreateSessionIn = z.infer<typeof CreateSessionSchema>
-export type UpdateSessionIn = Partial<CreateSessionIn>
+export type UpdateSessionIn = Partial<CreateSessionIn> & {
+  paymentMethodId?: string | null
+}
 
 // ---------------------------------------------------------------------------
 // Responses
@@ -66,6 +79,8 @@ export const SessionParticipantSchema = z.object({
   hoursPlayed: z.number(),
   shuttleWeight: z.number(),
   gender: z.enum(["male", "female"]).nullish(),
+  paid: z.boolean(),
+  paidAt: z.string().nullish(),
 })
 
 export type SessionParticipant = z.infer<typeof SessionParticipantSchema>
@@ -79,7 +94,10 @@ export const BadmintonSessionSchema = z.object({
   courtCost: z.number(),
   shuttleUnitPrice: z.number(),
   totalShuttleCount: z.number(),
+  defaultHoursPlayed: z.number(),
   shareToken: z.string(),
+  paymentMethodId: z.string().nullish(),
+  paymentMethod: PaymentMethodSchema.nullish(),
   computed: ComputedSnapshotSchema.nullish(),
   participants: z.array(SessionParticipantSchema).optional(),
   createdAt: z.string(),
@@ -115,8 +133,10 @@ export const PublicSessionSchema = z.object({
   courtCost: z.number(),
   shuttleUnitPrice: z.number(),
   totalShuttleCount: z.number(),
+  defaultHoursPlayed: z.number(),
   participants: z.array(SessionParticipantSchema.omit({ userId: true })),
   computed: ComputedSnapshotSchema.nullish(),
+  paymentMethod: PublicPaymentMethodSchema.nullish(),
 })
 
 export type PublicSession = z.infer<typeof PublicSessionSchema>

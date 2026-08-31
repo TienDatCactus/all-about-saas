@@ -49,7 +49,11 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => field.pushValue(newPlayer())}
+                onClick={() =>
+                  field.pushValue(
+                    newPlayer("", form.getFieldValue("defaultHoursPlayed"))
+                  )
+                }
               >
                 <PlusIcon />
                 Add player
