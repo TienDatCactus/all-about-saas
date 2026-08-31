@@ -8,7 +8,7 @@ import { TableCell, TableRow } from "@/components/ui/table"
 import { DEFAULT_SHUTTLE_WEIGHT, defaultShuttleWeight } from "../../lib/form"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { ButtonGroup } from "@/components/ui/button-group"
+import { HoursStepperInput } from "../HoursStepperInput"
 
 interface PlayerRowProps {
   form: any
@@ -118,43 +118,13 @@ export function PlayerRow({
           name={`${base}.hoursPlayed`}
         >
           {({ field, isInvalid }) => (
-            <ButtonGroup>
-              <Button
-                variant={"outline"}
-                onClick={(e) => {
-                  e.preventDefault()
-                  const hoursPlayed = form.getFieldValue(`${base}.hoursPlayed`)
-                  form.setFieldValue(
-                    `${base}.hoursPlayed`,
-                    Number((hoursPlayed - 0.1).toFixed(1))
-                  )
-                }}
-              >
-                -
-              </Button>
-              <Input
-                id={`${base}-hours`}
-                type="number"
-                step={0.1}
-                inputMode="decimal"
-                endAddon="h"
-                className="w-16 text-right tabular-nums lg:w-full"
-                {...numberFieldProps(field, isInvalid, 1, { min: 0 })}
-              />
-              <Button
-                variant={"outline"}
-                onClick={(e) => {
-                  e.preventDefault()
-                  const hoursPlayed = form.getFieldValue(`${base}.hoursPlayed`)
-                  form.setFieldValue(
-                    `${base}.hoursPlayed`,
-                    Number((hoursPlayed + 0.1).toFixed(1))
-                  )
-                }}
-              >
-                +
-              </Button>
-            </ButtonGroup>
+            <HoursStepperInput
+              id={`${base}-hours`}
+              value={field.state.value}
+              onChange={field.handleChange}
+              onBlur={field.handleBlur}
+              isInvalid={isInvalid}
+            />
           )}
         </FormField>
       </TableCell>

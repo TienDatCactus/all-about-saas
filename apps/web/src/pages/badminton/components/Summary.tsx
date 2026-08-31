@@ -44,7 +44,12 @@ interface PaymentMethodDisplay {
 
 interface SummaryProps {
   computed: DisplaySnapshot
-  meta?: { title?: string | null; playedOn?: string }
+  meta?: {
+    title?: string | null
+    playedOn?: string
+    totalShuttleCount?: number
+    defaultHoursPlayed?: number
+  }
   paymentMethod?: PaymentMethodDisplay | null
   paymentStatus?: Record<string, { paid: boolean }>
   onTogglePaid?: (participantId: string, paid: boolean) => void
@@ -89,104 +94,134 @@ export function BadmintonSummary({
         </Button>
       }
       content={
-        hasRows ? (
-          <div className="flex flex-col gap-4">
-            {Math.abs(computed.roundingResidual) > 999 && (
-              <Alert variant="destructive">
-                <WarningIcon />
-                <AlertDescription>
-                  {`${formatDong(computed.roundingResidual)} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.`}
-                </AlertDescription>
-              </Alert>
-            )}
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Player</TableHead>
-                    <TableHead className="text-right">Court</TableHead>
-                    <TableHead className="text-right">Shuttle</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    {paymentMethod && <TableHead>Payment</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {computed.rows.map((row, index) => (
-                    <TableRow key={row.participantId ?? `${index}-${row.name}`}>
-                      <TableCell className="font-medium">{row.name}</TableCell>
-                      <TableCell className="text-right text-muted-foreground tabular-nums">
-                        {formatDong(row.court)}
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground tabular-nums">
-                        {formatDong(row.shuttle)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums">
-                        {formatDong(row.total)}
-                      </TableCell>
-                      {paymentMethod && (
-                        <TableCell>
-                          <PaymentCell
-                            row={row}
-                            method={paymentMethod}
-                            paid={
-                              row.participantId
-                                ? paymentStatus?.[row.participantId]?.paid
-                                : undefined
-                            }
-                            onTogglePaid={
-                              row.participantId && onTogglePaid
-                                ? (paid) =>
-                                    onTogglePaid(row.participantId!, paid)
-                                : undefined
-                            }
-                          />
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell>Total collected</TableCell>
-                    <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatVnd(computed.courtCost)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatVnd(computed.shuttleCost)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVnd(computed.grandTotal)}
-                    </TableCell>
-                    {/* Keeps the footer's cell count equal to the header's and
-                        the body's — one short, the browser drops the footer's
-                        last column out from under the Payment header. */}
-                    {paymentMethod && <TableCell />}
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </div>
-            {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
-              <div className="flex flex-col items-center gap-2 border-t pt-4">
-                <p className="text-sm text-muted-foreground">
-                  {paymentMethod.label}
-                </p>
-                <img
-                  src={paymentMethod.imageUrl}
-                  alt={`QR nhận tiền: ${paymentMethod.label}`}
-                  className="h-64 w-64 rounded-lg border object-contain"
-                />
-              </div>
-            )}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatTile label="Tiền sân" value={formatDong(computed.courtCost)} />
+            <StatTile
+              label="Tiền cầu"
+              value={formatDong(computed.shuttleCost)}
+            />
+            <StatTile
+              label="Số lượng cầu"
+              value={`${meta?.totalShuttleCount ?? 0} quả`}
+            />
+            <StatTile
+              label="TG chơi mặc định"
+              value={`${meta?.defaultHoursPlayed ?? 1}h`}
+            />
           </div>
-        ) : (
-          <DataEmpty
-            media={{ variant: "icon", icon: <CalculatorIcon /> }}
-            title="Nothing to split yet"
-            description="Add players and costs to see each person's share."
-          />
-        )
+          {hasRows ? (
+            <div className="flex flex-col gap-4">
+              {Math.abs(computed.roundingResidual) > 999 && (
+                <Alert variant="destructive">
+                  <WarningIcon />
+                  <AlertDescription>
+                    {`${formatDong(computed.roundingResidual)} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.`}
+                  </AlertDescription>
+                </Alert>
+              )}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Player</TableHead>
+                      <TableHead className="text-right">Court</TableHead>
+                      <TableHead className="text-right">Shuttle</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      {paymentMethod && <TableHead>Payment</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {computed.rows.map((row, index) => (
+                      <TableRow
+                        key={row.participantId ?? `${index}-${row.name}`}
+                      >
+                        <TableCell className="font-medium">
+                          {row.name}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground tabular-nums">
+                          {formatDong(row.court)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground tabular-nums">
+                          {formatDong(row.shuttle)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">
+                          {formatDong(row.total)}
+                        </TableCell>
+                        {paymentMethod && (
+                          <TableCell>
+                            <PaymentCell
+                              row={row}
+                              method={paymentMethod}
+                              paid={
+                                row.participantId
+                                  ? paymentStatus?.[row.participantId]?.paid
+                                  : undefined
+                              }
+                              onTogglePaid={
+                                row.participantId && onTogglePaid
+                                  ? (paid) =>
+                                      onTogglePaid(row.participantId!, paid)
+                                  : undefined
+                              }
+                            />
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell>Total collected</TableCell>
+                      <TableCell className="text-right text-muted-foreground tabular-nums">
+                        {formatVnd(computed.courtCost)}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground tabular-nums">
+                        {formatVnd(computed.shuttleCost)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatVnd(computed.grandTotal)}
+                      </TableCell>
+                      {/* Keeps the footer's cell count equal to the header's and
+                          the body's — one short, the browser drops the footer's
+                          last column out from under the Payment header. */}
+                      {paymentMethod && <TableCell />}
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              </div>
+              {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
+                <div className="flex flex-col items-center gap-2 border-t pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    {paymentMethod.label}
+                  </p>
+                  <img
+                    src={paymentMethod.imageUrl}
+                    alt={`QR nhận tiền: ${paymentMethod.label}`}
+                    className="h-64 w-64 rounded-lg border object-contain"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <DataEmpty
+              media={{ variant: "icon", icon: <CalculatorIcon /> }}
+              title="Nothing to split yet"
+              description="Add players and costs to see each person's share."
+            />
+          )}
+        </div>
       }
     />
+  )
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border bg-muted/40 p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-lg font-semibold tabular-nums">{value}</div>
+    </div>
   )
 }
 

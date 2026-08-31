@@ -12,6 +12,7 @@ import {
   valuesToComputed,
   valuesToPayload,
 } from "../../lib/form"
+import { HoursStepperInput } from "../HoursStepperInput"
 import { PlayerEditor } from "../player-editor"
 import { BadmintonSummary } from "../Summary"
 import type { BadmintonSession } from "@/services/badminton/types"
@@ -74,7 +75,12 @@ export function SessionEditor({
         {(values: EditorValues) => (
           <BadmintonSummary
             computed={valuesToComputed(values)}
-            meta={{ title: values.title, playedOn: values.playedOn }}
+            meta={{
+              title: values.title,
+              playedOn: values.playedOn,
+              totalShuttleCount: values.totalShuttleCount,
+              defaultHoursPlayed: values.defaultHoursPlayed,
+            }}
             paymentMethod={paymentMethod}
             paymentStatus={paymentStatus}
             onTogglePaid={onTogglePaid}
@@ -143,7 +149,7 @@ export function SessionEditor({
                   )}
                 </FormField>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <FormField
                   form={form}
                   name="courtCost"
@@ -218,6 +224,29 @@ export function SessionEditor({
                         field.handleChange(
                           Number.isNaN(n) ? 0 : Math.max(0, Math.trunc(n))
                         )
+                      }}
+                    />
+                  )}
+                </FormField>
+                <FormField
+                  form={form}
+                  name="defaultHoursPlayed"
+                  label="Thời gian chơi mặc định"
+                  description="Áp dụng cho mọi người chơi hiện tại và người thêm mới."
+                >
+                  {({ field }) => (
+                    <HoursStepperInput
+                      id="defaultHoursPlayed"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(next) => {
+                        field.handleChange(next)
+                        const players = form.getFieldValue("players") as Array<{
+                          hoursPlayed: number
+                        }>
+                        players.forEach((_, i) => {
+                          form.setFieldValue(`players[${i}].hoursPlayed`, next)
+                        })
                       }}
                     />
                   )}

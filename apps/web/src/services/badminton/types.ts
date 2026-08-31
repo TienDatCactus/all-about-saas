@@ -32,6 +32,7 @@ export const CreateSessionSchema = z.object({
   courtCost: z.number().int().min(0),
   shuttleUnitPrice: z.number().int().min(0),
   totalShuttleCount: z.number().int().min(0),
+  defaultHoursPlayed: z.number().min(0),
   participants: z
     .array(ParticipantInputSchema)
     .min(1, "Add at least one player"),
@@ -93,6 +94,7 @@ export const BadmintonSessionSchema = z.object({
   courtCost: z.number(),
   shuttleUnitPrice: z.number(),
   totalShuttleCount: z.number(),
+  defaultHoursPlayed: z.number(),
   shareToken: z.string(),
   paymentMethodId: z.string().nullish(),
   paymentMethod: PaymentMethodSchema.nullish(),
@@ -131,6 +133,7 @@ export const PublicSessionSchema = z.object({
   courtCost: z.number(),
   shuttleUnitPrice: z.number(),
   totalShuttleCount: z.number(),
+  defaultHoursPlayed: z.number(),
   participants: z.array(SessionParticipantSchema.omit({ userId: true })),
   computed: ComputedSnapshotSchema.nullish(),
   paymentMethod: PublicPaymentMethodSchema.nullish(),
