@@ -373,6 +373,18 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			.leftJoin('u.oauthAccounts', 'oauth')
 			.where('u.email ILIKE :pattern', { pattern })
 			.orWhere('profile.displayName ILIKE :pattern', { pattern })
+			// profile.displayName is essentially always empty (nothing ever writes
+			// it), so without these a registered user could only be found by email
+			// even though their real name is sitting unused in the OAuth provider's
+			// profileData — matching resolveOAuthDisplayName's own field order.
+			.orWhere(`oauth."profileData"->>'displayName' ILIKE :pattern`, {
+				pattern,
+			})
+			.orWhere(
+				`CONCAT(oauth."profileData"->>'firstName', ' ', oauth."profileData"->>'lastName') ILIKE :pattern`,
+				{ pattern },
+			)
+			.orWhere(`oauth."profileData"->>'username' ILIKE :pattern`, { pattern })
 			// u.email was missing from this list while the mapping below used it as
 			// the fallback label, so a user with no display name came back with
 			// `name: undefined` and the autocomplete rendered a blank, unpickable row.

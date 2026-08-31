@@ -970,6 +970,54 @@ describe('BadmintonService', () => {
 		});
 	});
 
+	describe('suggestParticipants: search matching', () => {
+		it('matches on OAuth-derived name fields, not just email and profile.displayName', async () => {
+			const qb = mockQueryBuilder([]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			await service.suggestParticipants('jane');
+
+			const pattern = '%jane%';
+			expect(qb.where).toHaveBeenCalledWith('u.email ILIKE :pattern', {
+				pattern,
+			});
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				'profile.displayName ILIKE :pattern',
+				{ pattern },
+			);
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				`oauth."profileData"->>'displayName' ILIKE :pattern`,
+				{ pattern },
+			);
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				`CONCAT(oauth."profileData"->>'firstName', ' ', oauth."profileData"->>'lastName') ILIKE :pattern`,
+				{ pattern },
+			);
+			expect(qb.orWhere).toHaveBeenCalledWith(
+				`oauth."profileData"->>'username' ILIKE :pattern`,
+				{ pattern },
+			);
+		});
+
+		it('finds a user by their OAuth-linked real name even without a matching email or profile.displayName', async () => {
+			const qb = mockQueryBuilder([
+				{
+					id: 'u1',
+					email: 'random-handle-42@example.com',
+					profile: undefined,
+					oauthAccounts: [
+						{ profileData: { firstName: 'Jane', lastName: 'Doe' } },
+					],
+				},
+			]);
+			usersRepo.createQueryBuilder.mockReturnValue(qb);
+
+			const res = await service.suggestParticipants('jane');
+
+			expect(res.users).toEqual([{ userId: 'u1', name: 'Jane Doe' }]);
+		});
+	});
+
 	describe('resolveOAuthDisplayName', () => {
 		it('prefers a provider displayName when present', () => {
 			expect(
