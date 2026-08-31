@@ -45,6 +45,10 @@ export class BadmintonSession extends SoftDeleteBaseEntity {
 	@Column('int', { default: 0 })
 	totalShuttleCount!: number;
 
+	/** Session-wide default hoursPlayed. Seeded onto any participant that doesn't specify its own, at create time or when a new row is inserted during an update. */
+	@Column('float', { default: 1 })
+	defaultHoursPlayed!: number;
+
 	/** Unguessable token for the public read-only share link. */
 	@Index({ unique: true })
 	@Column()

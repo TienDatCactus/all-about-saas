@@ -32,6 +32,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 	}
 
 	async createSession(ownerId: string, dto: CreateBadmintonSessionDto) {
+		const defaultHoursPlayed = dto.defaultHoursPlayed ?? 1;
 		const session = this.sessionRepo.create({
 			ownerId,
 			playedOn: dto.playedOn,
@@ -39,6 +40,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			courtCost: dto.courtCost,
 			shuttleUnitPrice: dto.shuttleUnitPrice,
 			totalShuttleCount: dto.totalShuttleCount,
+			defaultHoursPlayed,
 			shareToken: this.generateShareToken(),
 		});
 
@@ -51,7 +53,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 				id: randomUUID(),
 				userId: d.userId,
 				name: d.name,
-				hoursPlayed: d.hoursPlayed ?? 1,
+				hoursPlayed: d.hoursPlayed ?? defaultHoursPlayed,
 				shuttleWeight: d.shuttleWeight ?? 6,
 				gender: d.gender,
 				sessionId: session.id,
@@ -221,7 +223,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 				unclaimed.delete(match.id);
 				match.userId = input.userId ?? null;
 				match.name = input.name;
-				match.hoursPlayed = input.hoursPlayed ?? 1;
+				match.hoursPlayed = input.hoursPlayed ?? session.defaultHoursPlayed;
 				match.shuttleWeight = input.shuttleWeight ?? 6;
 				match.gender = input.gender ?? null;
 				return match;
@@ -230,7 +232,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 				id: randomUUID(),
 				userId: input.userId ?? null,
 				name: input.name,
-				hoursPlayed: input.hoursPlayed ?? 1,
+				hoursPlayed: input.hoursPlayed ?? session.defaultHoursPlayed,
 				shuttleWeight: input.shuttleWeight ?? 6,
 				gender: input.gender ?? null,
 				sessionId: session.id,
@@ -284,6 +286,7 @@ export class BadmintonService extends BaseService<BadmintonSession> {
 			courtCost: session.courtCost,
 			shuttleUnitPrice: session.shuttleUnitPrice,
 			totalShuttleCount: session.totalShuttleCount,
+			defaultHoursPlayed: session.defaultHoursPlayed,
 			participants: session.participants.map((p) => ({
 				id: p.id,
 				name: p.name,

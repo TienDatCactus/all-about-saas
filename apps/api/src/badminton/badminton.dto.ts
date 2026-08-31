@@ -41,6 +41,12 @@ export class CreateBadmintonSessionDto {
 	@Min(0)
 	totalShuttleCount!: number;
 
+	/** Session-wide default hoursPlayed, applied to any participant that omits its own. Defaults to 1. */
+	@IsOptional()
+	@IsNumber()
+	@Min(0)
+	defaultHoursPlayed?: number;
+
 	@IsArray()
 	@ArrayMinSize(1)
 	@ValidateNested({ each: true })

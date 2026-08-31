@@ -107,6 +107,33 @@ describe('BadmintonService', () => {
 		expect(p.shuttleWeight).toBe(6);
 	});
 
+	it('create: a participant with no hoursPlayed falls back to the caller-supplied defaultHoursPlayed, not the hardcoded 1', async () => {
+		const dto: CreateBadmintonSessionDto = {
+			playedOn: '2026-07-25',
+			courtCost: 50_000,
+			shuttleUnitPrice: 1_000,
+			totalShuttleCount: 0,
+			defaultHoursPlayed: 2.5,
+			participants: [{ name: 'Solo' }],
+		};
+		const saved: any = await service.createSession('owner-1', dto);
+		expect(saved.defaultHoursPlayed).toBe(2.5);
+		expect(saved.participants[0].hoursPlayed).toBe(2.5);
+	});
+
+	it('create: falls back to 1 when neither the participant nor the DTO supplies hoursPlayed/defaultHoursPlayed', async () => {
+		const dto: CreateBadmintonSessionDto = {
+			playedOn: '2026-07-25',
+			courtCost: 50_000,
+			shuttleUnitPrice: 1_000,
+			totalShuttleCount: 0,
+			participants: [{ name: 'Solo' }],
+		};
+		const saved: any = await service.createSession('owner-1', dto);
+		expect(saved.defaultHoursPlayed).toBe(1);
+		expect(saved.participants[0].hoursPlayed).toBe(1);
+	});
+
 	it('create: stores gender when provided (UI convenience field, not read by the calc)', async () => {
 		const dto: CreateBadmintonSessionDto = {
 			playedOn: '2026-07-25',
@@ -178,6 +205,7 @@ describe('BadmintonService', () => {
 			courtCost: 100_000,
 			shuttleUnitPrice: 1_000,
 			totalShuttleCount: 10,
+			defaultHoursPlayed: 1,
 			participants: [
 				{
 					id: 'p-old',
@@ -448,6 +476,7 @@ describe('BadmintonService', () => {
 			courtCost: 90_000,
 			shuttleUnitPrice: 1_000,
 			totalShuttleCount: 9,
+			defaultHoursPlayed: 1,
 			participants: [],
 			computed: undefined,
 		});
@@ -538,6 +567,59 @@ describe('BadmintonService', () => {
 			const stranger = res.participants.find((p: any) => p.name === 'Stranger');
 			expect(stranger.id).not.toBe('11111111-2222-3333-4444-555555555555');
 			expect(typeof stranger.id).toBe('string');
+		});
+
+		it('inserts a brand-new participant with the NEW defaultHoursPlayed when the update payload changes it alongside an existing participant', async () => {
+			manager.findOne.mockResolvedValue(locked());
+			manager.findBy.mockResolvedValue(stored());
+
+			const res: any = await service.updateSession('o1', 's1', {
+				defaultHoursPlayed: 5,
+				participants: [
+					// Existing participant, matched by id, and (per
+					// apps/web/src/pages/badminton/lib/form.ts's valuesToPayload())
+					// always carrying its current hoursPlayed explicitly in the real
+					// frontend flow — included here regardless.
+					{ id: 'p-a', name: 'A', hoursPlayed: 3, shuttleWeight: 6 },
+					// Brand new, no id and no hoursPlayed: this is the case the
+					// feature targets — it must pick up the just-updated default,
+					// not the pre-update value and not the hardcoded 1.
+					{ name: 'C' },
+				],
+			});
+
+			const byName: Record<string, any> = Object.fromEntries(
+				res.participants.map((p: any) => [p.name, p]),
+			);
+			expect(res.defaultHoursPlayed).toBe(5);
+			expect(byName.A.hoursPlayed).toBe(3);
+			expect(byName.C.hoursPlayed).toBe(5);
+		});
+
+		// Defensive-only: the actual frontend always sends every participant's
+		// current hoursPlayed explicitly (valuesToPayload() in
+		// apps/web/src/pages/badminton/lib/form.ts maps every player through
+		// `nonNegative(p.hoursPlayed)`, which is never undefined), so this path is
+		// never hit by the web app. It exists only for a direct API caller that
+		// omits hoursPlayed on an existing row's payload entry — pinned here purely
+		// to verify the `?? session.defaultHoursPlayed` fallback expression itself
+		// is correct in the matched-row branch, not because the product wants
+		// changing the default to retroactively touch existing participants (that
+		// retroactive-overwrite behavior is a frontend-only form-state effect).
+		it('falls back an existing matched participant with no hoursPlayed in its payload entry to the new default too (defensive fallback, not the real frontend path)', async () => {
+			manager.findOne.mockResolvedValue(locked());
+			manager.findBy.mockResolvedValue(stored());
+
+			const res: any = await service.updateSession('o1', 's1', {
+				defaultHoursPlayed: 7,
+				participants: [
+					// No hoursPlayed at all on this matched entry.
+					{ id: 'p-a', name: 'A' },
+				],
+			});
+
+			expect(res.participants[0].id).toBe('p-a');
+			expect(res.participants[0].hoursPlayed).toBe(7);
 		});
 
 		it('gives a repeated id one updated row and one new row, never the same entity twice', async () => {
