@@ -92,7 +92,7 @@ export default function DataAutocomplete<TMeta = unknown>({
   groups,
   onSearch,
   creatable,
-  createLabel = (q) => `Add “${q}”`,
+  createLabel: createLabelProp,
   loading,
   placeholder,
   emptyMessage = "No matches",
@@ -104,6 +104,16 @@ export default function DataAutocomplete<TMeta = unknown>({
   disabled,
   className,
 }: DataAutocompleteProps<TMeta>) {
+  // Resolved here rather than as a destructuring default: React Compiler
+  // cannot safely reorder an ArrowFunctionExpression used as a default value
+  // in a destructuring pattern (BuildHIR::node.lowerReorderableExpression).
+  // `=== undefined` (not `??`), to match a destructuring default's actual
+  // semantics — a default fires only on undefined, not on null too.
+  const createLabel =
+    createLabelProp === undefined
+      ? (q: string) => `Add “${q}”`
+      : createLabelProp
+
   const searchRef = React.useRef(onSearch)
   searchRef.current = onSearch
 

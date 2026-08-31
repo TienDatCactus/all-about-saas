@@ -82,7 +82,9 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
 
   const fire = useCallback(async (opts: ConfettiOptions = {}) => {
     try {
-      await instanceRef.current?.({
+      const instance = instanceRef.current
+      if (!instance) return
+      await instance({
         ...optionsRef.current,
         ...opts,
       })
@@ -126,7 +128,9 @@ export const ConfettiButton = forwardRef<
 >(({ options, children, onClick, ...props }, ref) => {
   const handleClick: ConfettiButtonProps["onClick"] = async (event) => {
     try {
-      onClick?.(event)
+      if (onClick) {
+        onClick(event)
+      }
       if (event.defaultPrevented) return
 
       const target = event.currentTarget

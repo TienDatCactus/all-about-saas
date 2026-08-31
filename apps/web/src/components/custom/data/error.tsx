@@ -30,12 +30,22 @@ interface DataErrorProp {
 }
 
 export default function DataError({
-  media = { variant: "icon", icon: <WarningIcon /> },
+  media: mediaProp,
   title,
   description,
   content,
   className,
 }: DataErrorProp) {
+  // Resolved here rather than as a destructuring default: React Compiler
+  // cannot safely reorder an ObjectExpression used as a default value in a
+  // destructuring pattern (BuildHIR::node.lowerReorderableExpression).
+  // `=== undefined` (not `??`), to match a destructuring default's actual
+  // semantics — a default fires only on undefined, and `??` firing on null
+  // too would be an observable behavior change for a `media={null}` caller.
+  const media =
+    mediaProp === undefined
+      ? { variant: "icon" as const, icon: <WarningIcon /> }
+      : mediaProp
   return (
     <Empty
       role="alert"

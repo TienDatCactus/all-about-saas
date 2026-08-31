@@ -197,6 +197,7 @@ function ImageLoader({
     activeSrc: src,
     usedFallback: false,
     visible: false,
+    retryCount: 0,
   })
   // Reset when the prop src changes
   useEffect(() => {
@@ -233,6 +234,13 @@ function ImageLoader({
     // Still have retries on the original src
     if (!state.usedFallback && retryCount.current < retries) {
       retryCount.current += 1
+      // Mirrored into state in the same tick the ref changes — not inside the
+      // setTimeout below, which fires only after the backoff delay. Splitting
+      // them left a window where the ref already reflected the new count but
+      // a re-render (from an unrelated prop change) would still see the old
+      // state.retryCount, changing isFailed's render-time value from what it
+      // would have been reading the ref directly.
+      dispatch({ type: "retrying", retryCount: retryCount.current })
       const delay = retryDelay * Math.pow(2, retryCount.current - 1)
       retryTimer.current = setTimeout(() => {
         if (!isMounted.current) return
@@ -272,10 +280,13 @@ function ImageLoader({
   // ── Render ───────────────────────────────────────────────────────────────
 
   const isLoading = status === "loading"
+  // Reads state.retryCount, not the ref — React Compiler flags reading
+  // ref.current during render (see the retryCount ref's usage in the effect
+  // above, and the reducer for how this mirror stays in sync with it).
   const isFailed =
     status === "failed" &&
     (state.usedFallback || !fallbackSrc) &&
-    retryCount.current >= retries
+    state.retryCount >= retries
 
   return (
     <>

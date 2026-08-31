@@ -257,14 +257,23 @@ const StatefulButton: React.FC<StatefulButtonProps> = ({
 
   const shouldReduceMotion = useReducedMotion()
 
+  // Read via a ref, not closed over directly: buttonType is effectively fixed
+  // for a mounted instance, and progress is deliberately the only value that
+  // should retrigger this effect. Adding buttonType to the dependency array
+  // (the alternative to satisfy react-hooks/exhaustive-deps without a ref)
+  // would also retrigger it on a buttonType change alone, which is a
+  // different behavior than today's. `send` is stable from useMachine, so it
+  // costs nothing to depend on it directly.
+  const buttonTypeRef = React.useRef(buttonType)
   React.useEffect(() => {
-    if (buttonType === "progress" && typeof progress === "number") {
+    buttonTypeRef.current = buttonType
+  })
+
+  React.useEffect(() => {
+    if (buttonTypeRef.current === "progress" && typeof progress === "number") {
       send({ type: "updateProgress", progress })
     }
-    // buttonType is a stable string literal, and send is stable from useMachine,
-    // so progress is deliberately the only dep that retriggers this.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress])
+  }, [progress, send])
 
   React.useEffect(() => {
     // Only mirror an external mutation when the caller actually supplies one.
