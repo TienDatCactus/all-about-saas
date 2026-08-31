@@ -1,5 +1,11 @@
-import { CalculatorIcon, CopyIcon, WarningIcon } from "@phosphor-icons/react"
+import {
+  CalculatorIcon,
+  CopyIcon,
+  QrCodeIcon,
+  WarningIcon,
+} from "@phosphor-icons/react"
 import type { ComputedSnapshot } from "@/services/badminton/types"
+import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
 import DataCard from "@/components/custom/data/card"
 import DataEmpty from "@/components/custom/data/empty"
 import { toast } from "@/components/custom/toast"
@@ -80,39 +86,48 @@ export function BadmintonSummary({
           Collected always equals the total expense.
     "
       action={
-        <Button
-          tabIndex={-1}
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            void handleCopy(e)
-          }}
-          disabled={!hasRows}
-        >
-          <CopyIcon data-icon="inline-start" />
-          Copy
-        </Button>
+        <div className="flex gap-2">
+          {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
+            <QrPreviewDialog
+              label={paymentMethod.label}
+              imageUrl={paymentMethod.imageUrl}
+              trigger={
+                <Button tabIndex={-1} variant="outline" size="sm">
+                  <QrCodeIcon data-icon="inline-start" />
+                  QR code
+                </Button>
+              }
+            />
+          )}
+          <Button
+            tabIndex={-1}
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              void handleCopy(e)
+            }}
+            disabled={!hasRows}
+          >
+            <CopyIcon data-icon="inline-start" />
+            Copy
+          </Button>
+        </div>
       }
       content={
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile
-              label="Court fee"
-              value={formatDong(computed.courtCost)}
-            />
-            <StatTile
-              label="Shuttle fee"
-              value={formatDong(computed.shuttleCost)}
-            />
-            <StatTile
-              label="Shuttle count"
-              value={`${meta?.totalShuttleCount ?? 0} shuttles`}
-            />
-            <StatTile
-              label="Default play time"
-              value={`${meta?.defaultHoursPlayed ?? 1}h`}
-            />
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Court fee{" "}
+            <span className="font-medium text-foreground">
+              {formatDong(computed.courtCost)}
+            </span>
+            {" · "}Shuttle fee{" "}
+            <span className="font-medium text-foreground">
+              {formatDong(computed.shuttleCost)}
+            </span>
+            {" · "}
+            {meta?.totalShuttleCount ?? 0} shuttles
+            {" · "}Default {meta?.defaultHoursPlayed ?? 1}h
+          </p>
           {hasRows ? (
             <div className="flex flex-col gap-4">
               {Math.abs(computed.roundingResidual) > 999 && (
@@ -193,18 +208,6 @@ export function BadmintonSummary({
                   </TableFooter>
                 </Table>
               </div>
-              {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
-                <div className="flex flex-col items-center gap-2 border-t pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    {paymentMethod.label}
-                  </p>
-                  <img
-                    src={paymentMethod.imageUrl}
-                    alt={`Payment QR: ${paymentMethod.label}`}
-                    className="h-64 w-64 rounded-lg border object-contain"
-                  />
-                </div>
-              )}
             </div>
           ) : (
             <DataEmpty
@@ -216,15 +219,6 @@ export function BadmintonSummary({
         </div>
       }
     />
-  )
-}
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border bg-muted/40 p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
-    </div>
   )
 }
 

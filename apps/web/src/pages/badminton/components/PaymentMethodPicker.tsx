@@ -1,8 +1,14 @@
-import { useState } from "react"
-import { PlusIcon, TrashIcon, WalletIcon } from "@phosphor-icons/react"
+import { useEffect, useState } from "react"
+import {
+  PlusIcon,
+  QrCodeIcon,
+  TrashIcon,
+  WalletIcon,
+} from "@phosphor-icons/react"
 import { useForm } from "@tanstack/react-form"
 import DataDialog from "@/components/custom/data/dialog"
 import { FormField } from "@/components/custom/form-field"
+import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +20,15 @@ import {
   usePaymentMethodsQuery,
 } from "@/services/payment-methods/queries"
 import { useUpdateSessionMutation } from "@/services/badminton/queries"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Image } from "@/components/custom/image"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export function PaymentMethodPicker({
   sessionId,
@@ -80,24 +95,42 @@ export function PaymentMethodPicker({
                       </span>
                     </Label>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Delete ${m.label}`}
-                    onClick={() => {
-                      deleteMethod.mutate(m.id, {
-                        onSuccess: () => {
-                          if (value === m.id) {
-                            updateSession.mutate({ paymentMethodId: null })
-                          }
-                        },
-                        onError: () => toast.error("Delete failed"),
-                      })
-                    }}
-                  >
-                    <TrashIcon />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {m.type === "image" && m.imageUrl && (
+                      <QrPreviewDialog
+                        label={m.label}
+                        imageUrl={m.imageUrl}
+                        trigger={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Preview ${m.label}`}
+                          >
+                            <QrCodeIcon />
+                          </Button>
+                        }
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Delete ${m.label}`}
+                      onClick={() => {
+                        deleteMethod.mutate(m.id, {
+                          onSuccess: () => {
+                            if (value === m.id) {
+                              updateSession.mutate({ paymentMethodId: null })
+                            }
+                          },
+                          onError: () => toast.error("Delete failed"),
+                        })
+                      }}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  </div>
                 </div>
               ))}
               {methods.length === 0 && (
@@ -148,12 +181,6 @@ function AddMethodForm() {
     },
   })
 
-  /**
-   * Switching branches drops the abandoned branch's value. Its input is
-   * unmounted, so whatever is left in state is invisible but still submitted —
-   * a picked file would be uploaded with a `type: "phone"` method the API then
-   * ignores, and a half-typed number would linger behind the file picker.
-   */
   const switchType = (field: any, next: "image" | "phone") => {
     field.handleChange(next)
     if (next === "phone") form.setFieldValue("file", undefined)
@@ -162,47 +189,44 @@ function AddMethodForm() {
 
   return (
     <div className="border-t pt-4">
-      <FormField form={form} name="type">
-        {({ field }) => (
-          <div className="mb-2 flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant={field.state.value === "phone" ? "default" : "outline"}
-              onClick={() => switchType(field, "phone")}
-            >
-              MoMo phone number
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={field.state.value === "image" ? "default" : "outline"}
-              onClick={() => switchType(field, "image")}
-            >
-              Upload QR image
-            </Button>
-          </div>
-        )}
-      </FormField>
-      <div className="flex flex-col gap-2">
-        <FormField form={form} name="label">
-          {({ inputProps }) => (
-            <Input placeholder="Label (e.g. Personal MoMo)" {...inputProps} />
+      <Tabs defaultValue="phone">
+        <FormField form={form} name="type">
+          {({ field }) => (
+            <TabsList>
+              <TabsTrigger
+                onClick={() => switchType(field, "phone")}
+                value="phone"
+              >
+                MoMo phone number
+              </TabsTrigger>
+              <TabsTrigger
+                onClick={() => switchType(field, "image")}
+                value="image"
+              >
+                Upload QR image
+              </TabsTrigger>
+            </TabsList>
           )}
         </FormField>
-        <form.Subscribe
-          selector={(s: { values: { type: "image" | "phone" } }) =>
-            s.values.type
-          }
-        >
-          {(type: "image" | "phone") =>
-            type === "phone" ? (
+        <div className="flex flex-col gap-2">
+          <FormField form={form} name="label">
+            {({ inputProps }) => (
+              <Input placeholder="Label (e.g. Personal MoMo)" {...inputProps} />
+            )}
+          </FormField>
+          <form.Subscribe
+            selector={(s: { values: { type: "image" | "phone" } }) =>
+              s.values.type
+            }
+          >
+            <TabsContent value="phone">
               <FormField form={form} name="phoneNumber">
                 {({ inputProps }) => (
                   <Input placeholder="MoMo phone number" {...inputProps} />
                 )}
               </FormField>
-            ) : (
+            </TabsContent>
+            <TabsContent value="image" className="flex items-center gap-2">
               <FormField form={form} name="file">
                 {({ field }) => (
                   <Input
@@ -212,38 +236,83 @@ function AddMethodForm() {
                   />
                 )}
               </FormField>
-            )
-          }
-        </form.Subscribe>
-        <form.Subscribe
-          selector={(s: {
-            values: {
-              type: "image" | "phone"
-              label: string
-              phoneNumber: string
-              file: File | undefined
+              <form.Subscribe
+                selector={(s: { values: { file: File | undefined } }) =>
+                  s.values.file
+                }
+              >
+                {(file: File | undefined) => <ImagePreview file={file} />}
+              </form.Subscribe>
+            </TabsContent>
+          </form.Subscribe>
+          <form.Subscribe
+            selector={(s: {
+              values: {
+                type: "image" | "phone"
+                label: string
+                phoneNumber: string
+                file: File | undefined
+              }
+            }) =>
+              s.values.label.trim().length > 0 &&
+              (s.values.type === "phone"
+                ? s.values.phoneNumber.trim().length > 0
+                : !!s.values.file)
             }
-          }) =>
-            s.values.label.trim().length > 0 &&
-            (s.values.type === "phone"
-              ? s.values.phoneNumber.trim().length > 0
-              : !!s.values.file)
-          }
-        >
-          {(canSubmit: boolean) => (
-            <Button
-              type="button"
-              disabled={!canSubmit || createMethod.isPending}
-              onClick={() => {
-                form.handleSubmit().catch(() => undefined)
-              }}
-            >
-              <PlusIcon data-icon="inline-start" />
-              Add
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
+          >
+            {(canSubmit: boolean) => (
+              <Button
+                type="button"
+                disabled={!canSubmit || createMethod.isPending}
+                onClick={() => {
+                  form.handleSubmit().catch(() => undefined)
+                }}
+              >
+                <PlusIcon data-icon="inline-start" />
+                Add
+              </Button>
+            )}
+          </form.Subscribe>
+        </div>
+      </Tabs>
     </div>
+  )
+}
+
+function ImagePreview({ file }: { file: File | undefined }) {
+  const [url, setUrl] = useState<string>()
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!file) {
+      setUrl(undefined)
+      return
+    }
+    const objectUrl = URL.createObjectURL(file)
+    setUrl(objectUrl)
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [file])
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm" disabled={!url}>
+          Preview
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>QR code preview</DialogTitle>
+        </DialogHeader>
+        {url && (
+          <Image
+            src={url}
+            alt="QR code preview"
+            aspectRatio="square"
+            objectFit="contain"
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
