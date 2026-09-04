@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   PlusIcon,
   QrCodeIcon,
@@ -6,6 +6,7 @@ import {
   WalletIcon,
 } from "@phosphor-icons/react"
 import { useForm } from "@tanstack/react-form"
+import { DataAttachment } from "@/components/custom/data/attachment"
 import DataDialog from "@/components/custom/data/dialog"
 import { FormField } from "@/components/custom/form-field"
 import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
@@ -21,14 +22,6 @@ import {
 } from "@/services/payment-methods/queries"
 import { useUpdateSessionMutation } from "@/services/badminton/queries"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Image } from "@/components/custom/image"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 
 export function PaymentMethodPicker({
   sessionId,
@@ -226,23 +219,18 @@ function AddMethodForm() {
                 )}
               </FormField>
             </TabsContent>
-            <TabsContent value="image" className="flex items-center gap-2">
+            <TabsContent value="image">
               <FormField form={form} name="file">
                 {({ field }) => (
-                  <Input
-                    type="file"
+                  <DataAttachment
                     accept="image/png,image/jpeg,image/webp"
-                    onChange={(e) => field.handleChange(e.target.files?.[0])}
+                    file={field.state.value}
+                    onFileChange={field.handleChange}
+                    placeholder="Upload QR image"
+                    state={createMethod.isPending ? "uploading" : undefined}
                   />
                 )}
               </FormField>
-              <form.Subscribe
-                selector={(s: { values: { file: File | undefined } }) =>
-                  s.values.file
-                }
-              >
-                {(file: File | undefined) => <ImagePreview file={file} />}
-              </form.Subscribe>
             </TabsContent>
           </form.Subscribe>
           <form.Subscribe
@@ -276,43 +264,5 @@ function AddMethodForm() {
         </div>
       </Tabs>
     </div>
-  )
-}
-
-function ImagePreview({ file }: { file: File | undefined }) {
-  const [url, setUrl] = useState<string>()
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    if (!file) {
-      setUrl(undefined)
-      return
-    }
-    const objectUrl = URL.createObjectURL(file)
-    setUrl(objectUrl)
-    return () => URL.revokeObjectURL(objectUrl)
-  }, [file])
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" disabled={!url}>
-          Preview
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>QR code preview</DialogTitle>
-        </DialogHeader>
-        {url && (
-          <Image
-            src={url}
-            alt="QR code preview"
-            aspectRatio="square"
-            objectFit="contain"
-          />
-        )}
-      </DialogContent>
-    </Dialog>
   )
 }
