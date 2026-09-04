@@ -49,6 +49,7 @@
     "react-dom": "^19.2.4",
     "react-image": "^4.1.0",
     "react-number-format": "^5.4.5",
+    "react-photo-view": "^1.2.7",
     "react-resizable-panels": "^4.11.2",
     "react-svg": "^17.2.4",
     "react-top-loading-bar": "^3.0.2",

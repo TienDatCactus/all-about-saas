@@ -1,20 +1,20 @@
 import {
   CalculatorIcon,
+  CheckIcon,
   CopyIcon,
   QrCodeIcon,
   WarningIcon,
+  XIcon,
 } from "@phosphor-icons/react"
-import { useId } from "react"
 import type { ComputedSnapshot } from "@/services/badminton/types"
-import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
+import { DataImagePreview } from "@/components/custom/data/image-preview"
 import DataCard from "@/components/custom/data/card"
 import DataEmpty from "@/components/custom/data/empty"
 import { toast } from "@/components/custom/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import { Toggle } from "@/components/ui/toggle"
 import {
   Table,
   TableBody,
@@ -103,16 +103,18 @@ export function BadmintonSummary({
       action={
         <div className="flex gap-2">
           {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
-            <QrPreviewDialog
-              label={paymentMethod.label}
-              imageUrl={paymentMethod.imageUrl}
-              trigger={
-                <Button tabIndex={-1} variant="outline" size="sm">
-                  <QrCodeIcon data-icon="inline-start" />
-                  QR code
-                </Button>
-              }
-            />
+            <DataImagePreview
+              images={{
+                src: paymentMethod.imageUrl,
+                alt: `Payment QR: ${paymentMethod.label}`,
+                downloadName: `${paymentMethod.label}-qr.png`,
+              }}
+            >
+              <Button tabIndex={-1} variant="outline" size="sm">
+                <QrCodeIcon data-icon="inline-start" />
+                QR code
+              </Button>
+            </DataImagePreview>
           )}
           <Button
             tabIndex={-1}
@@ -148,7 +150,9 @@ export function BadmintonSummary({
                       <TableHead className="text-right">Court</TableHead>
                       <TableHead className="text-right">Shuttle</TableHead>
                       <TableHead className="text-right">Total</TableHead>
-                      {paymentMethod && <TableHead>Payment</TableHead>}
+                      {paymentMethod && (
+                        <TableHead className="text-center">Payment</TableHead>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -235,14 +239,13 @@ function PaymentCell({
   paid: boolean | undefined
   onTogglePaid?: (paid: boolean) => void
 }) {
-  const checkboxId = useId()
   const payUrl =
     method.type === "phone" && method.phoneNumber
       ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
       : undefined
 
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex items-center justify-center gap-2">
       {payUrl && (
         <Button variant="outline" size="sm" asChild>
           <a href={payUrl} target="_blank" rel="noopener noreferrer">
@@ -251,17 +254,20 @@ function PaymentCell({
         </Button>
       )}
       {paid === undefined ? null : onTogglePaid ? (
-        <Label
-          htmlFor={checkboxId}
-          className="flex items-center gap-2 font-normal"
+        <Toggle
+          aria-label={paid ? "Mark as unpaid" : "Mark as paid"}
+          pressed={paid}
+          onPressedChange={onTogglePaid}
+          size="sm"
+          variant="outline"
         >
-          <Checkbox
-            id={checkboxId}
-            checked={paid}
-            onCheckedChange={(checked) => onTogglePaid(checked === true)}
-          />
-          Paid
-        </Label>
+          {paid ? (
+            <CheckIcon data-icon="inline-start" />
+          ) : (
+            <XIcon data-icon="inline-start" />
+          )}
+          {paid ? "Paid" : "Unpaid"}
+        </Toggle>
       ) : (
         <Badge variant={paid ? "default" : "secondary"}>
           {paid ? "Paid" : "Unpaid"}

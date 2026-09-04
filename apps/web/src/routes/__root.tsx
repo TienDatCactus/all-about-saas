@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { MotionProvider, useMotion } from "@/lib/context/animation"
 import { AuthProvider } from "@/lib/context/auth"
 import { ThemeProvider } from "@/lib/context/theme"
+import { Dithered404 } from "@/components/dithered-404"
 
 export const Route = createRootRoute({
   staticData: { crumb: "Home" },
@@ -51,10 +52,18 @@ export const Route = createRootRoute({
   }),
   notFoundComponent: () => (
     <main className="container mx-auto p-4 pt-16">
-      <h1>404</h1>
-      <p>The requested page could not be found.</p>
+      <Dithered404 />
     </main>
   ),
+  errorComponent: ({ error, reset }) => {
+    return (
+      <div>
+        <h2>Something went wrong!</h2>
+        <p>{error.message}</p>
+        <button onClick={() => reset()}>Try Again</button>
+      </div>
+    )
+  },
   shellComponent: Providers,
 })
 

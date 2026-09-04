@@ -1,4 +1,4 @@
-import ClickSpark from "@/components/ClickSpark"
+import ClickSpark from "@/components/click-spark"
 import type { ConfettiRef } from "@/components/custom/confetti"
 import { Confetti } from "@/components/custom/confetti"
 import { PageShell } from "@/components/custom/page-shell"

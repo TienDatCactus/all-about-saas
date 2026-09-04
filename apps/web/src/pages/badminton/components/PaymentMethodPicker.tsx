@@ -8,8 +8,8 @@ import {
 import { useForm } from "@tanstack/react-form"
 import { DataAttachment } from "@/components/custom/data/attachment"
 import DataDialog from "@/components/custom/data/dialog"
+import { DataImagePreview } from "@/components/custom/data/image-preview"
 import { FormField } from "@/components/custom/form-field"
-import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -90,20 +90,22 @@ export function PaymentMethodPicker({
                   </div>
                   <div className="flex items-center gap-1">
                     {m.type === "image" && m.imageUrl && (
-                      <QrPreviewDialog
-                        label={m.label}
-                        imageUrl={m.imageUrl}
-                        trigger={
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Preview ${m.label}`}
-                          >
-                            <QrCodeIcon />
-                          </Button>
-                        }
-                      />
+                      <DataImagePreview
+                        images={{
+                          src: m.imageUrl,
+                          alt: `Payment QR: ${m.label}`,
+                          downloadName: `${m.label}-qr.png`,
+                        }}
+                      >
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Preview ${m.label}`}
+                        >
+                          <QrCodeIcon />
+                        </Button>
+                      </DataImagePreview>
                     )}
                     <Button
                       type="button"

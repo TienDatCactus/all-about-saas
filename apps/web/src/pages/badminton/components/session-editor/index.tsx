@@ -25,7 +25,7 @@ import DataDialog from "@/components/custom/data/dialog"
 import { FormField } from "@/components/custom/form-field"
 import { Button as StatefulButton } from "@/components/custom/stateful-button"
 import DatePicker from "@/components/date-picker"
-import { FieldGroup } from "@/components/ui/field"
+import { Field, FieldGroup } from "@/components/ui/field"
 import {
   useCreateSessionMutation,
   useUpdateSessionMutation,
@@ -125,10 +125,13 @@ export function SessionEditor({
           description="Court and shuttle costs for the day."
           action={
             sessionId && (
-              <PaymentMethodPicker
-                sessionId={sessionId}
-                value={paymentMethodId}
-              />
+              <Field orientation={"horizontal"}>
+                <p>Payment method:</p>
+                <PaymentMethodPicker
+                  sessionId={sessionId}
+                  value={paymentMethodId}
+                />
+              </Field>
             )
           }
           content={
