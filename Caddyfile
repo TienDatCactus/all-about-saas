@@ -35,7 +35,9 @@
 		#   served from {$API_DOMAIN}/storage/aas-uploads (the handle_path block
 		#   below), which is a different origin from this one — under 'self' alone
 		#   the browser blocked it and the share page showed a broken image.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://{$API_DOMAIN}; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN}; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		#   blob: is also needed: the QR-upload form previews the picked file via
+		#   URL.createObjectURL() before it's ever sent to the server.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://{$API_DOMAIN}; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN}; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		X-Frame-Options DENY
 		# helmet sets the rest at the app level; don't advertise the proxy.
 		-Server
