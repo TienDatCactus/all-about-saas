@@ -45,7 +45,7 @@ export class PaymentMethodsController {
 				label: { type: 'string', maxLength: 120 },
 				/** Required when type=phone. */
 				phoneNumber: { type: 'string', pattern: '^\\d{9,11}$' },
-				/** Required when type=image. PNG/JPEG/WEBP, 2 MB max. */
+				/** Required when type=image. PNG/JPEG/WEBP, 5 MB max. */
 				file: { type: 'string', format: 'binary' },
 			},
 		},
@@ -53,7 +53,7 @@ export class PaymentMethodsController {
 	@UseInterceptors(
 		FileInterceptor('file', {
 			storage: memoryStorage(),
-			limits: { fileSize: 2 * 1024 * 1024 },
+			limits: { fileSize: 5 * 1024 * 1024 },
 			fileFilter: (_req, file, cb) => {
 				if (['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
 					cb(null, true);
