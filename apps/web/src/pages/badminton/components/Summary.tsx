@@ -5,16 +5,16 @@ import {
   QrCodeIcon,
   WarningIcon,
   XIcon,
-} from "@phosphor-icons/react"
-import type { ComputedSnapshot } from "@/services/badminton/types"
-import { DataImagePreview } from "@/components/custom/data/image-preview"
-import DataCard from "@/components/custom/data/card"
-import DataEmpty from "@/components/custom/data/empty"
-import { toast } from "@/components/custom/toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Toggle } from "@/components/ui/toggle"
+} from "@phosphor-icons/react";
+import type { ComputedSnapshot } from "@/services/badminton/types";
+import { DataImagePreview } from "@/components/custom/data/image-preview";
+import DataCard from "@/components/custom/data/card";
+import DataEmpty from "@/components/custom/data/empty";
+import { toast } from "@/components/custom/toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 import {
   Table,
   TableBody,
@@ -23,9 +23,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { formatDong, formatVnd } from "@/pages/badminton/lib/format"
-import { buildSummaryText } from "@/pages/badminton/lib/summary-text"
+} from "@/components/ui/table";
+import { formatDong, formatVnd } from "@/pages/badminton/lib/format";
+import { buildSummaryText } from "@/pages/badminton/lib/summary-text";
 
 /**
  * What this component actually needs, which is looser than `ComputedSnapshot`:
@@ -39,29 +39,29 @@ import { buildSummaryText } from "@/pages/badminton/lib/summary-text"
 export type DisplaySnapshot = Omit<ComputedSnapshot, "rows"> & {
   rows: Array<
     Omit<ComputedSnapshot["rows"][number], "participantId"> & {
-      participantId?: string
+      participantId?: string;
     }
-  >
-}
+  >;
+};
 
 interface PaymentMethodDisplay {
-  type: "image" | "phone"
-  label: string
-  imageUrl?: string | null
-  phoneNumber?: string | null
+  type: "image" | "phone";
+  label: string;
+  imageUrl?: string | null;
+  phoneNumber?: string | null;
 }
 
 interface SummaryProps {
-  computed: DisplaySnapshot
+  computed: DisplaySnapshot;
   meta?: {
-    title?: string | null
-    playedOn?: string
-    totalShuttleCount?: number
-    defaultHoursPlayed?: number
-  }
-  paymentMethod?: PaymentMethodDisplay | null
-  paymentStatus?: Record<string, { paid: boolean }>
-  onTogglePaid?: (participantId: string, paid: boolean) => void
+    title?: string | null;
+    playedOn?: string;
+    totalShuttleCount?: number;
+    defaultHoursPlayed?: number;
+  };
+  paymentMethod?: PaymentMethodDisplay | null;
+  paymentStatus?: Record<string, { paid: boolean }>;
+  onTogglePaid?: (participantId: string, paid: boolean) => void;
 }
 
 export function BadmintonSummary({
@@ -71,17 +71,17 @@ export function BadmintonSummary({
   paymentStatus,
   onTogglePaid,
 }: SummaryProps) {
-  const hasRows = computed.rows.length > 0
+  const hasRows = computed.rows.length > 0;
 
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     try {
-      e.preventDefault()
-      await navigator.clipboard.writeText(buildSummaryText(computed, meta))
-      toast.success("Summary copied to clipboard")
+      e.preventDefault();
+      await navigator.clipboard.writeText(buildSummaryText(computed, meta));
+      toast.success("Summary copied to clipboard");
     } catch {
-      toast.error("Couldn't copy — check clipboard permissions")
+      toast.error("Couldn't copy — check clipboard permissions");
     }
-  }
+  };
   return (
     <DataCard
       title="Split summary"
@@ -104,7 +104,7 @@ export function BadmintonSummary({
         <div className="flex gap-2">
           {paymentMethod?.type === "image" && paymentMethod.imageUrl && (
             <DataImagePreview
-              images={{
+              image={{
                 src: paymentMethod.imageUrl,
                 alt: `Payment QR: ${paymentMethod.label}`,
                 downloadName: `${paymentMethod.label}-qr.png`,
@@ -121,7 +121,7 @@ export function BadmintonSummary({
             variant="outline"
             size="sm"
             onClick={(e) => {
-              void handleCopy(e)
+              void handleCopy(e);
             }}
             disabled={!hasRows}
           >
@@ -225,7 +225,7 @@ export function BadmintonSummary({
         </div>
       }
     />
-  )
+  );
 }
 
 function PaymentCell({
@@ -234,15 +234,15 @@ function PaymentCell({
   paid,
   onTogglePaid,
 }: {
-  row: DisplaySnapshot["rows"][number]
-  method: PaymentMethodDisplay
-  paid: boolean | undefined
-  onTogglePaid?: (paid: boolean) => void
+  row: DisplaySnapshot["rows"][number];
+  method: PaymentMethodDisplay;
+  paid: boolean | undefined;
+  onTogglePaid?: (paid: boolean) => void;
 }) {
   const payUrl =
     method.type === "phone" && method.phoneNumber
       ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
-      : undefined
+      : undefined;
 
   return (
     <div className="flex items-center justify-center gap-2">
@@ -274,5 +274,5 @@ function PaymentCell({
         </Badge>
       )}
     </div>
-  )
+  );
 }

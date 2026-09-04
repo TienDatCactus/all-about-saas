@@ -1,48 +1,48 @@
-import { useState } from "react"
+import { useState } from "react";
 import {
   PlusIcon,
   QrCodeIcon,
   TrashIcon,
   WalletIcon,
-} from "@phosphor-icons/react"
-import { useForm } from "@tanstack/react-form"
-import { DataAttachment } from "@/components/custom/data/attachment"
-import DataDialog from "@/components/custom/data/dialog"
-import { DataImagePreview } from "@/components/custom/data/image-preview"
-import { FormField } from "@/components/custom/form-field"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { toast } from "@/components/custom/toast"
+} from "@phosphor-icons/react";
+import { useForm } from "@tanstack/react-form";
+import { DataAttachment } from "@/components/custom/data/attachment";
+import DataDialog from "@/components/custom/data/dialog";
+import { DataImagePreview } from "@/components/custom/data/image-preview";
+import { FormField } from "@/components/custom/form-field";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "@/components/custom/toast";
 import {
   useCreatePaymentMethodMutation,
   useDeletePaymentMethodMutation,
   usePaymentMethodsQuery,
-} from "@/services/payment-methods/queries"
-import { useUpdateSessionMutation } from "@/services/badminton/queries"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/services/payment-methods/queries";
+import { useUpdateSessionMutation } from "@/services/badminton/queries";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function PaymentMethodPicker({
   sessionId,
   value,
 }: {
-  sessionId: string
-  value: string | null | undefined
+  sessionId: string;
+  value: string | null | undefined;
 }) {
-  const [open, setOpen] = useState(false)
-  const methodsQuery = usePaymentMethodsQuery()
-  const updateSession = useUpdateSessionMutation(sessionId)
-  const deleteMethod = useDeletePaymentMethodMutation()
+  const [open, setOpen] = useState(false);
+  const methodsQuery = usePaymentMethodsQuery();
+  const updateSession = useUpdateSessionMutation(sessionId);
+  const deleteMethod = useDeletePaymentMethodMutation();
 
-  const methods = methodsQuery.data ?? []
-  const current = methods.find((m) => m.id === value)
+  const methods = methodsQuery.data ?? [];
+  const current = methods.find((m) => m.id === value);
 
   const triggerLabel = current
     ? current.label
     : methodsQuery.isPending && value
       ? "Loading…"
-      : "Choose a payment method"
+      : "Choose a payment method";
 
   return (
     <>
@@ -70,8 +70,8 @@ export function PaymentMethodPicker({
                   {
                     onError: () =>
                       toast.error("Couldn't change the payment method"),
-                  }
-                )
+                  },
+                );
               }}
             >
               {methods.map((m) => (
@@ -91,7 +91,7 @@ export function PaymentMethodPicker({
                   <div className="flex items-center gap-1">
                     {m.type === "image" && m.imageUrl && (
                       <DataImagePreview
-                        images={{
+                        image={{
                           src: m.imageUrl,
                           alt: `Payment QR: ${m.label}`,
                           downloadName: `${m.label}-qr.png`,
@@ -116,11 +116,11 @@ export function PaymentMethodPicker({
                         deleteMethod.mutate(m.id, {
                           onSuccess: () => {
                             if (value === m.id) {
-                              updateSession.mutate({ paymentMethodId: null })
+                              updateSession.mutate({ paymentMethodId: null });
                             }
                           },
                           onError: () => toast.error("Delete failed"),
-                        })
+                        });
                       }}
                     >
                       <TrashIcon />
@@ -139,11 +139,11 @@ export function PaymentMethodPicker({
         }
       />
     </>
-  )
+  );
 }
 
 function AddMethodForm() {
-  const createMethod = useCreatePaymentMethodMutation()
+  const createMethod = useCreatePaymentMethodMutation();
 
   const form = useForm({
     defaultValues: {
@@ -165,22 +165,22 @@ function AddMethodForm() {
             // Not form.reset() — that would also snap `type` back to "phone",
             // dropping the host onto the wrong tab if they just added an
             // image method and want to add another one right after.
-            form.setFieldValue("label", "")
-            form.setFieldValue("phoneNumber", "")
-            form.setFieldValue("file", undefined)
-            toast.success("Payment method added")
+            form.setFieldValue("label", "");
+            form.setFieldValue("phoneNumber", "");
+            form.setFieldValue("file", undefined);
+            toast.success("Payment method added");
           },
           onError: () => toast.error("Add failed"),
-        }
-      )
+        },
+      );
     },
-  })
+  });
 
   const switchType = (field: any, next: "image" | "phone") => {
-    field.handleChange(next)
-    if (next === "phone") form.setFieldValue("file", undefined)
-    else form.setFieldValue("phoneNumber", "")
-  }
+    field.handleChange(next);
+    if (next === "phone") form.setFieldValue("file", undefined);
+    else form.setFieldValue("phoneNumber", "");
+  };
 
   return (
     <div className="border-t pt-4">
@@ -238,11 +238,11 @@ function AddMethodForm() {
           <form.Subscribe
             selector={(s: {
               values: {
-                type: "image" | "phone"
-                label: string
-                phoneNumber: string
-                file: File | undefined
-              }
+                type: "image" | "phone";
+                label: string;
+                phoneNumber: string;
+                file: File | undefined;
+              };
             }) =>
               s.values.label.trim().length > 0 &&
               (s.values.type === "phone"
@@ -255,7 +255,7 @@ function AddMethodForm() {
                 type="button"
                 disabled={!canSubmit || createMethod.isPending}
                 onClick={() => {
-                  form.handleSubmit().catch(() => undefined)
+                  form.handleSubmit().catch(() => undefined);
                 }}
               >
                 <PlusIcon data-icon="inline-start" />
@@ -266,5 +266,5 @@ function AddMethodForm() {
         </div>
       </Tabs>
     </div>
-  )
+  );
 }

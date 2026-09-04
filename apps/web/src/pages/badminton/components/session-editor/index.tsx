@@ -125,13 +125,13 @@ export function SessionEditor({
           description="Court and shuttle costs for the day."
           action={
             sessionId && (
-              <Field orientation={"horizontal"}>
+              <div className="flex items-center gap-2">
                 <p>Payment method:</p>
                 <PaymentMethodPicker
                   sessionId={sessionId}
                   value={paymentMethodId}
                 />
-              </Field>
+              </div>
             )
           }
           content={
