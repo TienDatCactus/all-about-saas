@@ -4,6 +4,7 @@ import {
   QrCodeIcon,
   WarningIcon,
 } from "@phosphor-icons/react"
+import { useId } from "react"
 import type { ComputedSnapshot } from "@/services/badminton/types"
 import { QrPreviewDialog } from "@/pages/badminton/components/QrPreviewDialog"
 import DataCard from "@/components/custom/data/card"
@@ -12,6 +13,8 @@ import { toast } from "@/components/custom/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -232,6 +235,7 @@ function PaymentCell({
   paid: boolean | undefined
   onTogglePaid?: (paid: boolean) => void
 }) {
+  const checkboxId = useId()
   const payUrl =
     method.type === "phone" && method.phoneNumber
       ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
@@ -247,18 +251,17 @@ function PaymentCell({
         </Button>
       )}
       {paid === undefined ? null : onTogglePaid ? (
-        <Button
-          type="button"
-          variant={paid ? "default" : "outline"}
-          size="sm"
-          // The label alone reads as a statement ("Paid"), not as a control
-          // whose state can be flipped. aria-pressed is what tells a screen
-          // reader this is a toggle and which way it currently sits.
-          aria-pressed={paid}
-          onClick={() => onTogglePaid(!paid)}
+        <Label
+          htmlFor={checkboxId}
+          className="flex items-center gap-2 font-normal"
         >
-          {paid ? "Paid" : "Unpaid"}
-        </Button>
+          <Checkbox
+            id={checkboxId}
+            checked={paid}
+            onCheckedChange={(checked) => onTogglePaid(checked === true)}
+          />
+          Paid
+        </Label>
       ) : (
         <Badge variant={paid ? "default" : "secondary"}>
           {paid ? "Paid" : "Unpaid"}
