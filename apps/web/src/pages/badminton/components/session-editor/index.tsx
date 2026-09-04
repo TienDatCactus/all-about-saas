@@ -14,6 +14,7 @@ import {
 } from "../../lib/form"
 import { CurrencyInput } from "../CurrencyInput"
 import { HoursStepperInput } from "../HoursStepperInput"
+import { PaymentMethodPicker } from "../PaymentMethodPicker"
 import { PlayerEditor } from "../player-editor"
 import { BadmintonSummary } from "../Summary"
 import type { BadmintonSession } from "@/services/badminton/types"
@@ -38,6 +39,8 @@ interface SessionEditorProps {
   onSaved?: (session: BadmintonSession) => void
   /** Owner-selected payment method for this session, or `null`/absent if none is set. */
   paymentMethod?: BadmintonSession["paymentMethod"]
+  /** Raw id backing `paymentMethod`, for the picker's own selection state. */
+  paymentMethodId?: string | null
   /** Per-participant paid status, keyed by participant id. */
   paymentStatus?: Record<string, { paid: boolean }>
   /** Omit to render the summary's payment status read-only (public share view). */
@@ -49,6 +52,7 @@ export function SessionEditor({
   initialValues,
   onSaved,
   paymentMethod,
+  paymentMethodId,
   paymentStatus,
   onTogglePaid,
 }: SessionEditorProps) {
@@ -119,6 +123,14 @@ export function SessionEditor({
         <DataCard
           title="Session details"
           description="Court and shuttle costs for the day."
+          action={
+            sessionId && (
+              <PaymentMethodPicker
+                sessionId={sessionId}
+                value={paymentMethodId}
+              />
+            )
+          }
           content={
             <FieldGroup>
               <div className="grid gap-4 sm:grid-cols-2">

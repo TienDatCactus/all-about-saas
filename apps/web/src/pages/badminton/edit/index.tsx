@@ -1,4 +1,3 @@
-import { PaymentMethodPicker } from "../components/PaymentMethodPicker"
 import { ShareLink } from "../components/ShareLink"
 import { SessionEditor } from "../components/session-editor"
 import { sessionToValues } from "../lib/form"
@@ -30,14 +29,11 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
       {(session) => (
         <div className="space-y-4">
           <ShareLink shareToken={session.shareToken} />
-          <PaymentMethodPicker
-            sessionId={sessionId}
-            value={session.paymentMethodId}
-          />
           <SessionEditor
             sessionId={sessionId}
             initialValues={sessionToValues(session)}
             paymentMethod={session.paymentMethod ?? null}
+            paymentMethodId={session.paymentMethodId}
             paymentStatus={Object.fromEntries(
               (session.participants ?? []).map((p) => [p.id, { paid: p.paid }])
             )}
