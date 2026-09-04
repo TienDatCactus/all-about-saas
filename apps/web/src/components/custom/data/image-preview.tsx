@@ -1,5 +1,5 @@
-import * as React from "react";
 import { DownloadIcon } from "@phosphor-icons/react";
+import * as React from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 
