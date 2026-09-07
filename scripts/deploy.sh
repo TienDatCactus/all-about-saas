@@ -44,6 +44,17 @@ compose pull api web
 log "Starting database"
 compose up -d --wait postgres
 
+# --- object store -------------------------------------------------------------
+# Not brought up anywhere else in this script: a fresh VPS (or one where the
+# container was ever removed) silently serves every payment-method upload a 500
+# (`getaddrinfo ENOTFOUND minio`) until someone notices and starts it by hand.
+# `--wait` blocks on its healthcheck the same way postgres does above;
+# minio-init is idempotent (mc mb / anonymous set no-op on a bucket that
+# already exists), so re-running it on every deploy is harmless.
+log "Starting object store"
+compose up -d --wait minio
+compose run --rm minio-init
+
 # --- migrate ----------------------------------------------------------------
 # `run --rm`, not `up`: `up --exit-code-from migrate` implies
 # --abort-on-container-exit, which tears down every other service the moment the

@@ -1,6 +1,5 @@
 import { DataAttachment } from "@/components/custom/data/attachment"
 import { FormField } from "@/components/custom/form-field"
-import { toast } from "@/components/custom/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -65,9 +64,7 @@ export default function AddMethodForm() {
             form.setFieldValue("label", "")
             form.setFieldValue("phoneNumber", "")
             form.setFieldValue("file", undefined)
-            toast.success("Payment method added")
           },
-          onError: () => toast.error("Add failed"),
         }
       )
     },
