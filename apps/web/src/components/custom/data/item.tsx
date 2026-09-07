@@ -27,6 +27,7 @@ interface DataItemProp {
   description?: string
   action?: React.ReactNode
   className?: string
+  variant?: "default" | "muted" | "outline"
 }
 /*
 For lists, use with:
@@ -44,9 +45,10 @@ export default function DataItem({
   action,
   header,
   className,
+  variant,
 }: DataItemProp) {
   return (
-    <Item className={cn(className)}>
+    <Item className={cn(className)} variant={variant}>
       {header && <ItemHeader>{header}</ItemHeader>}
       {media && (
         <ItemMedia variant={media.variant}>

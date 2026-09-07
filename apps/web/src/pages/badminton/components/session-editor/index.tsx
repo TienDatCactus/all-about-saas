@@ -26,12 +26,12 @@ import {
   valuesToComputed,
   valuesToPayload,
 } from "../../lib/form"
-import { CurrencyInput } from "../CurrencyInput"
 import { HoursStepperInput } from "../HoursStepperInput"
-import { PaymentMethodPicker } from "../PaymentMethodPicker"
+import { PaymentMethodPicker } from "../payment-method-picker"
 import { PlayerEditor } from "../player-editor"
 import { BadmintonSummary } from "../Summary"
 import { ShuttlePriceCalc } from "./ShuttlePriceCalc"
+import { CurrencyInput } from "@/components/currency-input"
 
 interface SessionEditorProps {
   sessionId?: string
