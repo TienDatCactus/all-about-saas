@@ -36,6 +36,8 @@ const FILE_BACKED = [
 	'GOOGLE_CLIENT_SECRET',
 	'GITHUB_CLIENT_SECRET',
 	'FACEBOOK_CLIENT_SECRET',
+	'KIMI_API_KEY',
+	'OPENAI_API_KEY',
 ] as const;
 
 export function resolveFileSecrets(env: NodeJS.ProcessEnv = process.env): void {

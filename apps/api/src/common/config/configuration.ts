@@ -52,4 +52,11 @@ export default () => ({
 			? process.env.COOKIE_SECURE === 'true'
 			: true,
 	},
+	ai: {
+		kimiApiKey: process.env.KIMI_API_KEY,
+		openaiApiKey: process.env.OPENAI_API_KEY,
+		qdrantUrl: process.env.QDRANT_URL,
+		qdrantApiKey: process.env.QDRANT_API_KEY,
+		qdrantCollection: process.env.QDRANT_COLLECTION || 'twinfoundry-kb',
+	},
 });

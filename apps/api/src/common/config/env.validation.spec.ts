@@ -14,6 +14,10 @@ const valid = () => ({
 	MINIO_SECRET_KEY: 'minioadmin',
 	MINIO_BUCKET: 'aas-uploads',
 	MINIO_PUBLIC_URL: 'http://localhost:9000/aas-uploads',
+	KIMI_API_KEY: 'sk-test',
+	OPENAI_API_KEY: 'sk-test',
+	QDRANT_URL: 'https://example.qdrant.io',
+	QDRANT_API_KEY: 'qdrant-test',
 });
 
 describe('validateEnv', () => {
@@ -118,5 +122,25 @@ describe('validateEnv', () => {
 				GOOGLE_CALLBACK_URL: 'http://localhost:8000/auth/google/callback',
 			}),
 		).not.toThrow();
+	});
+});
+
+describe('validateEnv — AI chat', () => {
+	it('accepts a complete env with AI vars', () => {
+		const out = validateEnv(valid());
+		expect(out.KIMI_API_KEY).toBe('sk-test');
+		expect(out.QDRANT_COLLECTION).toBe('twinfoundry-kb');
+	});
+
+	it('rejects a missing KIMI_API_KEY', () => {
+		const env = valid();
+		delete (env as Record<string, unknown>).KIMI_API_KEY;
+		expect(() => validateEnv(env)).toThrow(/KIMI_API_KEY/);
+	});
+
+	it('rejects a non-URL QDRANT_URL', () => {
+		expect(() => validateEnv({ ...valid(), QDRANT_URL: 'not-a-url' })).toThrow(
+			/QDRANT_URL/,
+		);
 	});
 });

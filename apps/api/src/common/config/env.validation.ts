@@ -92,6 +92,12 @@ const baseSchema = z.looseObject({
 
 	COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).optional(),
 	COOKIE_SECURE: z.enum(['true', 'false']).optional(),
+
+	KIMI_API_KEY: z.string().min(1),
+	OPENAI_API_KEY: z.string().min(1),
+	QDRANT_URL: z.string().url(),
+	QDRANT_API_KEY: z.string().min(1),
+	QDRANT_COLLECTION: z.string().min(1).default('twinfoundry-kb'),
 });
 
 const envSchema = baseSchema.superRefine((env, ctx) => {

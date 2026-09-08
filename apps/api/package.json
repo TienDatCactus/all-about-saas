@@ -32,6 +32,8 @@
     "prepare": "test -d node_modules/husky && husky install || echo \"husky is not installed\""
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.60",
+    "@ai-sdk/openai-compatible": "^3.0.44",
     "@aws-sdk/client-s3": "^3.1119.0",
     "@nestjs-modules/mailer": "^2.3.6",
     "@nestjs/common": "^11.0.1",
@@ -43,8 +45,10 @@
     "@nestjs/swagger": "^11.4.4",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.1",
+    "@qdrant/js-client-rest": "^1.19.0",
     "@repo/badminton-calc": "*",
     "@transactional/emails": "*",
+    "ai": "^7.0.93",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
