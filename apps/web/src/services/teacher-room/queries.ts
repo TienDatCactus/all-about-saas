@@ -1,17 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { teacherRoomApi } from "./api"
 import type {
-  CreateSlotIn, UpdateSlotIn, CreateAdHocSessionIn, RescheduleSessionIn,
+  CreateSlotIn,
+  UpdateSlotIn,
+  CreateAdHocSessionIn,
+  RescheduleSessionIn,
 } from "./types"
 
 export const teacherRoomKeys = {
   all: ["teacherRoom"] as const,
-  studentSuggest: (q: string) => [...teacherRoomKeys.all, "studentSuggest", q] as const,
-  slots: (studentId?: string) => [...teacherRoomKeys.all, "slots", studentId ?? "all"] as const,
+  studentSuggest: (q: string) =>
+    [...teacherRoomKeys.all, "studentSuggest", q] as const,
+  slots: (studentId?: string) =>
+    [...teacherRoomKeys.all, "slots", studentId ?? "all"] as const,
   sessionsRange: (from: string, to: string) =>
     [...teacherRoomKeys.all, "sessions", from, to] as const,
-  pendingToday: () => [...teacherRoomKeys.all, "sessions", "pending-today"] as const,
-  sessionHistory: (id: string) => [...teacherRoomKeys.all, "sessionHistory", id] as const,
+  pendingToday: () =>
+    [...teacherRoomKeys.all, "sessions", "pending-today"] as const,
+  sessionHistory: (id: string) =>
+    [...teacherRoomKeys.all, "sessionHistory", id] as const,
 }
 
 // Mirrors badminton's useParticipantSuggestions (apps/web/src/services/badminton/queries.ts):
@@ -75,14 +82,17 @@ export const useSessionHistoryQuery = (id: string, enabled = true) =>
     enabled: enabled && !!id,
   })
 
-function invalidateSessionQueries(queryClient: ReturnType<typeof useQueryClient>) {
+function invalidateSessionQueries(
+  queryClient: ReturnType<typeof useQueryClient>
+) {
   void queryClient.invalidateQueries({ queryKey: teacherRoomKeys.all })
 }
 
 export const useCreateAdHocSessionMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: CreateAdHocSessionIn) => teacherRoomApi.createAdHocSession(data),
+    mutationFn: (data: CreateAdHocSessionIn) =>
+      teacherRoomApi.createAdHocSession(data),
     onSuccess: () => invalidateSessionQueries(queryClient),
   })
 }
@@ -126,8 +136,13 @@ export const useReopenSessionMutation = () => {
 export const useSetPriorityMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, priority }: { id: string; priority: "low" | "normal" | "high" }) =>
-      teacherRoomApi.setSessionPriority(id, priority),
+    mutationFn: ({
+      id,
+      priority,
+    }: {
+      id: string
+      priority: "low" | "normal" | "high"
+    }) => teacherRoomApi.setSessionPriority(id, priority),
     onSuccess: () => invalidateSessionQueries(queryClient),
   })
 }
