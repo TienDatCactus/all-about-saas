@@ -162,4 +162,40 @@ describe('WeeklySlotsService.updateSlot', () => {
 		);
 		expect(newSessionCreates).toHaveLength(6);
 	});
+
+	it('updateSlot with only {active:false} cancels future sessions and does not regenerate', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const studentsService = mockStudentsService();
+		slotRepo.findOne.mockResolvedValue({
+			id: 'slot-1',
+			ownerId: 'owner-1',
+			studentId: 's1',
+			dayOfWeek: 2,
+			startTime: '15:00',
+			endTime: '16:00',
+		});
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValue([
+				{ id: 'sess-1', scheduledDate: '2026-09-15', status: 'scheduled' },
+			]);
+		const service = new WeeklySlotsService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
+
+		await service.updateSlot('owner-1', 'slot-1', { active: false });
+
+		expect(historyRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({ note: 'slot deactivated' }),
+		);
+		const regenerated = sessionRepo.save.mock.calls.filter(
+			([arg]) => (arg as Record<string, unknown>).status === 'scheduled',
+		);
+		expect(regenerated).toHaveLength(0);
+	});
 });
