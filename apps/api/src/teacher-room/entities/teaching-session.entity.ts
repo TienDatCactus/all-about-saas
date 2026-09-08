@@ -65,13 +65,21 @@ export class TeachingSession extends SoftDeleteBaseEntity {
 	@Column()
 	endTime!: string;
 
-	@Column({ type: 'enum', enum: SessionStatus, default: SessionStatus.SCHEDULED })
+	@Column({
+		type: 'enum',
+		enum: SessionStatus,
+		default: SessionStatus.SCHEDULED,
+	})
 	status!: SessionStatus;
 
 	@Column({ type: 'enum', enum: SessionType, default: SessionType.REGULAR })
 	type!: SessionType;
 
-	@Column({ type: 'enum', enum: SessionPriority, default: SessionPriority.NORMAL })
+	@Column({
+		type: 'enum',
+		enum: SessionPriority,
+		default: SessionPriority.NORMAL,
+	})
 	priority!: SessionPriority;
 
 	@Column({ type: 'text', nullable: true })

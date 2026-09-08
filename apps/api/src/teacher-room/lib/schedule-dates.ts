@@ -8,8 +8,14 @@ function toDateOnly(d: Date): string {
  * Every date matching `dayOfWeek` (0=Sun..6=Sat) across the `weeks`-week
  * window starting at `from` (inclusive of `from`'s own date if it matches).
  */
-export function occurrenceDates(dayOfWeek: number, from: Date, weeks: number): string[] {
-	const start = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+export function occurrenceDates(
+	dayOfWeek: number,
+	from: Date,
+	weeks: number,
+): string[] {
+	const start = new Date(
+		Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()),
+	);
 	const totalDays = weeks * 7;
 	const dates: string[] = [];
 	for (let i = 0; i < totalDays; i++) {

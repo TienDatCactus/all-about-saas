@@ -10,7 +10,8 @@ const MIN_SUGGEST_QUERY = 2;
 @Injectable()
 export class StudentsService {
 	constructor(
-		@InjectRepository(Student) private readonly studentRepo: Repository<Student>,
+		@InjectRepository(Student)
+		private readonly studentRepo: Repository<Student>,
 	) {}
 
 	suggest(ownerId: string, q: string) {
@@ -31,6 +32,8 @@ export class StudentsService {
 		});
 		if (existing) return existing;
 
-		return this.studentRepo.save(this.studentRepo.create({ ownerId, name: trimmed }));
+		return this.studentRepo.save(
+			this.studentRepo.create({ ownerId, name: trimmed }),
+		);
 	}
 }
