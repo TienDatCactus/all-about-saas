@@ -4,6 +4,7 @@ import {
 	Get,
 	Param,
 	ParseUUIDPipe,
+	Patch,
 	Post,
 	Query,
 	Req,
@@ -14,6 +15,7 @@ import { requireUser } from '../common/request-user';
 import {
 	CreateWeeklyScheduleSlotDto,
 	QueryWeeklyScheduleSlotDto,
+	UpdateWeeklyScheduleSlotDto,
 } from './weekly-slots.dto';
 import { WeeklySlotsService } from './weekly-slots.service';
 
@@ -46,5 +48,14 @@ export class WeeklySlotsController {
 	@Get(':id')
 	findOne(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
 		return this.service.findOne({ id, ownerId: requireUser(req).id });
+	}
+
+	@Patch(':id')
+	update(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body() dto: UpdateWeeklyScheduleSlotDto,
+	) {
+		return this.service.updateSlot(requireUser(req).id, id, dto);
 	}
 }
