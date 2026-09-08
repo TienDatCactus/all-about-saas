@@ -1,14 +1,19 @@
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { AppConstants } from "@/lib/utils/constants"
+import { getAccessToken } from "@/lib/utils/access-token"
 import { aiChatApi } from "@/services/ai/api"
 import { AI } from "@/services/url"
 import { Button } from "@/components/ui/button"
 
 export default function ChatPage() {
   const [input, setInput] = useState("")
-  const [threadId, setThreadId] = useState<string | null>(null)
+  // A ref, not state: `prepareSendMessagesRequest` below reads this inside the
+  // transport's fetch, which can fire before React has committed a `setState`
+  // from the same event handler — a ref is readable synchronously, a state
+  // variable closed over at render time isn't guaranteed to be current yet.
+  const threadIdRef = useRef<string | null>(null)
   const [pending, setPending] = useState<{
     pending: boolean
     summary?: string
@@ -17,8 +22,8 @@ export default function ChatPage() {
   })
 
   const refreshPendingAction = async () => {
-    if (!threadId) return
-    const result = await aiChatApi.getPendingAction(threadId)
+    if (!threadIdRef.current) return
+    const result = await aiChatApi.getPendingAction(threadIdRef.current)
     setPending(result)
   }
 
@@ -26,6 +31,33 @@ export default function ChatPage() {
     transport: new DefaultChatTransport({
       api: `${AppConstants.apiBaseUrl}${AI.chat}`,
       credentials: "include",
+      // `DefaultChatTransport` issues its own `fetch` — it never goes through
+      // the axios `http` client, so the app's usual Authorization-header
+      // interceptor (apps/web/src/lib/utils/http.ts) never runs. Attach the
+      // same bearer token by hand, or every request 401s before it reaches
+      // the controller.
+      headers: () => {
+        const token = getAccessToken()
+        const headers: Record<string, string> = {}
+        if (token) headers.Authorization = `Bearer ${token}`
+        return headers
+      },
+      // The AI SDK's default request body is `{ id, messages, trigger,
+      // messageId }` (the UI-message-stream protocol) — the backend's
+      // `SendChatMessageDto` expects `{ message, threadId? }` instead, and
+      // the global `ValidationPipe({ whitelist: true, forbidNonWhitelisted:
+      // true })` rejects anything else. Reshape the request to match.
+      prepareSendMessagesRequest: ({ messages }) => {
+        const last = messages[messages.length - 1]
+        const text =
+          last?.parts.find((part) => part.type === "text")?.text ?? ""
+        return {
+          body: {
+            message: text,
+            ...(threadIdRef.current ? { threadId: threadIdRef.current } : {}),
+          },
+        }
+      },
     }),
     onFinish: () => {
       void refreshPendingAction()
@@ -34,15 +66,14 @@ export default function ChatPage() {
 
   const handleSend = () => {
     if (!input.trim()) return
-    const nextThreadId = threadId ?? crypto.randomUUID()
-    setThreadId(nextThreadId)
+    if (!threadIdRef.current) threadIdRef.current = crypto.randomUUID()
     void sendMessage({ text: input })
     setInput("")
   }
 
   const handleConfirm = async (approve: boolean) => {
-    if (!threadId) return
-    await aiChatApi.confirm(threadId, approve)
+    if (!threadIdRef.current) return
+    await aiChatApi.confirm(threadIdRef.current, approve)
     setPending({ pending: false })
   }
 
