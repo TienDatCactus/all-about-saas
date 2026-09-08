@@ -133,19 +133,38 @@ describe('TeachingSessionsService', () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
 		sessionRepo.findOne.mockResolvedValue({
-			id: 'sess-1', ownerId: 'owner-1', scheduledDate: '2026-09-15', type: 'regular', status: 'scheduled',
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			scheduledDate: '2026-09-15',
+			type: 'regular',
+			status: 'scheduled',
 		});
 		const studentsService = { findOrCreate: jest.fn() };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
-		const updated = await service.reschedule('owner-1', 'sess-1', { newDate: '2026-09-17', note: 'ốm' });
+		const updated = await service.reschedule('owner-1', 'sess-1', {
+			newDate: '2026-09-17',
+			note: 'ốm',
+		});
 
 		expect(updated).toEqual(
-			expect.objectContaining({ scheduledDate: '2026-09-17', type: 'makeup', status: 'scheduled' }),
+			expect.objectContaining({
+				scheduledDate: '2026-09-17',
+				type: 'makeup',
+				status: 'scheduled',
+			}),
 		);
 		expect(historyRepo.save).toHaveBeenCalledWith(
 			expect.objectContaining({
-				sessionId: 'sess-1', action: 'rescheduled', fromDate: '2026-09-15', toDate: '2026-09-17', note: 'ốm',
+				sessionId: 'sess-1',
+				action: 'rescheduled',
+				fromDate: '2026-09-15',
+				toDate: '2026-09-17',
+				note: 'ốm',
 			}),
 		);
 	});
@@ -154,12 +173,22 @@ describe('TeachingSessionsService', () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
 		sessionRepo.findOne.mockResolvedValue({
-			id: 'sess-2', ownerId: 'owner-1', scheduledDate: '2026-09-15', type: 'extra', status: 'scheduled',
+			id: 'sess-2',
+			ownerId: 'owner-1',
+			scheduledDate: '2026-09-15',
+			type: 'extra',
+			status: 'scheduled',
 		});
 		const studentsService = { findOrCreate: jest.fn() };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
-		const updated = await service.reschedule('owner-1', 'sess-2', { newDate: '2026-09-18' });
+		const updated = await service.reschedule('owner-1', 'sess-2', {
+			newDate: '2026-09-18',
+		});
 
 		expect(updated.type).toBe('extra');
 	});
