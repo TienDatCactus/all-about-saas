@@ -9,7 +9,7 @@ import DatePicker from "@/components/date-picker"
 import { useRescheduleSessionMutation } from "@/services/teacher-room/queries"
 import type { TeachingSession } from "@/services/teacher-room/types"
 import { format, parseISO } from "date-fns"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export function RescheduleDialog({
   session,
@@ -24,6 +24,10 @@ export function RescheduleDialog({
   const [newDate, setNewDate] = useState<Date | undefined>(
     parseISO(session.scheduledDate)
   )
+
+  useEffect(() => {
+    if (open) setNewDate(parseISO(session.scheduledDate))
+  }, [open, session.scheduledDate])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
