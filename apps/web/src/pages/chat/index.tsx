@@ -5,7 +5,19 @@ import { AppConstants } from "@/lib/utils/constants"
 import { getAccessToken } from "@/lib/utils/access-token"
 import { aiChatApi } from "@/services/ai/api"
 import { AI } from "@/services/url"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Bubble, BubbleContent } from "@/components/ui/bubble"
+import { Message, MessageContent } from "@/components/ui/message"
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@/components/ui/message-scroller"
 
 export default function ChatPage() {
   const [input, setInput] = useState("")
@@ -21,12 +33,6 @@ export default function ChatPage() {
     pending: false,
   })
 
-  const refreshPendingAction = async () => {
-    if (!threadIdRef.current) return
-    const result = await aiChatApi.getPendingAction(threadIdRef.current)
-    setPending(result)
-  }
-
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: `${AppConstants.apiBaseUrl}${AI.chat}`,
@@ -37,6 +43,11 @@ export default function ChatPage() {
       // same bearer token by hand, or every request 401s before it reaches
       // the controller.
       headers: () => {
+        // Not `return token ? {...} : {}` — TypeScript infers
+        // `{ Authorization: string } | { Authorization?: undefined }` for that
+        // ternary, and the `undefined` branch fails the
+        // `Resolvable<Record<string, string> | Headers>` index-signature
+        // check. Build the object imperatively instead.
         const token = getAccessToken()
         const headers: Record<string, string> = {}
         if (token) headers.Authorization = `Bearer ${token}`
@@ -60,7 +71,11 @@ export default function ChatPage() {
       },
     }),
     onFinish: () => {
-      void refreshPendingAction()
+      void (async () => {
+        if (!threadIdRef.current) return
+        const result = await aiChatApi.getPendingAction(threadIdRef.current)
+        setPending(result)
+      })()
     },
   })
 
@@ -79,45 +94,60 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-6">
-      <div className="flex-1 space-y-3 overflow-y-auto">
-        {messages.map((message) => (
-          <div key={message.id}>
-            <span className="font-medium">
-              {message.role === "user" ? "You: " : "AI: "}
-            </span>
-            {message.parts.map((part, index) =>
-              part.type === "text" ? <span key={index}>{part.text}</span> : null
-            )}
-          </div>
-        ))}
-      </div>
+      <MessageScrollerProvider autoScroll>
+        <MessageScroller className="flex-1">
+          <MessageScrollerViewport>
+            <MessageScrollerContent>
+              {messages.map((message) => (
+                <MessageScrollerItem
+                  key={message.id}
+                  messageId={message.id}
+                  scrollAnchor={message.role === "user"}
+                >
+                  <Message align={message.role === "user" ? "end" : "start"}>
+                    <MessageContent>
+                      <Bubble
+                        variant={message.role === "user" ? "default" : "ghost"}
+                      >
+                        <BubbleContent>
+                          {message.parts.map((part, index) =>
+                            part.type === "text" ? (
+                              <span key={index}>{part.text}</span>
+                            ) : null
+                          )}
+                        </BubbleContent>
+                      </Bubble>
+                    </MessageContent>
+                  </Message>
+                </MessageScrollerItem>
+              ))}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          <MessageScrollerButton />
+        </MessageScroller>
+      </MessageScrollerProvider>
 
       {pending.pending ? (
-        <div className="flex items-center gap-2 rounded-md border p-3">
-          <span className="flex-1 text-sm">{pending.summary}</span>
-          <Button
-            size="sm"
-            onClick={() => {
-              void handleConfirm(true)
-            }}
-          >
-            Confirm
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              void handleConfirm(false)
-            }}
-          >
-            Cancel
-          </Button>
-        </div>
+        <Alert>
+          <AlertTitle>Confirm action</AlertTitle>
+          <AlertDescription>{pending.summary}</AlertDescription>
+          <div className="mt-2 flex gap-2">
+            <Button size="sm" onClick={() => void handleConfirm(true)}>
+              Confirm
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void handleConfirm(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </Alert>
       ) : null}
 
       <div className="flex gap-2">
-        <input
-          className="flex-1 rounded-md border px-3 py-2"
+        <Input
           value={input}
           disabled={status !== "ready"}
           onChange={(e) => setInput(e.target.value)}
