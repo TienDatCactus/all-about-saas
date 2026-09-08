@@ -11,7 +11,10 @@ import {
 	HistoryAction,
 } from './entities/teaching-session-history.entity';
 import { StudentsService } from './students.service';
-import { CreateAdHocSessionDto } from './teaching-sessions.dto';
+import {
+	CreateAdHocSessionDto,
+	RescheduleSessionDto,
+} from './teaching-sessions.dto';
 
 @Injectable()
 export class TeachingSessionsService {
@@ -76,6 +79,30 @@ export class TeachingSessionsService {
 			this.historyRepo.create({
 				sessionId: session.id,
 				action: HistoryAction.CREATED,
+			}),
+		);
+		return session;
+	}
+
+	async reschedule(ownerId: string, id: string, dto: RescheduleSessionDto) {
+		const session = await this.sessionRepo.findOne({ where: { id, ownerId } });
+		if (!session) throw new NotFoundException('Session not found');
+
+		const fromDate = session.scheduledDate;
+		session.scheduledDate = dto.newDate;
+		if (dto.newStartTime) session.startTime = dto.newStartTime;
+		if (dto.newEndTime) session.endTime = dto.newEndTime;
+		if (session.type === SessionType.REGULAR) session.type = SessionType.MAKEUP;
+		session.status = SessionStatus.SCHEDULED;
+		await this.sessionRepo.save(session);
+
+		await this.historyRepo.save(
+			this.historyRepo.create({
+				sessionId: id,
+				action: HistoryAction.RESCHEDULED,
+				fromDate,
+				toDate: dto.newDate,
+				note: dto.note,
 			}),
 		);
 		return session;

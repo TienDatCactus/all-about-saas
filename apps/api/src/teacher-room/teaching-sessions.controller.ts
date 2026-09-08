@@ -4,6 +4,7 @@ import {
 	Get,
 	Param,
 	ParseUUIDPipe,
+	Patch,
 	Post,
 	Query,
 	Req,
@@ -14,6 +15,7 @@ import { requireUser } from '../common/request-user';
 import {
 	CreateAdHocSessionDto,
 	QuerySessionRangeDto,
+	RescheduleSessionDto,
 } from './teaching-sessions.dto';
 import { TeachingSessionsService } from './teaching-sessions.service';
 
@@ -41,5 +43,14 @@ export class TeachingSessionsController {
 	@Post()
 	createAdHoc(@Req() req: Request, @Body() dto: CreateAdHocSessionDto) {
 		return this.service.createAdHoc(requireUser(req).id, dto);
+	}
+
+	@Patch(':id/reschedule')
+	reschedule(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body() dto: RescheduleSessionDto,
+	) {
+		return this.service.reschedule(requireUser(req).id, id, dto);
 	}
 }

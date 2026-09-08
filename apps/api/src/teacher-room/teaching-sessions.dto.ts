@@ -35,3 +35,21 @@ export class CreateAdHocSessionDto {
 	@MaxLength(2000)
 	note?: string;
 }
+
+export class RescheduleSessionDto {
+	@IsDateString()
+	newDate!: string;
+
+	@IsOptional()
+	@Matches(HHMM, { message: 'newStartTime must be HH:mm' })
+	newStartTime?: string;
+
+	@IsOptional()
+	@Matches(HHMM, { message: 'newEndTime must be HH:mm' })
+	newEndTime?: string;
+
+	@IsOptional()
+	@IsString()
+	@MaxLength(2000)
+	note?: string;
+}

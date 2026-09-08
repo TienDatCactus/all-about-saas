@@ -128,4 +128,39 @@ describe('TeachingSessionsService', () => {
 			expect.objectContaining({ sessionId: session.id, action: 'created' }),
 		);
 	});
+
+	it('reschedule moves the date, flips REGULAR to MAKEUP, keeps SCHEDULED, and logs from/to', async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue({
+			id: 'sess-1', ownerId: 'owner-1', scheduledDate: '2026-09-15', type: 'regular', status: 'scheduled',
+		});
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+
+		const updated = await service.reschedule('owner-1', 'sess-1', { newDate: '2026-09-17', note: 'ốm' });
+
+		expect(updated).toEqual(
+			expect.objectContaining({ scheduledDate: '2026-09-17', type: 'makeup', status: 'scheduled' }),
+		);
+		expect(historyRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({
+				sessionId: 'sess-1', action: 'rescheduled', fromDate: '2026-09-15', toDate: '2026-09-17', note: 'ốm',
+			}),
+		);
+	});
+
+	it("reschedule leaves an already-MAKEUP or EXTRA session's type unchanged", async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue({
+			id: 'sess-2', ownerId: 'owner-1', scheduledDate: '2026-09-15', type: 'extra', status: 'scheduled',
+		});
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+
+		const updated = await service.reschedule('owner-1', 'sess-2', { newDate: '2026-09-18' });
+
+		expect(updated.type).toBe('extra');
+	});
 });
