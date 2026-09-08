@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	Injectable,
+	InternalServerErrorException,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { streamText, isStepCount } from 'ai';
 import type { ModelMessage } from 'ai';
 import type { Response } from 'express';
@@ -32,6 +36,7 @@ export class ChatService {
 		private readonly chatMessageRepo: Repository<ChatMessage>,
 		private readonly badmintonService: BadmintonService,
 		private readonly ragService: RagService,
+		private readonly dataSource: DataSource,
 	) {}
 
 	async handleMessage(
@@ -47,7 +52,7 @@ export class ChatService {
 
 		const history = dto.threadId
 			? await this.chatMessageRepo.find({
-					where: { threadId },
+					where: { threadId, userId },
 					order: { createdAt: 'ASC' },
 				})
 			: [];
@@ -70,14 +75,14 @@ export class ChatService {
 			model: kimiChatModel,
 			system: SYSTEM_PROMPT,
 			messages: [
-				// `history` only ever holds rows this service itself wrote — user and
-				// assistant turns — so the cast just tells TS what's already true at
-				// runtime; `ChatMessageRole` is a wider enum than `ModelMessage['role']`
-				// allows one-to-one, which is what trips up plain inference here.
-				...(history.map((m) => ({
-					role: m.role,
-					content: m.content,
-				})) as ModelMessage[]),
+				// TOOL-role rows are a local audit trail appended by confirmAction
+				// below — never replayed to the model. AI SDK's `ModelMessage` requires
+				// a `tool` role's content to be structured `ToolResultPart`s, never a
+				// plain string, so a TOOL row would fail `streamText`'s own runtime
+				// validation if it reached here. Filtering keeps the cast honest.
+				...history
+					.filter((m) => m.role !== ChatMessageRole.TOOL)
+					.map((m) => ({ role: m.role, content: m.content }) as ModelMessage),
 				{ role: 'user' as const, content: dto.message },
 			],
 			tools,
@@ -93,7 +98,11 @@ export class ChatService {
 						threadId,
 						userId,
 						role: ChatMessageRole.ASSISTANT,
-						content: text,
+						// The draft's deterministic, args-derived summary (built in
+						// write-tools.ts) is what the user actually approves — the
+						// model's free-form narration (`text`) can disagree with
+						// `toolCall.args`, and is often empty on a tool-only turn.
+						content: pending ? pending.summary : text,
 						toolCall: pending
 							? { name: pending.action, args: pending.args }
 							: null,
@@ -126,59 +135,103 @@ export class ChatService {
 		userId: string,
 		dto: ConfirmChatActionDto,
 	): Promise<{ message: string; toolCallState: ToolCallState }> {
-		const pending = await this.chatMessageRepo.findOne({
-			where: {
-				threadId: dto.threadId,
-				userId,
-				toolCallState: ToolCallState.PENDING,
-			},
-			order: { createdAt: 'DESC' },
+		// Everything below runs against one locked row, in one transaction:
+		// - `pessimistic_write` makes a double-click-fast double-confirm safe —
+		//   the second transaction's `findOne` blocks until the first commits,
+		//   then finds the row no longer `pending`.
+		// - Same pattern `BadmintonService.updateSession` already uses for its
+		//   own read-modify-write (apps/api/src/badminton/badminton.service.ts).
+		// This does NOT make the domain write (`badmintonService.createSession`/
+		// `setParticipantPaid`) atomic with the state flip — those run on their
+		// own injected repositories, a separate connection from this
+		// transaction's manager. A crash between the domain write succeeding and
+		// this transaction committing leaves the row `pending` and retryable,
+		// which duplicates the write on retry. Accepted for this feature's scale;
+		// closing it fully would mean making BadmintonService participate in the
+		// same manager, which is out of scope here.
+		return this.dataSource.transaction(async (manager) => {
+			const pending = await manager.findOne(ChatMessage, {
+				where: {
+					threadId: dto.threadId,
+					userId,
+					toolCallState: ToolCallState.PENDING,
+				},
+				order: { createdAt: 'DESC' },
+				lock: { mode: 'pessimistic_write' },
+			});
+			if (!pending || !pending.toolCall) {
+				throw new NotFoundException('No pending action for this thread');
+			}
+
+			const age = Date.now() - new Date(pending.createdAt).getTime();
+			if (age > PENDING_TTL_MS) {
+				pending.toolCallState = ToolCallState.REJECTED;
+				await manager.save(pending);
+				throw new NotFoundException(
+					'This action has expired — ask again to get a fresh confirmation.',
+				);
+			}
+
+			if (!dto.approve) {
+				pending.toolCallState = ToolCallState.REJECTED;
+				await manager.save(pending);
+				return {
+					message: 'Cancelled — nothing was saved.',
+					toolCallState: pending.toolCallState,
+				};
+			}
+
+			const { name, args } = pending.toolCall;
+			let message: string;
+
+			if (name === 'createBadmintonSession') {
+				const session = await this.badmintonService.createSession(
+					userId,
+					args as never,
+				);
+				message = `Created session ${session.id}.`;
+			} else if (name === 'setParticipantPaid') {
+				const { sessionId, participantId, paid } = args as {
+					sessionId: string;
+					participantId: string;
+					paid: boolean;
+				};
+				await this.badmintonService.setParticipantPaid(
+					userId,
+					sessionId,
+					participantId,
+					paid,
+				);
+				message = `Marked participant as ${paid ? 'paid' : 'unpaid'}.`;
+			} else {
+				// The tool name came back out of a jsonb column — untrusted at read
+				// time even though only two names are producible today. A server-side
+				// data-integrity fault, not a missing resource: 500, not 404, and the
+				// row is deliberately left `pending` rather than silently discarded.
+				throw new InternalServerErrorException(
+					`Unknown pending tool call: ${name}`,
+				);
+			}
+
+			pending.toolCallState = ToolCallState.EXECUTED;
+			await manager.save(pending);
+			// Audit trail only — never replayed into the model (see the TOOL-role
+			// filter in handleMessage above), so plain text is fine here instead of
+			// the AI SDK's structured ToolResultPart shape.
+			await manager.save(
+				manager.create(ChatMessage, {
+					threadId: dto.threadId,
+					userId,
+					role: ChatMessageRole.TOOL,
+					content: message,
+				}),
+			);
+
+			// Two keys, deliberately: `TransformInterceptor` (apps/api/src/common/
+			// interceptor/transform.interceptor.ts) promotes a *single*-key
+			// `{ message }` return straight onto the envelope and nulls `data` —
+			// exactly what NOT to return here, since the web client reads `data`.
+			return { message, toolCallState: ToolCallState.EXECUTED };
 		});
-		if (!pending || !pending.toolCall) {
-			throw new NotFoundException('No pending action for this thread');
-		}
-
-		if (!dto.approve) {
-			pending.toolCallState = ToolCallState.REJECTED;
-			await this.chatMessageRepo.save(pending);
-			return {
-				message: 'Cancelled — nothing was saved.',
-				toolCallState: pending.toolCallState,
-			};
-		}
-
-		const { name, args } = pending.toolCall;
-		let message: string;
-
-		if (name === 'createBadmintonSession') {
-			const session = await this.badmintonService.createSession(
-				userId,
-				args as never,
-			);
-			message = `Created session ${session.id}.`;
-		} else if (name === 'setParticipantPaid') {
-			const { sessionId, participantId, paid } = args as {
-				sessionId: string;
-				participantId: string;
-				paid: boolean;
-			};
-			await this.badmintonService.setParticipantPaid(
-				userId,
-				sessionId,
-				participantId,
-				paid,
-			);
-			message = `Marked participant as ${paid ? 'paid' : 'unpaid'}.`;
-		} else {
-			throw new NotFoundException(`Unknown pending tool call: ${name}`);
-		}
-
-		pending.toolCallState = ToolCallState.EXECUTED;
-		await this.chatMessageRepo.save(pending);
-		// Two keys, deliberately: `TransformInterceptor` (apps/api/src/common/
-		// interceptor/transform.interceptor.ts) promotes a *single*-key
-		// `{ message }` return straight onto the envelope and nulls `data` —
-		// exactly what NOT to return here, since the web client reads `data`.
-		return { message, toolCallState: pending.toolCallState };
 	}
 }
