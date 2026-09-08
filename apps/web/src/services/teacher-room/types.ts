@@ -24,9 +24,15 @@ export const CreateSlotSchema = z.object({
   endTime: z.string(),
 })
 export type CreateSlotIn = z.infer<typeof CreateSlotSchema>
-export type UpdateSlotIn = Partial<Omit<CreateSlotIn, "studentName">> & { active?: boolean }
+export type UpdateSlotIn = Partial<Omit<CreateSlotIn, "studentName">> & {
+  active?: boolean
+}
 
-export const SessionStatusSchema = z.enum(["scheduled", "completed", "cancelled"])
+export const SessionStatusSchema = z.enum([
+  "scheduled",
+  "completed",
+  "cancelled",
+])
 export const SessionTypeSchema = z.enum(["regular", "makeup", "extra"])
 export const SessionPrioritySchema = z.enum(["low", "normal", "high"])
 
@@ -48,13 +54,23 @@ export type TeachingSession = z.infer<typeof TeachingSessionSchema>
 
 export const TeachingSessionHistorySchema = z.object({
   id: z.string(),
-  action: z.enum(["created", "rescheduled", "cancelled", "completed", "reopened", "note_updated", "priority_changed"]),
+  action: z.enum([
+    "created",
+    "rescheduled",
+    "cancelled",
+    "completed",
+    "reopened",
+    "note_updated",
+    "priority_changed",
+  ]),
   fromDate: z.string().nullish(),
   toDate: z.string().nullish(),
   note: z.string().nullish(),
   createdAt: z.string(),
 })
-export type TeachingSessionHistory = z.infer<typeof TeachingSessionHistorySchema>
+export type TeachingSessionHistory = z.infer<
+  typeof TeachingSessionHistorySchema
+>
 
 export const CreateAdHocSessionSchema = z.object({
   studentName: z.string().min(1, "Student name is required").max(120),
