@@ -96,7 +96,10 @@ export function BadmintonSummary({
             {formatDong(computed.shuttleCost)}
           </span>
           {" · "}
-          {meta?.totalShuttleCount ?? 0} shuttles
+          <span className="font-medium text-foreground">
+            {meta?.totalShuttleCount ?? 0}
+          </span>{" "}
+          shuttles
           {" · "}Default {meta?.defaultHoursPlayed ?? 1}h
         </p>
       }
