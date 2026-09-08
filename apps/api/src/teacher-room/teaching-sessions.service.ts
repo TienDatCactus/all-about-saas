@@ -138,20 +138,38 @@ export class TeachingSessionsService {
 	}
 
 	cancel(ownerId: string, id: string, dto: CancelSessionDto) {
-		return this.transition(ownerId, id, SessionStatus.CANCELLED, HistoryAction.CANCELLED, dto.note);
+		return this.transition(
+			ownerId,
+			id,
+			SessionStatus.CANCELLED,
+			HistoryAction.CANCELLED,
+			dto.note,
+		);
 	}
 
 	complete(ownerId: string, id: string, dto: CompleteSessionDto) {
 		return this.transition(
-			ownerId, id, SessionStatus.COMPLETED, HistoryAction.COMPLETED, dto.note,
-			(session) => { session.confirmedAt = new Date(); },
+			ownerId,
+			id,
+			SessionStatus.COMPLETED,
+			HistoryAction.COMPLETED,
+			dto.note,
+			(session) => {
+				session.confirmedAt = new Date();
+			},
 		);
 	}
 
 	reopen(ownerId: string, id: string, dto: ReopenSessionDto) {
 		return this.transition(
-			ownerId, id, SessionStatus.SCHEDULED, HistoryAction.REOPENED, dto.note,
-			(session) => { session.confirmedAt = null; },
+			ownerId,
+			id,
+			SessionStatus.SCHEDULED,
+			HistoryAction.REOPENED,
+			dto.note,
+			(session) => {
+				session.confirmedAt = null;
+			},
 		);
 	}
 
@@ -159,7 +177,9 @@ export class TeachingSessionsService {
 		const session = await this.sessionRepo.findOne({ where: { id, ownerId } });
 		if (!session) throw new NotFoundException('Session not found');
 		if (session.status !== SessionStatus.SCHEDULED) {
-			throw new BadRequestException('Only a scheduled session can have its priority changed');
+			throw new BadRequestException(
+				'Only a scheduled session can have its priority changed',
+			);
 		}
 
 		const from = session.priority;

@@ -59,22 +59,38 @@ export class TeachingSessionsController {
 	}
 
 	@Patch(':id/cancel')
-	cancel(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: CancelSessionDto) {
+	cancel(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body() dto: CancelSessionDto,
+	) {
 		return this.service.cancel(requireUser(req).id, id, dto);
 	}
 
 	@Patch(':id/complete')
-	complete(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: CompleteSessionDto) {
+	complete(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body() dto: CompleteSessionDto,
+	) {
 		return this.service.complete(requireUser(req).id, id, dto);
 	}
 
 	@Patch(':id/reopen')
-	reopen(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ReopenSessionDto) {
+	reopen(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body() dto: ReopenSessionDto,
+	) {
 		return this.service.reopen(requireUser(req).id, id, dto);
 	}
 
 	@Patch(':id/priority')
-	setPriority(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: SetPrioritySessionDto) {
+	setPriority(
+		@Req() req: Request,
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body() dto: SetPrioritySessionDto,
+	) {
 		return this.service.setPriority(requireUser(req).id, id, dto);
 	}
 }

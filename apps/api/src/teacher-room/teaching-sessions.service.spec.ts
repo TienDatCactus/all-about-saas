@@ -197,24 +197,45 @@ describe('TeachingSessionsService', () => {
 	it('cancel sets status CANCELLED and logs it', async () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
-		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'scheduled' });
+		sessionRepo.findOne.mockResolvedValue({
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			status: 'scheduled',
+		});
 		const studentsService = { findOrCreate: jest.fn() };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
 		const updated = await service.cancel('owner-1', 'sess-1', { note: 'nghỉ' });
 
 		expect(updated.status).toBe('cancelled');
 		expect(historyRepo.save).toHaveBeenCalledWith(
-			expect.objectContaining({ sessionId: 'sess-1', action: 'cancelled', note: 'nghỉ' }),
+			expect.objectContaining({
+				sessionId: 'sess-1',
+				action: 'cancelled',
+				note: 'nghỉ',
+			}),
 		);
 	});
 
 	it('complete sets status COMPLETED, stamps confirmedAt, and logs it', async () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
-		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'scheduled', confirmedAt: null });
+		sessionRepo.findOne.mockResolvedValue({
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			status: 'scheduled',
+			confirmedAt: null,
+		});
 		const studentsService = { findOrCreate: jest.fn() };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
 		const updated = await service.complete('owner-1', 'sess-1', {});
 
@@ -229,10 +250,17 @@ describe('TeachingSessionsService', () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
 		sessionRepo.findOne.mockResolvedValue({
-			id: 'sess-1', ownerId: 'owner-1', status: 'completed', confirmedAt: new Date('2026-09-08'),
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			status: 'completed',
+			confirmedAt: new Date('2026-09-08'),
 		});
 		const studentsService = { findOrCreate: jest.fn() };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
 		const updated = await service.reopen('owner-1', 'sess-1', {});
 
@@ -246,27 +274,53 @@ describe('TeachingSessionsService', () => {
 	it('setPriority updates priority on a SCHEDULED session and logs it', async () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
-		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'scheduled', priority: 'normal' });
+		sessionRepo.findOne.mockResolvedValue({
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			status: 'scheduled',
+			priority: 'normal',
+		});
 		const studentsService = { findOrCreate: jest.fn() };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
-		const updated = await service.setPriority('owner-1', 'sess-1', { priority: SessionPriority.HIGH });
+		const updated = await service.setPriority('owner-1', 'sess-1', {
+			priority: SessionPriority.HIGH,
+		});
 
 		expect(updated.priority).toBe('high');
 		expect(historyRepo.save).toHaveBeenCalledWith(
-			expect.objectContaining({ sessionId: 'sess-1', action: 'priority_changed', note: 'normal -> high' }),
+			expect.objectContaining({
+				sessionId: 'sess-1',
+				action: 'priority_changed',
+				note: 'normal -> high',
+			}),
 		);
 	});
 
 	it('setPriority rejects a non-SCHEDULED session', async () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
-		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'completed', priority: 'normal' });
+		sessionRepo.findOne.mockResolvedValue({
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			status: 'completed',
+			priority: 'normal',
+		});
 		const studentsService = { findOrCreate: jest.fn() };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
 		await expect(
-			service.setPriority('owner-1', 'sess-1', { priority: SessionPriority.HIGH }),
+			service.setPriority('owner-1', 'sess-1', {
+				priority: SessionPriority.HIGH,
+			}),
 		).rejects.toThrow('Only a scheduled session can have its priority changed');
 	});
 });
