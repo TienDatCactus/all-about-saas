@@ -12,15 +12,18 @@ function mockRepo() {
 describe('StudentsService', () => {
 	it('suggest returns owner-scoped name matches for a query of 2+ characters', async () => {
 		const repo = mockRepo();
+		const mockResults = [{ id: 's1', ownerId: 'owner-1', name: 'An' }];
+		(repo.find as any).mockResolvedValue(mockResults);
 		const service = new StudentsService(repo as never);
 
-		await service.suggest('owner-1', 'An');
+		const result = await service.suggest('owner-1', 'An');
 
 		expect(repo.find).toHaveBeenCalledWith({
 			where: { ownerId: 'owner-1', name: expect.anything() },
 			take: 8,
 			order: { name: 'ASC' },
 		});
+		expect(result).toEqual(mockResults);
 	});
 
 	it('suggest short-circuits below the 2-character minimum without querying', async () => {
@@ -35,22 +38,36 @@ describe('StudentsService', () => {
 
 	it('findOrCreate reuses an existing student on a case-insensitive exact name match', async () => {
 		const repo = mockRepo();
-		repo.findOne.mockResolvedValue({ id: 'student-1', ownerId: 'owner-1', name: 'An' });
+		repo.findOne.mockResolvedValue({
+			id: 'student-1',
+			ownerId: 'owner-1',
+			name: 'An',
+		});
 		const service = new StudentsService(repo as never);
 
 		const student = await service.findOrCreate('owner-1', 'an');
 
-		expect(student).toEqual({ id: 'student-1', ownerId: 'owner-1', name: 'An' });
+		expect(student).toEqual({
+			id: 'student-1',
+			ownerId: 'owner-1',
+			name: 'An',
+		});
 		expect(repo.create).not.toHaveBeenCalled();
 	});
 
 	it('findOrCreate creates a new student when no name matches', async () => {
 		const repo = mockRepo();
 		repo.findOne.mockResolvedValue(null);
+		const savedStudent = { id: 'new-id', ownerId: 'owner-1', name: 'Bình' };
+		(repo.save as any).mockResolvedValue(savedStudent);
 		const service = new StudentsService(repo as never);
 
-		await service.findOrCreate('owner-1', '  Bình  ');
+		const result = await service.findOrCreate('owner-1', '  Bình  ');
 
-		expect(repo.create).toHaveBeenCalledWith({ ownerId: 'owner-1', name: 'Bình' });
+		expect(repo.create).toHaveBeenCalledWith({
+			ownerId: 'owner-1',
+			name: 'Bình',
+		});
+		expect(result).toEqual(savedStudent);
 	});
 });
