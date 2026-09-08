@@ -22,6 +22,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { MailModule } from './mail/mail.module';
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { RolesModule } from './roles/roles.module';
+import { TeacherRoomModule } from './teacher-room/teacher-room.module';
 import { UsersModule } from './users/users.module';
 
 // Mounted secrets (DATABASE_PASSWORD_FILE, JWT_SECRET_FILE) into process.env,
@@ -77,6 +78,7 @@ resolveFileSecrets();
 		MailModule,
 		BadmintonModule,
 		PaymentMethodsModule,
+		TeacherRoomModule,
 	],
 	controllers: [AppController],
 	providers: [
