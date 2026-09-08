@@ -45,3 +45,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Superpowers subagent-driven-development scratch workspace (ledger, briefs,
+# reports, review packages) — never committed, git history is the record.
+.superpowers/
