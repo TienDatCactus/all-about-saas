@@ -33,3 +33,17 @@ export const PAYMENT_METHODS = {
 export const USERS = {
   me: "/users/me",
 }
+
+export const TEACHER_ROOM = {
+  studentSuggest: "/teacher-room/students/suggest",
+  slots: "/teacher-room/slots",
+  slot: (id: string) => `/teacher-room/slots/${id}`,
+  sessions: "/teacher-room/sessions",
+  sessionsPendingToday: "/teacher-room/sessions/pending-today",
+  sessionHistory: (id: string) => `/teacher-room/sessions/${id}/history`,
+  sessionReschedule: (id: string) => `/teacher-room/sessions/${id}/reschedule`,
+  sessionCancel: (id: string) => `/teacher-room/sessions/${id}/cancel`,
+  sessionComplete: (id: string) => `/teacher-room/sessions/${id}/complete`,
+  sessionReopen: (id: string) => `/teacher-room/sessions/${id}/reopen`,
+  sessionPriority: (id: string) => `/teacher-room/sessions/${id}/priority`,
+}
