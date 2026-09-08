@@ -1,0 +1,29 @@
+import { occurrenceDates, combineDateTime } from './schedule-dates';
+
+describe('occurrenceDates', () => {
+	it('returns every matching weekday in the next N weeks, inclusive of today', () => {
+		// 2026-09-08 is a Tuesday (dayOfWeek 2).
+		const from = new Date('2026-09-08T00:00:00.000Z');
+		const dates = occurrenceDates(2, from, 6);
+
+		expect(dates[0]).toBe('2026-09-08');
+		expect(dates).toHaveLength(6);
+		expect(dates[1]).toBe('2026-09-15');
+		expect(dates.at(-1)).toBe('2026-10-13');
+	});
+
+	it('excludes today when today does not match dayOfWeek', () => {
+		const from = new Date('2026-09-08T00:00:00.000Z'); // Tuesday
+		const dates = occurrenceDates(1, from, 6); // Monday
+
+		expect(dates[0]).toBe('2026-09-14');
+		expect(dates).toHaveLength(6);
+	});
+});
+
+describe('combineDateTime', () => {
+	it('combines a YYYY-MM-DD date and HH:mm time into a single UTC Date', () => {
+		const dt = combineDateTime('2026-09-08', '15:30');
+		expect(dt.toISOString()).toBe('2026-09-08T15:30:00.000Z');
+	});
+});
