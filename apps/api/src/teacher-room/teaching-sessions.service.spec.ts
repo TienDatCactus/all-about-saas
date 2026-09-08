@@ -94,17 +94,34 @@ describe('TeachingSessionsService', () => {
 	it('createAdHoc resolves studentName via findOrCreate and makes an EXTRA, slotless, SCHEDULED session plus a CREATED history row', async () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
-		const studentsService = { findOrCreate: jest.fn(async () => ({ id: 's1', ownerId: 'owner-1', name: 'An' })) };
-		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+		const studentsService = {
+			findOrCreate: jest.fn(async () => ({
+				id: 's1',
+				ownerId: 'owner-1',
+				name: 'An',
+			})),
+		};
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
 
 		const session = await service.createAdHoc('owner-1', {
-			studentName: 'An', scheduledDate: '2026-09-20', startTime: '10:00', endTime: '11:00',
+			studentName: 'An',
+			scheduledDate: '2026-09-20',
+			startTime: '10:00',
+			endTime: '11:00',
 		});
 
 		expect(studentsService.findOrCreate).toHaveBeenCalledWith('owner-1', 'An');
 		expect(sessionRepo.create).toHaveBeenCalledWith(
 			expect.objectContaining({
-				ownerId: 'owner-1', studentId: 's1', slotId: null, type: 'extra', status: 'scheduled',
+				ownerId: 'owner-1',
+				studentId: 's1',
+				slotId: null,
+				type: 'extra',
+				status: 'scheduled',
 			}),
 		);
 		expect(historyRepo.save).toHaveBeenCalledWith(

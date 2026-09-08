@@ -73,7 +73,10 @@ export class TeachingSessionsService {
 			}),
 		);
 		await this.historyRepo.save(
-			this.historyRepo.create({ sessionId: session.id, action: HistoryAction.CREATED }),
+			this.historyRepo.create({
+				sessionId: session.id,
+				action: HistoryAction.CREATED,
+			}),
 		);
 		return session;
 	}
