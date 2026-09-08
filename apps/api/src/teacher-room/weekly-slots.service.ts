@@ -121,6 +121,7 @@ export class WeeklySlotsService extends BaseService<WeeklyScheduleSlot> {
 			(s) => s.scheduledDate >= today,
 		)) {
 			session.status = SessionStatus.CANCELLED;
+			session.slotId = null; // detach so regeneration can reuse (slotId, scheduledDate)
 			await this.sessionRepo.save(session);
 			await this.historyRepo.save(
 				this.historyRepo.create({
