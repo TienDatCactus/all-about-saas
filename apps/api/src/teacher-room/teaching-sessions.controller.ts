@@ -13,9 +13,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { requireUser } from '../common/request-user';
 import {
+	CancelSessionDto,
+	CompleteSessionDto,
 	CreateAdHocSessionDto,
 	QuerySessionRangeDto,
+	ReopenSessionDto,
 	RescheduleSessionDto,
+	SetPrioritySessionDto,
 } from './teaching-sessions.dto';
 import { TeachingSessionsService } from './teaching-sessions.service';
 
@@ -52,5 +56,25 @@ export class TeachingSessionsController {
 		@Body() dto: RescheduleSessionDto,
 	) {
 		return this.service.reschedule(requireUser(req).id, id, dto);
+	}
+
+	@Patch(':id/cancel')
+	cancel(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: CancelSessionDto) {
+		return this.service.cancel(requireUser(req).id, id, dto);
+	}
+
+	@Patch(':id/complete')
+	complete(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: CompleteSessionDto) {
+		return this.service.complete(requireUser(req).id, id, dto);
+	}
+
+	@Patch(':id/reopen')
+	reopen(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ReopenSessionDto) {
+		return this.service.reopen(requireUser(req).id, id, dto);
+	}
+
+	@Patch(':id/priority')
+	setPriority(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() dto: SetPrioritySessionDto) {
+		return this.service.setPriority(requireUser(req).id, id, dto);
 	}
 }

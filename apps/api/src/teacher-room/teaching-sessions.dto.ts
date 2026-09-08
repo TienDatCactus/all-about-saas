@@ -1,10 +1,12 @@
 import {
 	IsDateString,
+	IsEnum,
 	IsOptional,
 	IsString,
 	Matches,
 	MaxLength,
 } from 'class-validator';
+import { SessionPriority } from './entities/teaching-session.entity';
 
 export class QuerySessionRangeDto {
 	@IsDateString()
@@ -34,6 +36,32 @@ export class CreateAdHocSessionDto {
 	@IsString()
 	@MaxLength(2000)
 	note?: string;
+}
+
+export class CancelSessionDto {
+	@IsOptional()
+	@IsString()
+	@MaxLength(2000)
+	note?: string;
+}
+
+export class CompleteSessionDto {
+	@IsOptional()
+	@IsString()
+	@MaxLength(2000)
+	note?: string;
+}
+
+export class ReopenSessionDto {
+	@IsOptional()
+	@IsString()
+	@MaxLength(2000)
+	note?: string;
+}
+
+export class SetPrioritySessionDto {
+	@IsEnum(SessionPriority)
+	priority!: SessionPriority;
 }
 
 export class RescheduleSessionDto {

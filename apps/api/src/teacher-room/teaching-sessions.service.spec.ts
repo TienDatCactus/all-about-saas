@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { SessionPriority } from './entities/teaching-session.entity';
 import { TeachingSessionsService } from './teaching-sessions.service';
 
 function mockRepo() {
@@ -191,5 +192,81 @@ describe('TeachingSessionsService', () => {
 		});
 
 		expect(updated.type).toBe('extra');
+	});
+
+	it('cancel sets status CANCELLED and logs it', async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'scheduled' });
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+
+		const updated = await service.cancel('owner-1', 'sess-1', { note: 'nghỉ' });
+
+		expect(updated.status).toBe('cancelled');
+		expect(historyRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: 'sess-1', action: 'cancelled', note: 'nghỉ' }),
+		);
+	});
+
+	it('complete sets status COMPLETED, stamps confirmedAt, and logs it', async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'scheduled', confirmedAt: null });
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+
+		const updated = await service.complete('owner-1', 'sess-1', {});
+
+		expect(updated.status).toBe('completed');
+		expect(updated.confirmedAt).toBeInstanceOf(Date);
+		expect(historyRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: 'sess-1', action: 'completed' }),
+		);
+	});
+
+	it('reopen sets status SCHEDULED, clears confirmedAt, and logs REOPENED', async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue({
+			id: 'sess-1', ownerId: 'owner-1', status: 'completed', confirmedAt: new Date('2026-09-08'),
+		});
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+
+		const updated = await service.reopen('owner-1', 'sess-1', {});
+
+		expect(updated.status).toBe('scheduled');
+		expect(updated.confirmedAt).toBeNull();
+		expect(historyRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: 'sess-1', action: 'reopened' }),
+		);
+	});
+
+	it('setPriority updates priority on a SCHEDULED session and logs it', async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'scheduled', priority: 'normal' });
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+
+		const updated = await service.setPriority('owner-1', 'sess-1', { priority: SessionPriority.HIGH });
+
+		expect(updated.priority).toBe('high');
+		expect(historyRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: 'sess-1', action: 'priority_changed', note: 'normal -> high' }),
+		);
+	});
+
+	it('setPriority rejects a non-SCHEDULED session', async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue({ id: 'sess-1', ownerId: 'owner-1', status: 'completed', priority: 'normal' });
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(sessionRepo as never, historyRepo as never, studentsService as never);
+
+		await expect(
+			service.setPriority('owner-1', 'sess-1', { priority: SessionPriority.HIGH }),
+		).rejects.toThrow('Only a scheduled session can have its priority changed');
 	});
 });

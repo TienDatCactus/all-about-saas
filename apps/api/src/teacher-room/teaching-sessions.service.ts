@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import {
@@ -12,8 +16,12 @@ import {
 } from './entities/teaching-session-history.entity';
 import { StudentsService } from './students.service';
 import {
+	CancelSessionDto,
+	CompleteSessionDto,
 	CreateAdHocSessionDto,
+	ReopenSessionDto,
 	RescheduleSessionDto,
+	SetPrioritySessionDto,
 } from './teaching-sessions.dto';
 
 @Injectable()
@@ -106,5 +114,65 @@ export class TeachingSessionsService {
 			}),
 		);
 		return session;
+	}
+
+	private async transition(
+		ownerId: string,
+		id: string,
+		status: SessionStatus,
+		action: HistoryAction,
+		note?: string,
+		mutate?: (session: TeachingSession) => void,
+	) {
+		const session = await this.sessionRepo.findOne({ where: { id, ownerId } });
+		if (!session) throw new NotFoundException('Session not found');
+
+		session.status = status;
+		mutate?.(session);
+		const saved = await this.sessionRepo.save(session);
+
+		await this.historyRepo.save(
+			this.historyRepo.create({ sessionId: id, action, note }),
+		);
+		return saved;
+	}
+
+	cancel(ownerId: string, id: string, dto: CancelSessionDto) {
+		return this.transition(ownerId, id, SessionStatus.CANCELLED, HistoryAction.CANCELLED, dto.note);
+	}
+
+	complete(ownerId: string, id: string, dto: CompleteSessionDto) {
+		return this.transition(
+			ownerId, id, SessionStatus.COMPLETED, HistoryAction.COMPLETED, dto.note,
+			(session) => { session.confirmedAt = new Date(); },
+		);
+	}
+
+	reopen(ownerId: string, id: string, dto: ReopenSessionDto) {
+		return this.transition(
+			ownerId, id, SessionStatus.SCHEDULED, HistoryAction.REOPENED, dto.note,
+			(session) => { session.confirmedAt = null; },
+		);
+	}
+
+	async setPriority(ownerId: string, id: string, dto: SetPrioritySessionDto) {
+		const session = await this.sessionRepo.findOne({ where: { id, ownerId } });
+		if (!session) throw new NotFoundException('Session not found');
+		if (session.status !== SessionStatus.SCHEDULED) {
+			throw new BadRequestException('Only a scheduled session can have its priority changed');
+		}
+
+		const from = session.priority;
+		session.priority = dto.priority;
+		const saved = await this.sessionRepo.save(session);
+
+		await this.historyRepo.save(
+			this.historyRepo.create({
+				sessionId: id,
+				action: HistoryAction.PRIORITY_CHANGED,
+				note: `${from} -> ${dto.priority}`,
+			}),
+		);
+		return saved;
 	}
 }
