@@ -80,6 +80,7 @@ export default function SlotListPage() {
         )}
       </DataPage>
       <SlotEditorDialog
+        key={editing === "new" ? "new" : (editing?.id ?? "closed")}
         slot={editing === "new" ? undefined : editing}
         open={editing !== undefined}
         onOpenChange={(open: boolean) => !open && setEditing(undefined)}
