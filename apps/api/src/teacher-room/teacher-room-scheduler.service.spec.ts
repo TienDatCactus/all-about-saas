@@ -70,3 +70,334 @@ describe('TeacherRoomSchedulerService.topUpWeeklySchedules', () => {
 		expect(sessionRepo.save).not.toHaveBeenCalled();
 	});
 });
+
+describe('TeacherRoomSchedulerService.sendDailyReminders', () => {
+	it('sendDailyReminders emails each distinct owner with a pending session today, formatted as "Name HH:mm–HH:mm"', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+		const configService = {
+			get: jest.fn().mockReturnValue('https://app.example.com'),
+		};
+
+		sessionRepo.find.mockResolvedValue([
+			{
+				ownerId: 'owner-1',
+				startTime: '15:00',
+				endTime: '16:00',
+				priority: 'high',
+				student: { name: 'An' },
+			},
+			{
+				ownerId: 'owner-1',
+				startTime: '17:00',
+				endTime: '18:00',
+				priority: 'normal',
+				student: { name: 'Bình' },
+			},
+		]);
+		userRepo.findOne = jest
+			.fn()
+			.mockResolvedValue({ id: 'owner-1', email: 'teacher@example.com' });
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			configService as never,
+		);
+
+		await service.sendDailyReminders();
+
+		expect(mailService.sendEmail).toHaveBeenCalledTimes(1);
+		expect(mailService.sendEmail).toHaveBeenCalledWith(
+			{ to: 'teacher@example.com' },
+			'teacherRoomReminder',
+			expect.objectContaining({
+				title: 'Buổi dạy hôm nay chưa chốt trạng thái',
+				// HIGH-priority sessions are marked and sorted first in the digest.
+				subtitle: expect.stringContaining(
+					'[Ưu tiên cao] An 15:00–16:00; Bình 17:00–18:00',
+				),
+				url: 'https://app.example.com/teacher-room',
+			}),
+		);
+	});
+
+	it('sendDailyReminders sends nothing when no session is pending today', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+		sessionRepo.find.mockResolvedValue([]);
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			{ get: jest.fn() } as never,
+		);
+
+		await service.sendDailyReminders();
+
+		expect(mailService.sendEmail).not.toHaveBeenCalled();
+	});
+});
+
+describe('TeacherRoomSchedulerService.sendUpcomingAndFollowupReminders', () => {
+	it('sendUpcomingAndFollowupReminders emails the pre-class reminder once startTime is within the window, then marks it sent', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+		const configService = {
+			get: jest.fn().mockReturnValue('https://app.example.com'),
+		};
+
+		// "Now" is 14:50; session starts at 15:00 — inside the 15-minute pre-class window.
+		const now = new Date('2026-09-08T14:50:00.000Z');
+		const session = {
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			scheduledDate: '2026-09-08',
+			startTime: '15:00',
+			endTime: '16:00',
+			preReminderSentAt: null,
+			postReminderSentAt: 'sent',
+			student: { name: 'An' },
+		};
+		sessionRepo.find = jest
+			.fn()
+			// Order: upcoming query, then the stale-session lookup this send path
+			// always runs once it decides to email (see the carryover test below —
+			// the brief's own draft of this test omitted that 3rd call), then the
+			// finishing query (postReminderSentAt IS NULL) — already sent.
+			.mockResolvedValueOnce([session])
+			.mockResolvedValueOnce([])
+			.mockResolvedValueOnce([]);
+		userRepo.findOne = jest
+			.fn()
+			.mockResolvedValue({ id: 'owner-1', email: 'teacher@example.com' });
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			configService as never,
+		);
+
+		await service.sendUpcomingAndFollowupReminders(now);
+
+		expect(mailService.sendEmail).toHaveBeenCalledWith(
+			{ to: 'teacher@example.com' },
+			'teacherRoomReminder',
+			expect.objectContaining({
+				title: 'Sắp đến giờ dạy',
+				subtitle: expect.stringContaining('An'),
+				url: 'https://app.example.com/teacher-room',
+			}),
+		);
+		expect(sessionRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'sess-1', preReminderSentAt: now }),
+		);
+	});
+
+	it('does not send the pre-class reminder before the window opens', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+
+		// "Now" is 14:00; session starts at 15:00 — outside the 15-minute window.
+		const now = new Date('2026-09-08T14:00:00.000Z');
+		const session = {
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			scheduledDate: '2026-09-08',
+			startTime: '15:00',
+			endTime: '16:00',
+			preReminderSentAt: null,
+			postReminderSentAt: null,
+			student: { name: 'An' },
+		};
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValueOnce([session])
+			.mockResolvedValueOnce([session]);
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			{ get: jest.fn() } as never,
+		);
+
+		await service.sendUpcomingAndFollowupReminders(now);
+
+		expect(mailService.sendEmail).not.toHaveBeenCalled();
+		expect(sessionRepo.save).not.toHaveBeenCalled();
+	});
+
+	it('does not send the post-class follow-up right when class ends — waits out the 90-minute delay', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+
+		// "Now" is 16:10; session ended at 16:00 — only 10 minutes ago, inside the 90-minute delay.
+		const now = new Date('2026-09-08T16:10:00.000Z');
+		const session = {
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			scheduledDate: '2026-09-08',
+			startTime: '15:00',
+			endTime: '16:00',
+			preReminderSentAt: 'sent',
+			postReminderSentAt: null,
+			student: { name: 'An' },
+		};
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValueOnce([])
+			.mockResolvedValueOnce([session]);
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			{ get: jest.fn() } as never,
+		);
+
+		await service.sendUpcomingAndFollowupReminders(now);
+
+		expect(mailService.sendEmail).not.toHaveBeenCalled();
+		expect(sessionRepo.save).not.toHaveBeenCalled();
+	});
+
+	it('sends the post-class follow-up once the 90-minute delay has elapsed, then marks it sent', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+		const configService = {
+			get: jest.fn().mockReturnValue('https://app.example.com'),
+		};
+
+		// "Now" is 17:35; session ended at 16:00 — 95 minutes ago, past the 90-minute delay.
+		const now = new Date('2026-09-08T17:35:00.000Z');
+		const session = {
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			scheduledDate: '2026-09-08',
+			startTime: '15:00',
+			endTime: '16:00',
+			preReminderSentAt: 'sent',
+			postReminderSentAt: null,
+			student: { name: 'An' },
+		};
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValueOnce([]) // upcoming query — already sent
+			.mockResolvedValueOnce([session]); // finishing query
+		userRepo.findOne = jest
+			.fn()
+			.mockResolvedValue({ id: 'owner-1', email: 'teacher@example.com' });
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			configService as never,
+		);
+
+		await service.sendUpcomingAndFollowupReminders(now);
+
+		expect(mailService.sendEmail).toHaveBeenCalledWith(
+			{ to: 'teacher@example.com' },
+			'teacherRoomReminder',
+			expect.objectContaining({ title: 'Buổi dạy vừa kết thúc' }),
+		);
+		expect(sessionRepo.save).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'sess-1', postReminderSentAt: now }),
+		);
+	});
+
+	it("carries a note about the student's older unconfirmed sessions into the next pre-class reminder", async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+		const configService = {
+			get: jest.fn().mockReturnValue('https://app.example.com'),
+		};
+
+		const now = new Date('2026-09-10T14:50:00.000Z'); // upcoming session at 15:00 today
+		const upcomingSession = {
+			id: 'sess-2',
+			ownerId: 'owner-1',
+			studentId: 'student-1',
+			scheduledDate: '2026-09-10',
+			startTime: '15:00',
+			endTime: '16:00',
+			preReminderSentAt: null,
+			postReminderSentAt: null,
+			student: { name: 'An' },
+		};
+		const staleSession = {
+			id: 'sess-1',
+			ownerId: 'owner-1',
+			studentId: 'student-1',
+			scheduledDate: '2026-09-08',
+			status: 'scheduled',
+		};
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValueOnce([upcomingSession]) // upcoming query
+			.mockResolvedValueOnce([staleSession]) // stale-session lookup for this student, scoped inside the loop
+			.mockResolvedValueOnce([]); // finishing query
+		userRepo.findOne = jest
+			.fn()
+			.mockResolvedValue({ id: 'owner-1', email: 'teacher@example.com' });
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			configService as never,
+		);
+
+		await service.sendUpcomingAndFollowupReminders(now);
+
+		expect(mailService.sendEmail).toHaveBeenCalledWith(
+			{ to: 'teacher@example.com' },
+			'teacherRoomReminder',
+			expect.objectContaining({
+				subtitle: expect.stringContaining(
+					'còn 1 buổi trước đó với An chưa note',
+				),
+			}),
+		);
+	});
+});
