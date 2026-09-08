@@ -10,7 +10,7 @@ import type { ModelMessage } from 'ai';
 import type { Response } from 'express';
 import { BadmintonService } from '../badminton/badminton.service';
 import { RagService } from './rag.service';
-import { kimiChatModel } from './ai.config';
+import { getKimiChatModel } from './ai.config';
 import { buildReadTools } from './tools/read-tools';
 import { buildWriteTools } from './tools/write-tools';
 import type { PendingAction } from './tools/write-tools';
@@ -22,6 +22,7 @@ import {
 import { SendChatMessageDto, ConfirmChatActionDto } from './dto/chat.dto';
 
 const PENDING_TTL_MS = 15 * 60 * 1000;
+const HISTORY_LIMIT = 40;
 
 const SYSTEM_PROMPT = `You are TwinFoundry's badminton assistant. You can propose
 creating a session or marking a participant paid, and answer questions about how
@@ -50,11 +51,18 @@ export class ChatService {
 		const abortController = new AbortController();
 		res.on('close', () => abortController.abort());
 
+		// DESC + take, then reverse back to chronological order: without a
+		// bound here, every turn resends the entire thread, so per-turn cost
+		// grows linearly and total thread cost grows quadratically — exactly
+		// what the design spec's Cost & Ops section budgets against.
 		const history = dto.threadId
-			? await this.chatMessageRepo.find({
-					where: { threadId, userId },
-					order: { createdAt: 'ASC' },
-				})
+			? (
+					await this.chatMessageRepo.find({
+						where: { threadId, userId },
+						order: { createdAt: 'DESC' },
+						take: HISTORY_LIMIT,
+					})
+				).reverse()
 			: [];
 
 		await this.chatMessageRepo.save(
@@ -72,7 +80,7 @@ export class ChatService {
 		};
 
 		const result = streamText({
-			model: kimiChatModel,
+			model: getKimiChatModel(),
 			system: SYSTEM_PROMPT,
 			messages: [
 				// TOOL-role rows are a local audit trail appended by confirmAction
@@ -92,6 +100,16 @@ export class ChatService {
 				const pending = toolResults
 					.map((r) => r.output as PendingAction | undefined)
 					.find((output) => output?.requiresConfirmation);
+
+				// At most one PENDING draft per thread: a new turn — whether or
+				// not it drafts a fresh action — supersedes anything left
+				// unconfirmed from an earlier turn. Without this, two drafted-
+				// but-unconfirmed turns in the same thread both stay executable,
+				// and confirming the newer one doesn't retire the older one.
+				await this.chatMessageRepo.update(
+					{ threadId, userId, toolCallState: ToolCallState.PENDING },
+					{ toolCallState: ToolCallState.REJECTED },
+				);
 
 				await this.chatMessageRepo.save(
 					this.chatMessageRepo.create({

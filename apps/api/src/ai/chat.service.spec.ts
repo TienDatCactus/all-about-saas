@@ -88,6 +88,19 @@ describe('ChatService', () => {
 				pending: false,
 			});
 		});
+
+		it('scopes the lookup to the requesting user', async () => {
+			chatMessageRepo.findOne.mockResolvedValue(null);
+			await service.getPendingAction('user-1', 'thread-1');
+			expect(chatMessageRepo.findOne).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({
+						userId: 'user-1',
+						threadId: 'thread-1',
+					}),
+				}),
+			);
+		});
 	});
 
 	describe('confirmAction', () => {
@@ -186,6 +199,55 @@ describe('ChatService', () => {
 				expect.objectContaining({ toolCallState: ToolCallState.REJECTED }),
 			);
 			expect(result.message).toMatch(/cancel/i);
+		});
+
+		it('scopes the pending-row lookup to the requesting user', async () => {
+			manager.findOne.mockResolvedValue(null);
+			await expect(
+				service.confirmAction('user-1', {
+					threadId: 'thread-1',
+					approve: true,
+				}),
+			).rejects.toThrow(NotFoundException);
+			expect(manager.findOne).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({
+					where: expect.objectContaining({
+						userId: 'user-1',
+						threadId: 'thread-1',
+					}),
+				}),
+			);
+		});
+
+		it('executes setParticipantPaid and flips state to executed', async () => {
+			manager.findOne.mockResolvedValue({
+				id: 'msg-2',
+				threadId: 'thread-1',
+				toolCallState: ToolCallState.PENDING,
+				toolCall: {
+					name: 'setParticipantPaid',
+					args: { sessionId: 's1', participantId: 'p1', paid: true },
+				},
+				createdAt: new Date(),
+			});
+
+			const result = await service.confirmAction('user-1', {
+				threadId: 'thread-1',
+				approve: true,
+			});
+
+			expect(badmintonService.setParticipantPaid).toHaveBeenCalledWith(
+				'user-1',
+				's1',
+				'p1',
+				true,
+			);
+			expect(manager.save).toHaveBeenCalledWith(
+				expect.objectContaining({ toolCallState: ToolCallState.EXECUTED }),
+			);
+			expect(result.message).toMatch(/paid/i);
+			expect(result.toolCallState).toBe(ToolCallState.EXECUTED);
 		});
 	});
 });

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Get,
+	Param,
+	ParseUUIDPipe,
+	Post,
+	Req,
+	Res,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { requireUser } from '../common/request-user';
@@ -21,7 +30,10 @@ export class AiController {
 	}
 
 	@Get(':threadId/pending-action')
-	getPendingAction(@Req() req: Request, @Param('threadId') threadId: string) {
+	getPendingAction(
+		@Req() req: Request,
+		@Param('threadId', ParseUUIDPipe) threadId: string,
+	) {
 		return this.chatService.getPendingAction(requireUser(req).id, threadId);
 	}
 

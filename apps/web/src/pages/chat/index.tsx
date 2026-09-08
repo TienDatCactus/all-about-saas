@@ -5,6 +5,7 @@ import { AppConstants } from "@/lib/utils/constants"
 import { getAccessToken } from "@/lib/utils/access-token"
 import { aiChatApi } from "@/services/ai/api"
 import { AI } from "@/services/url"
+import { toast } from "@/components/custom/toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -88,7 +89,15 @@ export default function ChatPage() {
 
   const handleConfirm = async (approve: boolean) => {
     if (!threadIdRef.current) return
-    await aiChatApi.confirm(threadIdRef.current, approve)
+    try {
+      await aiChatApi.confirm(threadIdRef.current, approve)
+    } catch {
+      toast.error(
+        approve
+          ? "Couldn't confirm — it may have expired. Ask again to get a fresh confirmation."
+          : "Couldn't cancel — it may have already been handled."
+      )
+    }
     setPending({ pending: false })
   }
 

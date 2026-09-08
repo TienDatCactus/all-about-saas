@@ -4,8 +4,6 @@ import type { QdrantClient } from '@qdrant/js-client-rest';
 import { embeddingModel } from './ai.config';
 import { QDRANT_CLIENT } from './qdrant.provider';
 
-const COLLECTION = process.env.QDRANT_COLLECTION || 'twinfoundry-kb';
-
 @Injectable()
 export class RagService {
 	private readonly logger = new Logger(RagService.name);
@@ -18,22 +16,30 @@ export class RagService {
 	 *  Uses `.query()`, not `.search()` — `@qdrant/js-client-rest@1.19.0` has no
 	 *  `search` method (it was replaced client-wide by the universal `query`
 	 *  endpoint). A raw vector passed as `query` runs a nearest-neighbor search,
-	 *  and results come back under `response.points`, not as a flat array. */
+	 *  and results come back under `response.points`, not as a flat array.
+	 *
+	 *  `QDRANT_COLLECTION` is read here, not at module scope: this module is
+	 *  imported (transitively, via AiModule) before `app.module.ts` loads the
+	 *  env file, so a module-level `const` would freeze in the hardcoded
+	 *  fallback on every real deployment, silently searching the wrong
+	 *  collection whenever `QDRANT_COLLECTION` is actually set to something
+	 *  else. */
 	async search(
 		query: string,
 		limit = 4,
 	): Promise<Array<{ text: string; heading: string; score: number }>> {
+		const collection = process.env.QDRANT_COLLECTION || 'twinfoundry-kb';
 		try {
 			const { embedding } = await embed({
 				model: embeddingModel,
 				value: query,
 			});
-			const response = await (this.qdrant as any).query(COLLECTION, {
+			const response = await this.qdrant.query(collection, {
 				query: embedding,
 				limit,
 				with_payload: true,
 			});
-			return response.points.map((point: any) => ({
+			return response.points.map((point) => ({
 				text: String((point.payload as Record<string, unknown>)?.text ?? ''),
 				heading: String(
 					(point.payload as Record<string, unknown>)?.heading ?? '',
