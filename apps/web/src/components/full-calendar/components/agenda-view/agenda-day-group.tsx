@@ -1,12 +1,12 @@
-import { format, parseISO } from "date-fns"
-import { useTranslation } from "react-i18next"
+import { format, parseISO } from "date-fns";
+import { useTranslation } from "react-i18next";
 
-import { useDateFnsLocale, useTimeFormat } from "@/hooks/use-date-fns-locale"
-import { EventDetailsDialog } from "../dialogs/event-details-dialog"
-import { EVENT_TONE, STATUS_LABEL_KEY, TYPE_LABEL_KEY } from "../../adapter"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { DataAvatar } from "@/components/custom/data/avatar"
+import { useDateFnsLocale, useTimeFormat } from "@/hooks/use-date-fns-locale";
+import { EventDetailsDialog } from "../dialogs/event-details-dialog";
+import { EVENT_TONE, STATUS_LABEL_KEY, TYPE_LABEL_KEY } from "../../adapter";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { DataAvatar } from "@/components/custom/data/avatar";
 import {
   Table,
   TableBody,
@@ -14,43 +14,43 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
-import type { IEvent } from "../../interfaces"
+import type { IEvent } from "../../interfaces";
 
 interface IProps {
-  date: Date
-  events: IEvent[]
+  date: Date;
+  events: IEvent[];
 }
 
 // Following https://reui.io/components/table's activity-log pattern: avatar
 // + name, a status badge, a monospace-ish detail column, time right-aligned.
 export function AgendaDayGroup({ date, events }: IProps) {
-  const locale = useDateFnsLocale()
-  const timeFormat = useTimeFormat()
-  const { t } = useTranslation()
+  const locale = useDateFnsLocale();
+  const timeFormat = useTimeFormat();
+  const { t } = useTranslation();
   const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-  )
+    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+  );
 
-  if (sortedEvents.length === 0) return null
+  if (sortedEvents.length === 0) return null;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault()
-      if (e.currentTarget instanceof HTMLElement) e.currentTarget.click()
+      e.preventDefault();
+      if (e.currentTarget instanceof HTMLElement) e.currentTarget.click();
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="sticky top-0 flex items-center gap-4 bg-background py-2">
+      <div className="flex items-center gap-4 bg-background py-2">
         <p className="text-sm font-semibold">
           {format(date, "EEEE, MMMM d, yyyy", { locale })}
         </p>
       </div>
 
-      <Card className="gap-0 overflow-hidden !p-0">
+      <Card className="gap-0 overflow-hidden p-0!">
         <Table>
           <TableHeader>
             <TableRow>
@@ -68,9 +68,9 @@ export function AgendaDayGroup({ date, events }: IProps) {
           </TableHeader>
           <TableBody>
             {sortedEvents.map((event) => {
-              const tone = EVENT_TONE[event.color]
-              const start = parseISO(event.startDate)
-              const end = parseISO(event.endDate)
+              const tone = EVENT_TONE[event.color];
+              const start = parseISO(event.startDate);
+              const end = parseISO(event.endDate);
 
               return (
                 <EventDetailsDialog key={event.id} event={event}>
@@ -113,11 +113,11 @@ export function AgendaDayGroup({ date, events }: IProps) {
                     </TableCell>
                   </TableRow>
                 </EventDetailsDialog>
-              )
+              );
             })}
           </TableBody>
         </Table>
       </Card>
     </div>
-  )
+  );
 }

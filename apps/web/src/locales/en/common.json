@@ -370,6 +370,10 @@
     "logo": {
       "ariaLabel": "Go to homepage"
     },
+    "shellHeader": {
+      "menu": "Menu",
+      "openMenu": "Open menu"
+    },
     "attachment": {
       "placeholder": "Upload a file",
       "remove": "Remove attachment"

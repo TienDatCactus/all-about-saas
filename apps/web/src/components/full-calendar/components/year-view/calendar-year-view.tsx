@@ -24,7 +24,12 @@ export function CalendarYearView({ allEvents }: IProps) {
     // Same fixed-height + internal scroll as the day/agenda views — without
     // it, 12 month tiles stacked 1-2 per row (narrow/@container-squeezed
     // widths) push the whole page height way out instead of scrolling.
-    <ScrollArea className="h-[800px]" type="always">
+    // Capped at 800px but shrinks on shorter viewports so this view never
+    // pushes the whole page taller than the screen (24rem ≈ chrome above it).
+    <ScrollArea
+      className="h-[min(800px,max(240px,calc(100dvh-24rem)))]"
+      type="always"
+    >
       <div className="p-4">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {months.map((month) => (

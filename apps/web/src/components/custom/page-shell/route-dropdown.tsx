@@ -2,7 +2,14 @@ import { useRouter } from "@tanstack/react-router"
 import React, { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { DataDropdown } from "../data/dropdown"
-import { PathIcon } from "@phosphor-icons/react"
+import { Button } from "../../ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../../ui/collapsible"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { CaretRightIcon, PathIcon } from "@phosphor-icons/react"
 interface RouteDropdownProps {
   hiddenRoutes?: Array<string>
 }
@@ -25,6 +32,7 @@ const RouteDropdown: React.FC<RouteDropdownProps> = ({
 }) => {
   const router = useRouter()
   const { t } = useTranslation()
+  const isMobile = useIsMobile()
 
   // Absolute paths navigate() accepts — routesByPath keys index routes with a
   // trailing slash ("/badminton/") that `to` rejects, so keys are normalized
@@ -93,6 +101,57 @@ const RouteDropdown: React.FC<RouteDropdownProps> = ({
     )
     return [...roots.sort(byPath), ...submenus.sort(byPath)]
   }, [router.routesByPath, hiddenRoutes])
+
+  // Mobile: a popover flyout is awkward inside the header's Sheet drawer, so
+  // the tree expands inline instead — same data, a Collapsible per level.
+  const renderMobileNode = (node: RouteNode): React.ReactNode => {
+    const title = routeTitle(node.path, t("common.routeDropdown.home"))
+    if (node.children?.length) {
+      return (
+        <Collapsible key={node.path}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="group w-full justify-between px-2">
+              <span className="flex items-center gap-2">
+                <PathIcon />
+                {title}
+              </span>
+              <CaretRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="flex flex-col gap-1 pl-6">
+            {node.children.map(renderMobileNode)}
+          </CollapsibleContent>
+        </Collapsible>
+      )
+    }
+    return (
+      <Button
+        key={node.path}
+        variant="ghost"
+        className="w-full justify-start gap-2 px-2"
+        onClick={() => void router.navigate({ to: node.path })}
+      >
+        <PathIcon />
+        {title}
+      </Button>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <Collapsible className="w-full">
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" className="group w-full justify-between">
+            {t("common.routeDropdown.pages")}
+            <CaretRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 flex flex-col gap-1">
+          {routeTree.map(renderMobileNode)}
+        </CollapsibleContent>
+      </Collapsible>
+    )
+  }
 
   return (
     <DataDropdown

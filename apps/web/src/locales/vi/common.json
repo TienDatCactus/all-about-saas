@@ -370,6 +370,10 @@
     "logo": {
       "ariaLabel": "Về trang chủ"
     },
+    "shellHeader": {
+      "menu": "Menu",
+      "openMenu": "Mở menu"
+    },
     "attachment": {
       "placeholder": "Tải lên tệp",
       "remove": "Xóa tệp đính kèm"

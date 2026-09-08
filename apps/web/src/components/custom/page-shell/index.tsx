@@ -1,12 +1,21 @@
-import { DesktopTowerIcon } from "@phosphor-icons/react"
+import { ListIcon } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "../../ui/button"
+import Logo from "../logo"
 import { LanguageToggler } from "./language-toggle"
 import RouteDropdown from "./route-dropdown"
 import { ThemeToggler } from "./theme-toggle"
 import { UserMenu } from "./user-menu"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 /** "/auth/sign-up" → "Sign up", "/badminton/$sessionId" → "sessionId", "/" → "Home". */
 
@@ -43,33 +52,52 @@ export function ShellHeader({
   actions?: ReactNode
   compact?: boolean
 }) {
+  const { t } = useTranslation()
   return (
     <header
       className={cn(
-        // flex-wrap + auto height below `sm`: the left (brand/nav) and right
-        // (language/theme/user) clusters both refuse to shrink, so below
-        // ~480px combined they no longer fit on one row. Without wrap, the
-        // right cluster — including sign-out — was pushed past the
-        // viewport edge with no scrollbar to reach it.
-        "flex h-auto min-h-12 w-full flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2 sm:h-12 sm:flex-nowrap sm:py-0",
+        "flex h-12 w-full items-center justify-between gap-2 border-b border-border px-4",
         !compact && "sticky top-0 z-100 bg-background"
       )}
     >
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex min-w-0 shrink items-center gap-3">
         {actions ?? actions}
         {actions ? <Separator orientation="vertical" /> : null}
-        <Button variant="ghost" className="font-semibold">
-          <DesktopTowerIcon />
-          All about Saas
-        </Button>
-        <RouteDropdown />
+        <Logo alt="All about Saas" className="w-8 shrink-0" />
+        <div className="hidden md:block">
+          <RouteDropdown />
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-3">
-        {/* <Separator orientation="vertical" /> */}
+      {/* Below `md` (768px — same cutover as useIsMobile, which RouteDropdown
+          itself reads) the page navigator + language/theme/user cluster move
+          into a top-down Sheet instead of wrapping or shrinking off-screen —
+          there isn't enough width beside the brand to keep them inline. */}
+      <div className="hidden shrink-0 items-center gap-3 md:flex">
         <LanguageToggler />
         <ThemeToggler />
         <UserMenu />
       </div>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="shrink-0 md:hidden">
+            <ListIcon />
+            <span className="sr-only">{t("common.shellHeader.openMenu")}</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="top">
+          <SheetHeader>
+            <SheetTitle>{t("common.shellHeader.menu")}</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-3 p-6 pt-0">
+            <RouteDropdown />
+            <div className="flex items-center gap-3">
+              <LanguageToggler />
+              <ThemeToggler />
+              <UserMenu />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
   )
 }

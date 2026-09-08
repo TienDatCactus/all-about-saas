@@ -76,7 +76,13 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
           </div>
         </div>
 
-        <ScrollArea className="h-[800px]" type="always">
+        {/* Capped at 800px but shrinks on shorter viewports so this view
+            never pushes the whole page taller than the screen (24rem ≈
+            chrome above it: header, page title, calendar toolbar). */}
+        <ScrollArea
+          className="h-[min(800px,max(240px,calc(100dvh-24rem)))]"
+          type="always"
+        >
           <div className="flex">
             {/* Hours column */}
             <div className="relative w-18">

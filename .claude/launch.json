@@ -12,6 +12,12 @@
 			"runtimeExecutable": "npm",
 			"runtimeArgs": ["run", "email", "--workspace", "@transactional/emails"],
 			"port": 4000
+		},
+		{
+			"name": "api",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "dev", "--workspace", "@app/api"],
+			"port": 8000
 		}
 	]
 }
