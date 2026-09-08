@@ -27,5 +27,6 @@ import { BadmintonController } from './badminton.controller';
 	],
 	providers: [BadmintonService],
 	controllers: [BadmintonController],
+	exports: [BadmintonService],
 })
 export class BadmintonModule {}

@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AiModule } from './ai/ai.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -42,6 +43,7 @@ resolveFileSecrets();
 	imports: [
 		UsersModule,
 		AuthModule,
+		AiModule,
 		ConfigModule.forRoot({
 			envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}.local`],
 			isGlobal: true,
