@@ -18,6 +18,12 @@ export default function SlotListPage() {
   const [editing, setEditing] = useState<
     WeeklyScheduleSlot | "new" | undefined
   >()
+  const [dialogKey, setDialogKey] = useState(0)
+
+  function openDialog(target: WeeklyScheduleSlot | "new") {
+    setEditing(target)
+    setDialogKey((k) => k + 1)
+  }
 
   const slots = [...(slotsQuery.data?.data ?? [])].sort(
     (a, b) =>
@@ -32,7 +38,7 @@ export default function SlotListPage() {
         title="Lịch học hàng tuần"
         description="Lịch cố định theo tuần cho từng học sinh."
         actions={
-          <Button onClick={() => setEditing("new")}>
+          <Button onClick={() => openDialog("new")}>
             <PlusIcon data-icon="inline-start" />
             Thêm lịch học
           </Button>
@@ -43,7 +49,7 @@ export default function SlotListPage() {
           media: { variant: "icon", icon: <CalendarIcon /> },
           title: "Chưa có lịch học nào",
           content: (
-            <Button onClick={() => setEditing("new")}>Thêm lịch học</Button>
+            <Button onClick={() => openDialog("new")}>Thêm lịch học</Button>
           ),
         }}
       >
@@ -69,7 +75,7 @@ export default function SlotListPage() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => setEditing(slot)}
+                    onClick={() => openDialog(slot)}
                   >
                     <PencilIcon />
                   </Button>
@@ -80,7 +86,7 @@ export default function SlotListPage() {
         )}
       </DataPage>
       <SlotEditorDialog
-        key={editing === "new" ? "new" : (editing?.id ?? "closed")}
+        key={dialogKey}
         slot={editing === "new" ? undefined : editing}
         open={editing !== undefined}
         onOpenChange={(open: boolean) => !open && setEditing(undefined)}
