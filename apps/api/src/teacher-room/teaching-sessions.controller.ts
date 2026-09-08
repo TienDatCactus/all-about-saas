@@ -1,15 +1,20 @@
 import {
+	Body,
 	Controller,
 	Get,
 	Param,
 	ParseUUIDPipe,
+	Post,
 	Query,
 	Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { requireUser } from '../common/request-user';
-import { QuerySessionRangeDto } from './teaching-sessions.dto';
+import {
+	CreateAdHocSessionDto,
+	QuerySessionRangeDto,
+} from './teaching-sessions.dto';
 import { TeachingSessionsService } from './teaching-sessions.service';
 
 @Controller('teacher-room/sessions')
@@ -31,5 +36,10 @@ export class TeachingSessionsController {
 	@Get(':id/history')
 	history(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
 		return this.service.history(requireUser(req).id, id);
+	}
+
+	@Post()
+	createAdHoc(@Req() req: Request, @Body() dto: CreateAdHocSessionDto) {
+		return this.service.createAdHoc(requireUser(req).id, dto);
 	}
 }

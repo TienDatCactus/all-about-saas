@@ -4,9 +4,14 @@ import { Between, Repository } from 'typeorm';
 import {
 	TeachingSession,
 	SessionStatus,
+	SessionType,
 } from './entities/teaching-session.entity';
-import { TeachingSessionHistory } from './entities/teaching-session-history.entity';
+import {
+	TeachingSessionHistory,
+	HistoryAction,
+} from './entities/teaching-session-history.entity';
 import { StudentsService } from './students.service';
+import { CreateAdHocSessionDto } from './teaching-sessions.dto';
 
 @Injectable()
 export class TeachingSessionsService {
@@ -15,9 +20,7 @@ export class TeachingSessionsService {
 		private readonly sessionRepo: Repository<TeachingSession>,
 		@InjectRepository(TeachingSessionHistory)
 		private readonly historyRepo: Repository<TeachingSessionHistory>,
-		// Unused until Task 8's createAdHoc (resolves a free-text studentName the
-		// same way WeeklySlotsService does) — declared here so every test in this
-		// growing spec file constructs the class with a stable 3-arg shape.
+		// Resolves a free-text studentName in createAdHoc, same as WeeklySlotsService.createSlot.
 		private readonly studentsService: StudentsService,
 	) {}
 
@@ -48,5 +51,30 @@ export class TeachingSessionsService {
 			where: { sessionId },
 			order: { createdAt: 'DESC' },
 		});
+	}
+
+	async createAdHoc(ownerId: string, dto: CreateAdHocSessionDto) {
+		const student = await this.studentsService.findOrCreate(
+			ownerId,
+			dto.studentName,
+		);
+
+		const session = await this.sessionRepo.save(
+			this.sessionRepo.create({
+				ownerId,
+				studentId: student.id,
+				slotId: null,
+				scheduledDate: dto.scheduledDate,
+				startTime: dto.startTime,
+				endTime: dto.endTime,
+				status: SessionStatus.SCHEDULED,
+				type: SessionType.EXTRA,
+				note: dto.note,
+			}),
+		);
+		await this.historyRepo.save(
+			this.historyRepo.create({ sessionId: session.id, action: HistoryAction.CREATED }),
+		);
+		return session;
 	}
 }
