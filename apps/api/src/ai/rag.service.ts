@@ -10,24 +10,15 @@ const COLLECTION = process.env.QDRANT_COLLECTION || 'twinfoundry-kb';
 export class RagService {
 	private readonly logger = new Logger(RagService.name);
 
-	constructor(
-		@Inject(QDRANT_CLIENT)
-		private readonly qdrant: QdrantClient & {
-			search: (
-				collection: string,
-				request: {
-					vector: number[];
-					limit: number;
-					with_payload: boolean;
-				},
-			) => Promise<
-				Array<{ score: number; payload: Record<string, unknown> }>
-			>;
-		},
-	) {}
+	constructor(@Inject(QDRANT_CLIENT) private readonly qdrant: QdrantClient) {}
 
 	/** Fails soft: a chat turn should answer without retrieved context rather
-	 *  than break because Qdrant is briefly unreachable. */
+	 *  than break because Qdrant is briefly unreachable.
+	 *
+	 *  Uses `.query()`, not `.search()` — `@qdrant/js-client-rest@1.19.0` has no
+	 *  `search` method (it was replaced client-wide by the universal `query`
+	 *  endpoint). A raw vector passed as `query` runs a nearest-neighbor search,
+	 *  and results come back under `response.points`, not as a flat array. */
 	async search(
 		query: string,
 		limit = 4,
@@ -37,17 +28,17 @@ export class RagService {
 				model: embeddingModel,
 				value: query,
 			});
-			const hits = await this.qdrant.search(COLLECTION, {
-				vector: embedding,
+			const response = await (this.qdrant as any).query(COLLECTION, {
+				query: embedding,
 				limit,
 				with_payload: true,
 			});
-			return hits.map((hit: { score: number; payload: Record<string, unknown> }) => ({
-				text: String((hit.payload as Record<string, unknown>)?.text ?? ''),
+			return response.points.map((point: any) => ({
+				text: String((point.payload as Record<string, unknown>)?.text ?? ''),
 				heading: String(
-					(hit.payload as Record<string, unknown>)?.heading ?? '',
+					(point.payload as Record<string, unknown>)?.heading ?? '',
 				),
-				score: hit.score,
+				score: point.score,
 			}));
 		} catch (error) {
 			this.logger.warn(
