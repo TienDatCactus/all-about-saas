@@ -8,164 +8,164 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as AuthenticatedBadmintonRouteRouteImport } from './routes/_authenticated/badminton/route'
-import { Route as AuthChangePasswordRouteImport } from './routes/auth/change-password'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
-import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
-import { Route as AuthenticatedBadmintonIndexRouteImport } from './routes/_authenticated/badminton/index'
-import { Route as AuthenticatedBadmintonSessionIdRouteImport } from './routes/_authenticated/badminton/$sessionId'
-import { Route as AuthenticatedBadmintonNewRouteImport } from './routes/_authenticated/badminton/new'
-import { Route as BadmintonSShareTokenRouteImport } from './routes/badminton.s.$shareToken'
+import { Route as rootRouteImport } from "./routes/__root"
+import { Route as IndexRouteImport } from "./routes/index"
+import { Route as AuthenticatedRouteImport } from "./routes/_authenticated"
+import { Route as VerifyEmailRouteImport } from "./routes/verify-email"
+import { Route as AuthenticatedBadmintonRouteRouteImport } from "./routes/_authenticated/badminton/route"
+import { Route as AuthChangePasswordRouteImport } from "./routes/auth/change-password"
+import { Route as AuthLoginRouteImport } from "./routes/auth/login"
+import { Route as AuthResetPasswordRouteImport } from "./routes/auth/reset-password"
+import { Route as AuthSignUpRouteImport } from "./routes/auth/sign-up"
+import { Route as AuthenticatedBadmintonIndexRouteImport } from "./routes/_authenticated/badminton/index"
+import { Route as AuthenticatedBadmintonSessionIdRouteImport } from "./routes/_authenticated/badminton/$sessionId"
+import { Route as AuthenticatedBadmintonNewRouteImport } from "./routes/_authenticated/badminton/new"
+import { Route as BadmintonSShareTokenRouteImport } from "./routes/badminton.s.$shareToken"
 
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+  id: "/_authenticated",
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
+  id: "/verify-email",
+  path: "/verify-email",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedBadmintonRouteRoute =
   AuthenticatedBadmintonRouteRouteImport.update({
-    id: '/badminton',
-    path: '/badminton',
+    id: "/badminton",
+    path: "/badminton",
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthChangePasswordRoute = AuthChangePasswordRouteImport.update({
-  id: '/auth/change-password',
-  path: '/auth/change-password',
+  id: "/auth/change-password",
+  path: "/auth/change-password",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
+  id: "/auth/login",
+  path: "/auth/login",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
-  id: '/auth/reset-password',
-  path: '/auth/reset-password',
+  id: "/auth/reset-password",
+  path: "/auth/reset-password",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSignUpRoute = AuthSignUpRouteImport.update({
-  id: '/auth/sign-up',
-  path: '/auth/sign-up',
+  id: "/auth/sign-up",
+  path: "/auth/sign-up",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedBadmintonIndexRoute =
   AuthenticatedBadmintonIndexRouteImport.update({
-    id: '/',
-    path: '/',
+    id: "/",
+    path: "/",
     getParentRoute: () => AuthenticatedBadmintonRouteRoute,
   } as any)
 const AuthenticatedBadmintonSessionIdRoute =
   AuthenticatedBadmintonSessionIdRouteImport.update({
-    id: '/$sessionId',
-    path: '/$sessionId',
+    id: "/$sessionId",
+    path: "/$sessionId",
     getParentRoute: () => AuthenticatedBadmintonRouteRoute,
   } as any)
 const AuthenticatedBadmintonNewRoute =
   AuthenticatedBadmintonNewRouteImport.update({
-    id: '/new',
-    path: '/new',
+    id: "/new",
+    path: "/new",
     getParentRoute: () => AuthenticatedBadmintonRouteRoute,
   } as any)
 const BadmintonSShareTokenRoute = BadmintonSShareTokenRouteImport.update({
-  id: '/badminton/s/$shareToken',
-  path: '/badminton/s/$shareToken',
+  id: "/badminton/s/$shareToken",
+  path: "/badminton/s/$shareToken",
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/badminton': typeof AuthenticatedBadmintonRouteRouteWithChildren
-  '/auth/change-password': typeof AuthChangePasswordRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/auth/sign-up': typeof AuthSignUpRoute
-  '/badminton/$sessionId': typeof AuthenticatedBadmintonSessionIdRoute
-  '/badminton/new': typeof AuthenticatedBadmintonNewRoute
-  '/badminton/s/$shareToken': typeof BadmintonSShareTokenRoute
-  '/badminton/': typeof AuthenticatedBadmintonIndexRoute
+  "/": typeof IndexRoute
+  "/verify-email": typeof VerifyEmailRoute
+  "/badminton": typeof AuthenticatedBadmintonRouteRouteWithChildren
+  "/auth/change-password": typeof AuthChangePasswordRoute
+  "/auth/login": typeof AuthLoginRoute
+  "/auth/reset-password": typeof AuthResetPasswordRoute
+  "/auth/sign-up": typeof AuthSignUpRoute
+  "/badminton/$sessionId": typeof AuthenticatedBadmintonSessionIdRoute
+  "/badminton/new": typeof AuthenticatedBadmintonNewRoute
+  "/badminton/s/$shareToken": typeof BadmintonSShareTokenRoute
+  "/badminton/": typeof AuthenticatedBadmintonIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/auth/change-password': typeof AuthChangePasswordRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/auth/sign-up': typeof AuthSignUpRoute
-  '/badminton/$sessionId': typeof AuthenticatedBadmintonSessionIdRoute
-  '/badminton/new': typeof AuthenticatedBadmintonNewRoute
-  '/badminton/s/$shareToken': typeof BadmintonSShareTokenRoute
-  '/badminton': typeof AuthenticatedBadmintonIndexRoute
+  "/": typeof IndexRoute
+  "/verify-email": typeof VerifyEmailRoute
+  "/auth/change-password": typeof AuthChangePasswordRoute
+  "/auth/login": typeof AuthLoginRoute
+  "/auth/reset-password": typeof AuthResetPasswordRoute
+  "/auth/sign-up": typeof AuthSignUpRoute
+  "/badminton/$sessionId": typeof AuthenticatedBadmintonSessionIdRoute
+  "/badminton/new": typeof AuthenticatedBadmintonNewRoute
+  "/badminton/s/$shareToken": typeof BadmintonSShareTokenRoute
+  "/badminton": typeof AuthenticatedBadmintonIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/verify-email': typeof VerifyEmailRoute
-  '/_authenticated/badminton': typeof AuthenticatedBadmintonRouteRouteWithChildren
-  '/auth/change-password': typeof AuthChangePasswordRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/auth/sign-up': typeof AuthSignUpRoute
-  '/_authenticated/badminton/$sessionId': typeof AuthenticatedBadmintonSessionIdRoute
-  '/_authenticated/badminton/new': typeof AuthenticatedBadmintonNewRoute
-  '/badminton/s/$shareToken': typeof BadmintonSShareTokenRoute
-  '/_authenticated/badminton/': typeof AuthenticatedBadmintonIndexRoute
+  "/": typeof IndexRoute
+  "/_authenticated": typeof AuthenticatedRouteWithChildren
+  "/verify-email": typeof VerifyEmailRoute
+  "/_authenticated/badminton": typeof AuthenticatedBadmintonRouteRouteWithChildren
+  "/auth/change-password": typeof AuthChangePasswordRoute
+  "/auth/login": typeof AuthLoginRoute
+  "/auth/reset-password": typeof AuthResetPasswordRoute
+  "/auth/sign-up": typeof AuthSignUpRoute
+  "/_authenticated/badminton/$sessionId": typeof AuthenticatedBadmintonSessionIdRoute
+  "/_authenticated/badminton/new": typeof AuthenticatedBadmintonNewRoute
+  "/badminton/s/$shareToken": typeof BadmintonSShareTokenRoute
+  "/_authenticated/badminton/": typeof AuthenticatedBadmintonIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/verify-email'
-    | '/badminton'
-    | '/auth/change-password'
-    | '/auth/login'
-    | '/auth/reset-password'
-    | '/auth/sign-up'
-    | '/badminton/$sessionId'
-    | '/badminton/new'
-    | '/badminton/s/$shareToken'
-    | '/badminton/'
+    | "/"
+    | "/verify-email"
+    | "/badminton"
+    | "/auth/change-password"
+    | "/auth/login"
+    | "/auth/reset-password"
+    | "/auth/sign-up"
+    | "/badminton/$sessionId"
+    | "/badminton/new"
+    | "/badminton/s/$shareToken"
+    | "/badminton/"
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/verify-email'
-    | '/auth/change-password'
-    | '/auth/login'
-    | '/auth/reset-password'
-    | '/auth/sign-up'
-    | '/badminton/$sessionId'
-    | '/badminton/new'
-    | '/badminton/s/$shareToken'
-    | '/badminton'
+    | "/"
+    | "/verify-email"
+    | "/auth/change-password"
+    | "/auth/login"
+    | "/auth/reset-password"
+    | "/auth/sign-up"
+    | "/badminton/$sessionId"
+    | "/badminton/new"
+    | "/badminton/s/$shareToken"
+    | "/badminton"
   id:
-    | '__root__'
-    | '/'
-    | '/_authenticated'
-    | '/verify-email'
-    | '/_authenticated/badminton'
-    | '/auth/change-password'
-    | '/auth/login'
-    | '/auth/reset-password'
-    | '/auth/sign-up'
-    | '/_authenticated/badminton/$sessionId'
-    | '/_authenticated/badminton/new'
-    | '/badminton/s/$shareToken'
-    | '/_authenticated/badminton/'
+    | "__root__"
+    | "/"
+    | "/_authenticated"
+    | "/verify-email"
+    | "/_authenticated/badminton"
+    | "/auth/change-password"
+    | "/auth/login"
+    | "/auth/reset-password"
+    | "/auth/sign-up"
+    | "/_authenticated/badminton/$sessionId"
+    | "/_authenticated/badminton/new"
+    | "/badminton/s/$shareToken"
+    | "/_authenticated/badminton/"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,89 +179,89 @@ export interface RootRouteChildren {
   BadmintonSShareTokenRoute: typeof BadmintonSShareTokenRoute
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
+    "/_authenticated": {
+      id: "/_authenticated"
+      path: ""
+      fullPath: "/"
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
+    "/verify-email": {
+      id: "/verify-email"
+      path: "/verify-email"
+      fullPath: "/verify-email"
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/badminton': {
-      id: '/_authenticated/badminton'
-      path: '/badminton'
-      fullPath: '/badminton'
+    "/_authenticated/badminton": {
+      id: "/_authenticated/badminton"
+      path: "/badminton"
+      fullPath: "/badminton"
       preLoaderRoute: typeof AuthenticatedBadmintonRouteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/auth/change-password': {
-      id: '/auth/change-password'
-      path: '/auth/change-password'
-      fullPath: '/auth/change-password'
+    "/auth/change-password": {
+      id: "/auth/change-password"
+      path: "/auth/change-password"
+      fullPath: "/auth/change-password"
       preLoaderRoute: typeof AuthChangePasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
+    "/auth/login": {
+      id: "/auth/login"
+      path: "/auth/login"
+      fullPath: "/auth/login"
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/reset-password': {
-      id: '/auth/reset-password'
-      path: '/auth/reset-password'
-      fullPath: '/auth/reset-password'
+    "/auth/reset-password": {
+      id: "/auth/reset-password"
+      path: "/auth/reset-password"
+      fullPath: "/auth/reset-password"
       preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/sign-up': {
-      id: '/auth/sign-up'
-      path: '/auth/sign-up'
-      fullPath: '/auth/sign-up'
+    "/auth/sign-up": {
+      id: "/auth/sign-up"
+      path: "/auth/sign-up"
+      fullPath: "/auth/sign-up"
       preLoaderRoute: typeof AuthSignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/badminton/': {
-      id: '/_authenticated/badminton/'
-      path: '/'
-      fullPath: '/badminton/'
+    "/_authenticated/badminton/": {
+      id: "/_authenticated/badminton/"
+      path: "/"
+      fullPath: "/badminton/"
       preLoaderRoute: typeof AuthenticatedBadmintonIndexRouteImport
       parentRoute: typeof AuthenticatedBadmintonRouteRoute
     }
-    '/_authenticated/badminton/$sessionId': {
-      id: '/_authenticated/badminton/$sessionId'
-      path: '/$sessionId'
-      fullPath: '/badminton/$sessionId'
+    "/_authenticated/badminton/$sessionId": {
+      id: "/_authenticated/badminton/$sessionId"
+      path: "/$sessionId"
+      fullPath: "/badminton/$sessionId"
       preLoaderRoute: typeof AuthenticatedBadmintonSessionIdRouteImport
       parentRoute: typeof AuthenticatedBadmintonRouteRoute
     }
-    '/_authenticated/badminton/new': {
-      id: '/_authenticated/badminton/new'
-      path: '/new'
-      fullPath: '/badminton/new'
+    "/_authenticated/badminton/new": {
+      id: "/_authenticated/badminton/new"
+      path: "/new"
+      fullPath: "/badminton/new"
       preLoaderRoute: typeof AuthenticatedBadmintonNewRouteImport
       parentRoute: typeof AuthenticatedBadmintonRouteRoute
     }
-    '/badminton/s/$shareToken': {
-      id: '/badminton/s/$shareToken'
-      path: '/badminton/s/$shareToken'
-      fullPath: '/badminton/s/$shareToken'
+    "/badminton/s/$shareToken": {
+      id: "/badminton/s/$shareToken"
+      path: "/badminton/s/$shareToken"
+      fullPath: "/badminton/s/$shareToken"
       preLoaderRoute: typeof BadmintonSShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -283,7 +283,7 @@ const AuthenticatedBadmintonRouteRouteChildren: AuthenticatedBadmintonRouteRoute
 
 const AuthenticatedBadmintonRouteRouteWithChildren =
   AuthenticatedBadmintonRouteRoute._addFileChildren(
-    AuthenticatedBadmintonRouteRouteChildren,
+    AuthenticatedBadmintonRouteRouteChildren
   )
 
 interface AuthenticatedRouteChildren {
@@ -296,7 +296,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
+  AuthenticatedRouteChildren
 )
 
 const rootRouteChildren: RootRouteChildren = {
@@ -313,9 +313,9 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
+import type { getRouter } from "./router.tsx"
+import type { createStart } from "@tanstack/react-start"
+declare module "@tanstack/react-start" {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
