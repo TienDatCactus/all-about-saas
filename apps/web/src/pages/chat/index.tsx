@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button"
 export default function ChatPage() {
   const [input, setInput] = useState("")
   const [threadId, setThreadId] = useState<string | null>(null)
-  const [pending, setPending] = useState<{ pending: boolean; summary?: string }>({
+  const [pending, setPending] = useState<{
+    pending: boolean
+    summary?: string
+  }>({
     pending: false,
   })
 
