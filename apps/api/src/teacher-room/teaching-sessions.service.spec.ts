@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { TeachingSessionsService } from './teaching-sessions.service';
 
 function mockRepo() {
@@ -71,5 +72,22 @@ describe('TeachingSessionsService', () => {
 			where: { sessionId: 'sess-1' },
 			order: { createdAt: 'DESC' },
 		});
+	});
+
+	it('history rejects with NotFoundException if session not found (guards against cross-tenant disclosure)', async () => {
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		sessionRepo.findOne.mockResolvedValue(null);
+		const studentsService = { findOrCreate: jest.fn() };
+		const service = new TeachingSessionsService(
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
+
+		await expect(service.history('owner-1', 'sess-1')).rejects.toThrow(
+			new NotFoundException('Session not found'),
+		);
+		expect(historyRepo.find).not.toHaveBeenCalled();
 	});
 });
