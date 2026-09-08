@@ -33,3 +33,9 @@ export const PAYMENT_METHODS = {
 export const USERS = {
   me: "/users/me",
 }
+
+export const AI = {
+  chat: "/ai/chat",
+  pendingAction: (threadId: string) => `/ai/chat/${threadId}/pending-action`,
+  confirm: "/ai/chat/confirm",
+}

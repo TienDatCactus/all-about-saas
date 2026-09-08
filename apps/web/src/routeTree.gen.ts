@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthenticatedBadmintonRouteRouteImport } from './routes/_authenticated/badminton/route'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthChangePasswordRouteImport } from './routes/auth/change-password'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
@@ -42,6 +43,11 @@ const AuthenticatedBadmintonRouteRoute =
     path: '/badminton',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthChangePasswordRoute = AuthChangePasswordRouteImport.update({
   id: '/auth/change-password',
   path: '/auth/change-password',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/verify-email': typeof VerifyEmailRoute
   '/badminton': typeof AuthenticatedBadmintonRouteRouteWithChildren
+  '/chat': typeof AuthenticatedChatRoute
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/badminton': typeof AuthenticatedBadmintonRouteRouteWithChildren
+  '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/verify-email'
     | '/badminton'
+    | '/chat'
     | '/auth/change-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/verify-email'
+    | '/chat'
     | '/auth/change-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/verify-email'
     | '/_authenticated/badminton'
+    | '/_authenticated/chat'
     | '/auth/change-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -207,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/badminton'
       fullPath: '/badminton'
       preLoaderRoute: typeof AuthenticatedBadmintonRouteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/auth/change-password': {
@@ -288,11 +307,13 @@ const AuthenticatedBadmintonRouteRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedBadmintonRouteRoute: typeof AuthenticatedBadmintonRouteRouteWithChildren
+  AuthenticatedChatRoute: typeof AuthenticatedChatRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBadmintonRouteRoute:
     AuthenticatedBadmintonRouteRouteWithChildren,
+  AuthenticatedChatRoute: AuthenticatedChatRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
