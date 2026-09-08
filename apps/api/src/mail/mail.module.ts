@@ -33,5 +33,6 @@ import * as dns from 'dns';
 	// No controller: POST /mail/try was an unauthenticated, fixed-recipient test
 	// endpoint that let anyone on the internet make the server send mail.
 	providers: [MailService],
+	exports: [MailService],
 })
 export class MailModule {}

@@ -11,6 +11,7 @@ import { WeeklySlotsService } from './weekly-slots.service';
 import { WeeklySlotsController } from './weekly-slots.controller';
 import { TeachingSessionsService } from './teaching-sessions.service';
 import { TeachingSessionsController } from './teaching-sessions.controller';
+import { TeacherRoomSchedulerService } from './teacher-room-scheduler.service';
 import { MailModule } from '../mail/mail.module';
 
 @Module({
@@ -24,7 +25,12 @@ import { MailModule } from '../mail/mail.module';
 		]),
 		MailModule,
 	],
-	providers: [StudentsService, WeeklySlotsService, TeachingSessionsService],
+	providers: [
+		StudentsService,
+		WeeklySlotsService,
+		TeachingSessionsService,
+		TeacherRoomSchedulerService,
+	],
 	controllers: [
 		StudentsController,
 		WeeklySlotsController,
