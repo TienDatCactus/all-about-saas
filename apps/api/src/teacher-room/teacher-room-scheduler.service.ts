@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, LessThan, Repository } from 'typeorm';
+import { In, IsNull, LessThan, LessThanOrEqual, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { WeeklyScheduleSlot } from './entities/weekly-schedule-slot.entity';
 import {
@@ -84,7 +84,10 @@ export class TeacherRoomSchedulerService {
 	async sendDailyReminders() {
 		const today = new Date().toISOString().slice(0, 10);
 		const pending = await this.sessionRepo.find({
-			where: { scheduledDate: today, status: SessionStatus.SCHEDULED },
+			where: {
+				scheduledDate: LessThanOrEqual(today),
+				status: SessionStatus.SCHEDULED,
+			},
 			relations: { student: true },
 			order: { priority: 'DESC', startTime: 'ASC' },
 		});

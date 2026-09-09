@@ -22,8 +22,9 @@ describe('occurrenceDates', () => {
 });
 
 describe('combineDateTime', () => {
-	it('combines a YYYY-MM-DD date and HH:mm time into a single UTC Date', () => {
+	it('treats HH:mm as Vietnam local time (+07:00), converting to the equivalent UTC instant', () => {
 		const dt = combineDateTime('2026-09-08', '15:30');
-		expect(dt.toISOString()).toBe('2026-09-08T15:30:00.000Z');
+		// 15:30 +07:00 = 08:30 UTC.
+		expect(dt.toISOString()).toBe('2026-09-08T08:30:00.000Z');
 	});
 });

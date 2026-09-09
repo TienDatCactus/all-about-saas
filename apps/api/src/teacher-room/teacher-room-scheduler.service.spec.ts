@@ -1,3 +1,4 @@
+import { LessThanOrEqual } from 'typeorm';
 import { TeacherRoomSchedulerService } from './teacher-room-scheduler.service';
 
 function mockRepo() {
@@ -128,6 +129,53 @@ describe('TeacherRoomSchedulerService.sendDailyReminders', () => {
 		);
 	});
 
+	it('sendDailyReminders still includes a session from several days ago, not just today', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const userRepo = mockRepo();
+		const mailService = { sendEmail: jest.fn() };
+		const configService = {
+			get: jest.fn().mockReturnValue('https://app.example.com'),
+		};
+
+		sessionRepo.find.mockResolvedValue([
+			{
+				ownerId: 'owner-1',
+				startTime: '15:00',
+				endTime: '16:00',
+				priority: 'normal',
+				student: { name: 'An' },
+			},
+		]);
+		userRepo.findOne = jest
+			.fn()
+			.mockResolvedValue({ id: 'owner-1', email: 'teacher@example.com' });
+
+		const service = new TeacherRoomSchedulerService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			userRepo as never,
+			mailService as never,
+			configService as never,
+		);
+
+		await service.sendDailyReminders();
+
+		// The digest is a backstop: it must keep re-listing anything still
+		// unconfirmed, so the date filter is `<= today`, never `=== today`.
+		expect(sessionRepo.find).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: {
+					scheduledDate: LessThanOrEqual(expect.any(String)),
+					status: 'scheduled',
+				},
+			}),
+		);
+		expect(mailService.sendEmail).toHaveBeenCalledTimes(1);
+	});
+
 	it('sendDailyReminders sends nothing when no session is pending today', async () => {
 		const slotRepo = mockRepo();
 		const sessionRepo = mockRepo();
@@ -162,8 +210,9 @@ describe('TeacherRoomSchedulerService.sendUpcomingAndFollowupReminders', () => {
 			get: jest.fn().mockReturnValue('https://app.example.com'),
 		};
 
-		// "Now" is 14:50; session starts at 15:00 — inside the 15-minute pre-class window.
-		const now = new Date('2026-09-08T14:50:00.000Z');
+		// "Now" is 14:50 Vietnam time (07:50 UTC); session starts at 15:00 —
+		// inside the 15-minute pre-class window.
+		const now = new Date('2026-09-08T07:50:00.000Z');
 		const session = {
 			id: 'sess-1',
 			ownerId: 'owner-1',
@@ -219,8 +268,9 @@ describe('TeacherRoomSchedulerService.sendUpcomingAndFollowupReminders', () => {
 		const userRepo = mockRepo();
 		const mailService = { sendEmail: jest.fn() };
 
-		// "Now" is 14:00; session starts at 15:00 — outside the 15-minute window.
-		const now = new Date('2026-09-08T14:00:00.000Z');
+		// "Now" is 14:00 Vietnam time (07:00 UTC); session starts at 15:00 —
+		// outside the 15-minute window.
+		const now = new Date('2026-09-08T07:00:00.000Z');
 		const session = {
 			id: 'sess-1',
 			ownerId: 'owner-1',
@@ -258,8 +308,9 @@ describe('TeacherRoomSchedulerService.sendUpcomingAndFollowupReminders', () => {
 		const userRepo = mockRepo();
 		const mailService = { sendEmail: jest.fn() };
 
-		// "Now" is 16:10; session ended at 16:00 — only 10 minutes ago, inside the 90-minute delay.
-		const now = new Date('2026-09-08T16:10:00.000Z');
+		// "Now" is 16:10 Vietnam time (09:10 UTC); session ended at 16:00 —
+		// only 10 minutes ago, inside the 90-minute delay.
+		const now = new Date('2026-09-08T09:10:00.000Z');
 		const session = {
 			id: 'sess-1',
 			ownerId: 'owner-1',
@@ -300,8 +351,9 @@ describe('TeacherRoomSchedulerService.sendUpcomingAndFollowupReminders', () => {
 			get: jest.fn().mockReturnValue('https://app.example.com'),
 		};
 
-		// "Now" is 17:35; session ended at 16:00 — 95 minutes ago, past the 90-minute delay.
-		const now = new Date('2026-09-08T17:35:00.000Z');
+		// "Now" is 17:35 Vietnam time (10:35 UTC); session ended at 16:00 —
+		// 95 minutes ago, past the 90-minute delay.
+		const now = new Date('2026-09-08T10:35:00.000Z');
 		const session = {
 			id: 'sess-1',
 			ownerId: 'owner-1',
@@ -351,7 +403,8 @@ describe('TeacherRoomSchedulerService.sendUpcomingAndFollowupReminders', () => {
 			get: jest.fn().mockReturnValue('https://app.example.com'),
 		};
 
-		const now = new Date('2026-09-10T14:50:00.000Z'); // upcoming session at 15:00 today
+		// 14:50 Vietnam time (07:50 UTC) — upcoming session at 15:00 today.
+		const now = new Date('2026-09-10T07:50:00.000Z');
 		const upcomingSession = {
 			id: 'sess-2',
 			ownerId: 'owner-1',
