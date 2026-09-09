@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { FormField } from "@/components/custom/form-field"
+import { toast } from "@/components/custom/toast"
 import { Button as StatefulButton } from "@/components/custom/stateful-button"
 import { useForm } from "@tanstack/react-form"
 import { useCreateAdHocSessionMutation } from "@/services/teacher-room/queries"
@@ -35,6 +36,11 @@ export function AdHocSessionDialog({
       endTime: "16:00",
     } as AdHocFormValues,
     onSubmit: async ({ value }: { value: AdHocFormValues }) => {
+      // Zero-padded 'HH:mm' from <input type="time"> compares lexically.
+      if (value.endTime <= value.startTime) {
+        toast.error("Giờ kết thúc phải sau giờ bắt đầu")
+        return
+      }
       await create.mutateAsync({ scheduledDate, ...value })
       onOpenChange(false)
     },

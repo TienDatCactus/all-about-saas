@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { FormField } from "@/components/custom/form-field"
+import { toast } from "@/components/custom/toast"
 import { Button as StatefulButton } from "@/components/custom/stateful-button"
 import {
   Select,
@@ -54,6 +55,11 @@ export function SlotEditorDialog({
         }
       : { studentName: "", dayOfWeek: 1, startTime: "15:00", endTime: "16:00" },
     onSubmit: async ({ value }: { value: SlotFormValues }) => {
+      // Zero-padded 'HH:mm' from <input type="time"> compares lexically.
+      if (value.endTime <= value.startTime) {
+        toast.error("Giờ kết thúc phải sau giờ bắt đầu")
+        return
+      }
       const { studentName, ...schedule } = value
       if (slot) {
         await update.mutateAsync({ id: slot.id, data: schedule })

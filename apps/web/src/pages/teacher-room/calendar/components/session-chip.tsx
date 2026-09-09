@@ -40,11 +40,21 @@ export function SessionChip({ session }: { session: TeachingSession }) {
   const durationInMinutes = differenceInMinutes(end, start)
   const heightInPixels = (durationInMinutes / 60) * 96 - 8
 
+  // DialogTrigger only wires up onClick, so Enter/Space on the focused chip
+  // has to forward to it — same handler as the original EventBlock.
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      if (e.currentTarget instanceof HTMLElement) e.currentTarget.click()
+    }
+  }
+
   return (
     <SessionDetailDialog session={session}>
       <div
         role="button"
         tabIndex={0}
+        onKeyDown={handleKeyDown}
         className={cn(
           chipVariants({ tone: toneFor(session) }),
           durationInMinutes < 35 && "justify-center py-0"
