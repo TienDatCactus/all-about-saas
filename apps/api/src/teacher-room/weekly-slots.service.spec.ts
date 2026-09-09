@@ -72,6 +72,8 @@ describe('WeeklySlotsService.updateSlot', () => {
 		const sessionRepo = mockRepo();
 		const historyRepo = mockRepo();
 		const studentsService = mockStudentsService();
+		// `active` is a non-nullable column defaulting to true, so a slot read
+		// back from the DB always carries it — updateSlot branches on it.
 		const existingSlot = {
 			id: 'slot-1',
 			ownerId: 'owner-1',
@@ -79,15 +81,21 @@ describe('WeeklySlotsService.updateSlot', () => {
 			dayOfWeek: 2,
 			startTime: '15:00',
 			endTime: '16:00',
+			active: true,
 		};
 		slotRepo.findOne.mockResolvedValue(existingSlot);
-		sessionRepo.find = jest.fn().mockResolvedValue([
-			{
-				id: 'sess-future-1',
-				scheduledDate: '2026-09-15',
-				status: 'scheduled',
-			},
-		]);
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValueOnce([
+				{
+					id: 'sess-future-1',
+					scheduledDate: '2026-09-15',
+					status: 'scheduled',
+				},
+			])
+			// generateSessions' dedup query — the row above was just detached
+			// from the slot, so no candidate date is occupied.
+			.mockResolvedValueOnce([]);
 		const service = new WeeklySlotsService(
 			slotRepo as never,
 			sessionRepo as never,
@@ -128,16 +136,23 @@ describe('WeeklySlotsService.updateSlot', () => {
 			dayOfWeek: 2,
 			startTime: '15:00',
 			endTime: '16:00',
+			active: true,
 		};
 		slotRepo.findOne.mockResolvedValue(existingSlot);
-		sessionRepo.find = jest.fn().mockResolvedValue([
-			{
-				id: 'sess-future-1',
-				slotId: 'slot-1',
-				scheduledDate: '2026-09-15',
-				status: 'scheduled',
-			},
-		]);
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValueOnce([
+				{
+					id: 'sess-future-1',
+					slotId: 'slot-1',
+					scheduledDate: '2026-09-15',
+					status: 'scheduled',
+				},
+			])
+			// generateSessions' dedup query is scoped to slotId — the cancelled
+			// row above had slotId nulled out, so it frees its date for reuse.
+			// That detachment is exactly what this test is about.
+			.mockResolvedValueOnce([]);
 		const service = new WeeklySlotsService(
 			slotRepo as never,
 			sessionRepo as never,
@@ -175,6 +190,7 @@ describe('WeeklySlotsService.updateSlot', () => {
 			dayOfWeek: 2,
 			startTime: '15:00',
 			endTime: '16:00',
+			active: true,
 		});
 		sessionRepo.find = jest
 			.fn()
@@ -197,5 +213,75 @@ describe('WeeklySlotsService.updateSlot', () => {
 			([arg]) => (arg as Record<string, unknown>).status === 'scheduled',
 		);
 		expect(regenerated).toHaveLength(0);
+	});
+
+	it("does not regenerate when editing an already-inactive slot's schedule", async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const studentsService = mockStudentsService();
+		slotRepo.findOne.mockResolvedValue({
+			id: 'slot-1',
+			ownerId: 'owner-1',
+			studentId: 's1',
+			dayOfWeek: 2,
+			startTime: '15:00',
+			endTime: '16:00',
+			active: false,
+		});
+		sessionRepo.find = jest.fn().mockResolvedValue([]);
+		const service = new WeeklySlotsService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
+
+		// No `active` in the DTO — the slot stays off, so a day change must
+		// not quietly bring its sessions back.
+		await service.updateSlot('owner-1', 'slot-1', { dayOfWeek: 3 });
+
+		const regenerated = sessionRepo.save.mock.calls.filter(
+			([arg]) => (arg as Record<string, unknown>).status === 'scheduled',
+		);
+		expect(regenerated).toHaveLength(0);
+	});
+});
+
+describe('WeeklySlotsService.generateSessions', () => {
+	it('skips a candidate date that already has a session for this slot', async () => {
+		const slotRepo = mockRepo();
+		const sessionRepo = mockRepo();
+		const historyRepo = mockRepo();
+		const studentsService = mockStudentsService();
+		sessionRepo.find = jest
+			.fn()
+			.mockResolvedValue([{ scheduledDate: '2026-09-08' }]);
+		const service = new WeeklySlotsService(
+			slotRepo as never,
+			sessionRepo as never,
+			historyRepo as never,
+			studentsService as never,
+		);
+
+		await service.generateSessions(
+			'owner-1',
+			{
+				id: 'slot-1',
+				ownerId: 'owner-1',
+				studentId: 's1',
+				dayOfWeek: 2,
+				startTime: '15:00',
+				endTime: '16:00',
+			} as never,
+			new Date('2026-09-08T00:00:00.000Z'),
+		);
+
+		// 6 candidate Tuesdays minus the 1 that already exists = 5 new sessions.
+		expect(sessionRepo.save).toHaveBeenCalledTimes(5);
+		expect(historyRepo.save).toHaveBeenCalledTimes(5);
+		expect(sessionRepo.save).not.toHaveBeenCalledWith(
+			expect.objectContaining({ scheduledDate: '2026-09-08' }),
+		);
 	});
 });

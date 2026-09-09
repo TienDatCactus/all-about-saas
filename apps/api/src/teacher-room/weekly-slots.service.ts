@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BaseService } from '../common/services/base.service';
 import { WeeklyScheduleSlot } from './entities/weekly-schedule-slot.entity';
 import {
@@ -61,8 +61,22 @@ export class WeeklySlotsService extends BaseService<WeeklyScheduleSlot> {
 		slot: WeeklyScheduleSlot,
 		from: Date = new Date(),
 	) {
-		const dates = occurrenceDates(slot.dayOfWeek, from, GENERATION_WEEKS);
-		for (const scheduledDate of dates) {
+		const candidateDates = occurrenceDates(
+			slot.dayOfWeek,
+			from,
+			GENERATION_WEEKS,
+		);
+		// Same dedup guard as the weekly top-up cron: a date whose (slotId,
+		// scheduledDate) is still occupied — e.g. a session individually
+		// completed/cancelled via TeachingSessionsService.transition, which
+		// leaves slotId set — would otherwise trip the unique constraint.
+		const existing = await this.sessionRepo.find({
+			where: { slotId: slot.id, scheduledDate: In(candidateDates) },
+		});
+		const existingDates = new Set(existing.map((s) => s.scheduledDate));
+		const missingDates = candidateDates.filter((d) => !existingDates.has(d));
+
+		for (const scheduledDate of missingDates) {
 			const session = await this.sessionRepo.save(
 				this.sessionRepo.create({
 					ownerId,
@@ -101,7 +115,10 @@ export class WeeklySlotsService extends BaseService<WeeklyScheduleSlot> {
 		this.slotRepo.merge(slot, dto);
 		await this.slotRepo.save(slot);
 
-		if (dto.active === false) {
+		// Branch on the merged slot, not the DTO — editing an already-inactive
+		// slot's schedule must not quietly regenerate sessions for a slot
+		// that is still off.
+		if (!slot.active) {
 			await this.cancelFutureSessions(slot, 'slot deactivated');
 		} else if (scheduleChanged) {
 			await this.cancelFutureSessions(slot, 'slot rescheduled');
