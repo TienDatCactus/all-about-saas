@@ -10,6 +10,20 @@
     },
     "user": {
       "logout": "Đăng xuất"
+    },
+    "timetable": {
+      "crumb": "Lịch dạy",
+      "title": "Lịch dạy",
+      "description": "Lịch dạy và các buổi học sắp tới."
+    },
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "description": "Liên kết này không khả dụng trong Lớp cô Trang."
+    },
+    "error": {
+      "title": "Đã có lỗi xảy ra",
+      "description": "Không thể tải trang.",
+      "tryAgain": "Thử lại"
     }
   },
   "auth": {

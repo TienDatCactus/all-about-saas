@@ -10,6 +10,20 @@
     },
     "user": {
       "logout": "Log out"
+    },
+    "timetable": {
+      "crumb": "Timetable",
+      "title": "Teaching schedule",
+      "description": "Your teaching schedule and upcoming sessions."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "That link isn’t available in Teacher Room."
+    },
+    "error": {
+      "title": "Something went wrong",
+      "description": "The page couldn't be loaded.",
+      "tryAgain": "Try again"
     }
   },
   "auth": {

@@ -9,6 +9,7 @@ import {
   startOfYear,
   endOfYear,
 } from "date-fns"
+import { useTranslation } from "react-i18next"
 
 import { PageHeader } from "@/components/custom/page-shell/page-header"
 import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
@@ -51,6 +52,7 @@ function rangeForView(view: TCalendarView, selectedDate: Date) {
 }
 
 export default function TeacherTimetablePage() {
+  const { t } = useTranslation()
   const { view = "week", date } = Route.useSearch()
   const setSearchParams = useSearchParamsSetter()
 
@@ -66,8 +68,8 @@ export default function TeacherTimetablePage() {
   return (
     <>
       <PageHeader
-        title="Lịch dạy"
-        description="Lịch dạy và các buổi học sắp tới."
+        title={t("teacherRoom.timetable.title")}
+        description={t("teacherRoom.timetable.description")}
       />
       <CalendarProvider
         events={events}
