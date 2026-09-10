@@ -13,6 +13,38 @@ import {
 import i18n from "@/lib/i18n"
 import { TeacherRoomSidebar } from "@/pages/teacher-room/layouts/sidebar"
 
+function TeacherRoomNotFound() {
+  const { t } = useTranslation()
+  return (
+    <DataEmpty
+      media={{ variant: "icon", icon: <MagnifyingGlassIcon /> }}
+      title={t("common.routeNotFound.title")}
+      description={t("teacherRoom.notFound.description")}
+    />
+  )
+}
+
+function TeacherRoomError({
+  error,
+  reset,
+}: {
+  error: Error
+  reset: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <DataError
+      title={t("common.routeError.title")}
+      description={error.message || t("common.routeError.description")}
+      content={
+        <Button variant="outline" onClick={() => reset()}>
+          {t("common.routeError.tryAgain")}
+        </Button>
+      }
+    />
+  )
+}
+
 export const Route = createFileRoute("/_authenticated/teacher-room")({
   staticData: { crumb: () => i18n.t("teacherRoom.sidebar.title") },
   component: () => (
@@ -26,28 +58,6 @@ export const Route = createFileRoute("/_authenticated/teacher-room")({
       </SidebarInset>
     </SidebarProvider>
   ),
-  notFoundComponent: () => {
-    const { t } = useTranslation()
-    return (
-      <DataEmpty
-        media={{ variant: "icon", icon: <MagnifyingGlassIcon /> }}
-        title={t("teacherRoom.notFound.title")}
-        description={t("teacherRoom.notFound.description")}
-      />
-    )
-  },
-  errorComponent: ({ error, reset }) => {
-    const { t } = useTranslation()
-    return (
-      <DataError
-        title={t("teacherRoom.error.title")}
-        description={error.message || t("teacherRoom.error.description")}
-        content={
-          <Button variant="outline" onClick={() => reset()}>
-            {t("teacherRoom.error.tryAgain")}
-          </Button>
-        }
-      />
-    )
-  },
+  notFoundComponent: TeacherRoomNotFound,
+  errorComponent: TeacherRoomError,
 })

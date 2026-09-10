@@ -100,7 +100,7 @@ export function BadmintonSummary({
           </span>
           {" · "}
           {t("badminton.summary.shuttleCount", {
-            count: meta?.totalShuttleCount ?? 0,
+            n: meta?.totalShuttleCount ?? 0,
           })}
           {" · "}
           {t("badminton.summary.defaultHours", {

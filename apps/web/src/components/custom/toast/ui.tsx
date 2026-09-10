@@ -373,7 +373,9 @@ export default function Toast(props: ToastProps) {
                   size="sm"
                   onClick={copyToClipboard}
                 >
-                  {copied ? t("common.toast.copied") : t("common.toast.copyDetails")}
+                  {copied
+                    ? t("common.toast.copied")
+                    : t("common.toast.copyDetails")}
                 </Button>
               </div>
             </>

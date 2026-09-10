@@ -16,13 +16,7 @@
       "description": "Lịch dạy và các buổi học sắp tới."
     },
     "notFound": {
-      "title": "Không tìm thấy trang",
       "description": "Liên kết này không khả dụng trong Lớp cô Trang."
-    },
-    "error": {
-      "title": "Đã có lỗi xảy ra",
-      "description": "Không thể tải trang.",
-      "tryAgain": "Thử lại"
     }
   },
   "auth": {
@@ -117,7 +111,7 @@
       "title": "Tổng kết chia tiền",
       "courtFee": "Tiền sân",
       "shuttleFee": "Tiền cầu",
-      "shuttleCount": "{{count}} quả cầu",
+      "shuttleCount": "{{n}} quả cầu",
       "defaultHours": "Mặc định {{hours}}h",
       "qrCode": "Mã QR",
       "qrAlt": "Mã QR thanh toán: {{label}}",
@@ -210,19 +204,21 @@
         "apply": "Áp dụng"
       }
     },
-    "notFoundRoute": {
-      "title": "Không tìm thấy trang",
+    "notFound": {
       "description": "Liên kết này không khả dụng."
-    },
-    "errorRoute": {
-      "title": "Đã có lỗi xảy ra",
-      "description": "Không thể tải trang.",
-      "tryAgain": "Thử lại"
     }
   },
   "common": {
     "themeToggle": {
       "toggle": "Bật/tắt giao diện"
+    },
+    "routeError": {
+      "title": "Đã có lỗi xảy ra",
+      "description": "Không thể tải trang.",
+      "tryAgain": "Thử lại"
+    },
+    "routeNotFound": {
+      "title": "Không tìm thấy trang"
     },
     "routeDropdown": {
       "home": "Trang chủ",

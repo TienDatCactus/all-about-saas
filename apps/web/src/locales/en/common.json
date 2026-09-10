@@ -16,13 +16,7 @@
       "description": "Your teaching schedule and upcoming sessions."
     },
     "notFound": {
-      "title": "Page not found",
-      "description": "That link isn’t available in Teacher Room."
-    },
-    "error": {
-      "title": "Something went wrong",
-      "description": "The page couldn't be loaded.",
-      "tryAgain": "Try again"
+      "description": "That link isn’t available in Lớp cô Trang."
     }
   },
   "auth": {
@@ -117,7 +111,7 @@
       "title": "Split summary",
       "courtFee": "Court fee",
       "shuttleFee": "Shuttle fee",
-      "shuttleCount": "{{count}} shuttles",
+      "shuttleCount": "{{n}} shuttles",
       "defaultHours": "Default {{hours}}h",
       "qrCode": "QR code",
       "qrAlt": "Payment QR: {{label}}",
@@ -210,19 +204,21 @@
         "apply": "Apply"
       }
     },
-    "notFoundRoute": {
-      "title": "Page not found",
+    "notFound": {
       "description": "That link isn’t available."
-    },
-    "errorRoute": {
-      "title": "Something went wrong",
-      "description": "The page couldn't be loaded.",
-      "tryAgain": "Try again"
     }
   },
   "common": {
     "themeToggle": {
       "toggle": "Toggle theme"
+    },
+    "routeError": {
+      "title": "Something went wrong",
+      "description": "The page couldn't be loaded.",
+      "tryAgain": "Try again"
+    },
+    "routeNotFound": {
+      "title": "Page not found"
     },
     "routeDropdown": {
       "home": "Home",
