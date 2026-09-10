@@ -1,9 +1,9 @@
 {
   "teacherRoom": {
     "sidebar": {
-      "title": "Teacher room",
+      "title": "Lớp cô Trang",
       "subtitle": "Manage teaching schedule & classes",
-      "groupLabel": "Teacher room",
+      "groupLabel": "Lớp cô Trang",
       "toggle": "Toggle",
       "timetable": "Timetable",
       "backHome": "Back to home"

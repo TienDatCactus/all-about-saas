@@ -4,11 +4,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import i18n from "@/lib/i18n"
 import { TeacherRoomSidebar } from "@/pages/teacher-room/layouts/sidebar"
 import { Outlet, createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_authenticated/teacher-room")({
-  staticData: { crumb: "Teacher room" },
+  staticData: { crumb: () => i18n.t("teacherRoom.sidebar.title") },
   component: () => (
     <SidebarProvider>
       <TeacherRoomSidebar />

@@ -1,9 +1,9 @@
 {
   "teacherRoom": {
     "sidebar": {
-      "title": "Teacher room",
+      "title": "Lớp cô Trang",
       "subtitle": "Quản lý lịch dạy & lớp học",
-      "groupLabel": "Teacher room",
+      "groupLabel": "Lớp cô Trang",
       "toggle": "Bật/tắt",
       "timetable": "Lịch dạy",
       "backHome": "Về trang chủ"
