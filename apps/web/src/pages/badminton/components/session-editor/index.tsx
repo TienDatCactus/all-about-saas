@@ -19,6 +19,7 @@ import {
 import { useForm } from "@tanstack/react-form"
 import { format, parseISO } from "date-fns"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { EditorValues } from "../../lib/form"
 import {
   defaultValues,
@@ -56,6 +57,7 @@ export function SessionEditor({
   paymentStatus,
   onTogglePaid,
 }: SessionEditorProps) {
+  const { t } = useTranslation()
   const create = useCreateSessionMutation()
   const update = useUpdateSessionMutation(sessionId ?? "")
   const status = sessionId ? update.status : create.status
@@ -104,7 +106,9 @@ export function SessionEditor({
             disabled={!canSave}
             onClick={form.handleSubmit}
           >
-            {sessionId ? "Save changes" : "Save session"}
+            {sessionId
+              ? t("badminton.session.saveChanges")
+              : t("badminton.session.saveSession")}
           </StatefulButton>
         )}
       </form.Subscribe>
@@ -121,12 +125,12 @@ export function SessionEditor({
     >
       <div className="col-span-3 flex min-w-0 flex-col gap-6">
         <DataCard
-          title="Session details"
-          description="Court and shuttle costs for the day."
+          title={t("badminton.session.detailsTitle")}
+          description={t("badminton.session.detailsDescription")}
           action={
             sessionId && (
               <div className="flex items-center gap-2">
-                <p>Payment method:</p>
+                <p>{t("badminton.session.paymentMethodLabel")}</p>
                 <PaymentMethodPicker
                   sessionId={sessionId}
                   value={paymentMethodId}
@@ -137,13 +141,24 @@ export function SessionEditor({
           content={
             <FieldGroup>
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField form={form} name="title" label="Title">
+                <FormField
+                  form={form}
+                  name="title"
+                  label={t("badminton.session.titleLabel")}
+                >
                   {({ inputProps }) => (
-                    <Input placeholder="Friday night" {...inputProps} />
+                    <Input
+                      placeholder={t("badminton.session.titlePlaceholder")}
+                      {...inputProps}
+                    />
                   )}
                 </FormField>
 
-                <FormField form={form} name="playedOn" label="Date">
+                <FormField
+                  form={form}
+                  name="playedOn"
+                  label={t("badminton.session.dateLabel")}
+                >
                   {({ field, isInvalid }) => (
                     <DatePicker
                       id="playedOn"
@@ -168,13 +183,13 @@ export function SessionEditor({
                 <FormField
                   form={form}
                   name="courtCost"
-                  label="Court cost"
-                  description="Total cost for the court, shared by all players."
+                  label={t("badminton.session.courtCostLabel")}
+                  description={t("badminton.session.courtCostDescription")}
                 >
                   {({ field }) => (
                     <CurrencyInput
                       id="courtCost"
-                      aria-label="Court cost"
+                      aria-label={t("badminton.session.courtCostLabel")}
                       className="text-right tabular-nums"
                       startAddon={<CurrencyCircleDollarIcon />}
                       endAddon="₫"
@@ -186,14 +201,14 @@ export function SessionEditor({
                 <FormField
                   form={form}
                   name="shuttleUnitPrice"
-                  label="Shuttle price (each)"
-                  description="Shuttle total = price × total shuttles."
+                  label={t("badminton.session.shuttlePriceLabel")}
+                  description={t("badminton.session.shuttlePriceDescription")}
                 >
                   {({ field }) => (
                     <div className="stack-row gap-2">
                       <CurrencyInput
                         id="shuttleUnitPrice"
-                        aria-label="Shuttle price per shuttle"
+                        aria-label={t("badminton.session.shuttlePriceAria")}
                         className="text-right tabular-nums"
                         startAddon={<CoinsIcon />}
                         endAddon="₫"
@@ -207,8 +222,8 @@ export function SessionEditor({
                 <FormField
                   form={form}
                   name="totalShuttleCount"
-                  label="Total shuttles"
-                  description="Total shuttle count for the session, shared by all players."
+                  label={t("badminton.session.totalShuttlesLabel")}
+                  description={t("badminton.session.totalShuttlesDescription")}
                 >
                   {({ field }) => (
                     <Input
@@ -217,7 +232,7 @@ export function SessionEditor({
                       min={0}
                       step={1}
                       inputMode="numeric"
-                      aria-label="Total shuttles"
+                      aria-label={t("badminton.session.totalShuttlesLabel")}
                       placeholder="0"
                       className="text-right tabular-nums"
                       startAddon={<RacquetIcon />}
@@ -234,8 +249,8 @@ export function SessionEditor({
                 <FormField
                   form={form}
                   name="defaultHoursPlayed"
-                  label="Default play time"
-                  description="Applies to every current player and anyone added after."
+                  label={t("badminton.session.defaultHoursLabel")}
+                  description={t("badminton.session.defaultHoursDescription")}
                 >
                   {({ field }) => (
                     <HoursStepperInput
@@ -259,8 +274,8 @@ export function SessionEditor({
           }
         />
         <DataCard
-          title="Players"
-          description="Hours played splits the court fee. Shuttle weight splits the shuttle pot — tap Male/Female for the 6/4 default."
+          title={t("badminton.session.playersTitle")}
+          description={t("badminton.session.playersDescription")}
           content={<PlayerEditor form={form} />}
         />
         <Button
@@ -270,7 +285,7 @@ export function SessionEditor({
           }}
           className="w-full lg:hidden"
         >
-          View Changes
+          {t("badminton.session.viewChanges")}
         </Button>
       </div>
       <div className="col-span-2 flex hidden flex-col gap-4 lg:sticky lg:top-6 lg:block">
@@ -280,7 +295,7 @@ export function SessionEditor({
       <DataDialog
         open={mobileSummaryOpen}
         onOpenChange={setMobileSummaryOpen}
-        title="Split summary"
+        title={t("badminton.summary.title")}
         content={<div className="flex flex-col gap-4">{summaryAndSave}</div>}
       />
     </form>

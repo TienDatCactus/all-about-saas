@@ -1,4 +1,5 @@
 import { PlusIcon } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 import { newPlayer } from "../../lib/form"
 import { PlayerRow } from "./PlayerRow"
 import type { EditorPlayer } from "../../lib/form"
@@ -17,6 +18,7 @@ interface PlayerEditorProps {
   form: any
 }
 export function PlayerEditor({ form }: PlayerEditorProps) {
+  const { t } = useTranslation()
   return (
     <FormField form={form} name="players">
       {({ field }) => {
@@ -25,10 +27,12 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableCell>Player</TableCell>
-                <TableCell className="text-right">Hours played</TableCell>
-                <TableCell>Shuttle weight</TableCell>
-                <TableCell>Remove</TableCell>
+                <TableCell>{t("badminton.players.player")}</TableCell>
+                <TableCell className="text-right">
+                  {t("badminton.players.hoursPlayed")}
+                </TableCell>
+                <TableCell>{t("badminton.players.shuttleWeight")}</TableCell>
+                <TableCell>{t("badminton.players.removeColumn")}</TableCell>
               </TableRow>
             </TableHeader>
 
@@ -56,7 +60,7 @@ export function PlayerEditor({ form }: PlayerEditorProps) {
                 }
               >
                 <PlusIcon />
-                Add player
+                {t("badminton.players.addPlayer")}
               </Button>
             </TableCaption>
           </Table>

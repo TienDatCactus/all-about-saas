@@ -1,4 +1,5 @@
 import { TrashIcon } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 import { PlayerNameInput } from "./PlayerNameInput"
 import type React from "react"
 import { AddonInput as Input } from "@/components/custom/addon-input"
@@ -52,12 +53,17 @@ export function PlayerRow({
   canRemove,
   onRemove,
 }: PlayerRowProps) {
+  const { t } = useTranslation()
   const base = `players[${index}]`
   return (
     <TableRow key={base}>
       <TableCell>
         <div className="stack-row gap-4">
-          <FormField form={form} label="Name" name={`${base}.name`}>
+          <FormField
+            form={form}
+            label={t("badminton.players.nameLabel")}
+            name={`${base}.name`}
+          >
             {({ field, isInvalid }) => (
               <PlayerNameInput
                 id={`${base}-name`}
@@ -76,7 +82,11 @@ export function PlayerRow({
               />
             )}
           </FormField>
-          <FormField name={`${base}.gender`} label="Gender" form={form}>
+          <FormField
+            name={`${base}.gender`}
+            label={t("badminton.players.genderLabel")}
+            form={form}
+          >
             {({ field }) => (
               // Nested so this re-renders on shuttleWeight changes too — the switch
               // must reflect the NUMBER (source of truth, hand-editable), not just
@@ -100,7 +110,9 @@ export function PlayerRow({
                         }}
                       />
                       <Label htmlFor={`${base}-player-gender`}>
-                        {isFemale ? "Female" : "Male"}
+                        {isFemale
+                          ? t("badminton.players.female")
+                          : t("badminton.players.male")}
                       </Label>
                     </div>
                   )
@@ -114,7 +126,7 @@ export function PlayerRow({
       <TableCell>
         <FormField
           form={form}
-          label="Hours played"
+          label={t("badminton.players.hoursPlayed")}
           name={`${base}.hoursPlayed`}
         >
           {({ field, isInvalid }) => (
@@ -133,7 +145,7 @@ export function PlayerRow({
         <div className="stack-row items-end gap-2">
           <FormField
             form={form}
-            label="Shuttle weight"
+            label={t("badminton.players.shuttleWeight")}
             name={`${base}.shuttleWeight`}
           >
             {({ field, isInvalid }) => (
@@ -157,7 +169,7 @@ export function PlayerRow({
           type="button"
           variant="destructive"
           size="icon"
-          aria-label="Remove player"
+          aria-label={t("badminton.players.removePlayerAria")}
           onClick={onRemove}
           disabled={!canRemove}
         >

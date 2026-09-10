@@ -11,6 +11,7 @@ import {
 } from "@/services/payment-methods/queries"
 import { TrashIcon, WalletIcon } from "@phosphor-icons/react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import AddMethodForm from "./AddMethodForm"
 
 export function PaymentMethodPicker({
@@ -20,6 +21,7 @@ export function PaymentMethodPicker({
   sessionId: string
   value: string | null | undefined
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const methodsQuery = usePaymentMethodsQuery()
   const updateSession = useUpdateSessionMutation(sessionId)
@@ -31,8 +33,8 @@ export function PaymentMethodPicker({
   const triggerLabel = current
     ? current.label
     : methodsQuery.isPending && value
-      ? "Loading…"
-      : "Choose a payment method"
+      ? t("badminton.paymentMethod.loading")
+      : t("badminton.paymentMethod.choosePlaceholder")
 
   return (
     <>
@@ -48,8 +50,8 @@ export function PaymentMethodPicker({
       <DataDialog
         open={open}
         onOpenChange={setOpen}
-        title="Payment method"
-        description="Choose or add a MoMo QR/phone number to show on the share page."
+        title={t("badminton.paymentMethod.title")}
+        description={t("badminton.paymentMethod.description")}
         content={
           <div className="flex flex-col gap-4">
             <RadioGroup
@@ -59,7 +61,7 @@ export function PaymentMethodPicker({
                   { paymentMethodId: id },
                   {
                     onError: () =>
-                      toast.error("Couldn't change the payment method"),
+                      toast.error(t("badminton.paymentMethod.updateError")),
                   }
                 )
               }}
@@ -76,7 +78,7 @@ export function PaymentMethodPicker({
                     title={m.label}
                     description={
                       m.type === "image"
-                        ? "QR image"
+                        ? t("badminton.paymentMethod.qrImageLabel")
                         : (m.phoneNumber ?? undefined)
                     }
                     action={
@@ -84,7 +86,9 @@ export function PaymentMethodPicker({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label={`Delete ${m.label}`}
+                        aria-label={t("badminton.paymentMethod.deleteAria", {
+                          label: m.label,
+                        })}
                         onClick={() => {
                           deleteMethod.mutate(m.id, {
                             onSuccess: () => {
@@ -94,7 +98,10 @@ export function PaymentMethodPicker({
                                 })
                               }
                             },
-                            onError: () => toast.error("Delete failed"),
+                            onError: () =>
+                              toast.error(
+                                t("badminton.paymentMethod.deleteError")
+                              ),
                           })
                         }}
                       >
@@ -105,7 +112,7 @@ export function PaymentMethodPicker({
                 ))}
                 {methods.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No payment methods yet.
+                    {t("badminton.paymentMethod.empty")}
                   </p>
                 )}
               </ItemGroup>

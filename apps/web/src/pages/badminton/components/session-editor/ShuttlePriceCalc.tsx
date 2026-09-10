@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { CalculatorIcon } from "@phosphor-icons/react"
 import { Input } from "@/components/ui/input"
@@ -21,6 +22,7 @@ interface ShuttlePriceCalcProps {
  * how many shuttles were in it.
  */
 export function ShuttlePriceCalc({ onApply }: ShuttlePriceCalcProps) {
+  const { t } = useTranslation()
   const [tubePrice, setTubePrice] = useState(0)
   const [shuttlesPerTube, setShuttlesPerTube] = useState(0)
   const unitPrice = shuttlesPerTube > 0 ? tubePrice / shuttlesPerTube : 0
@@ -35,14 +37,18 @@ export function ShuttlePriceCalc({ onApply }: ShuttlePriceCalcProps) {
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="leading-none font-medium">Shuttle price</h4>
+            <h4 className="leading-none font-medium">
+              {t("badminton.session.shuttleCalc.title")}
+            </h4>
             <p className="text-sm text-muted-foreground">
-              Derive the per-shuttle price from a tube's total price.
+              {t("badminton.session.shuttleCalc.description")}
             </p>
           </div>
           <div className="grid gap-2">
             <div className="grid grid-cols-3 items-center gap-4">
-              <Label htmlFor="tubePrice">Tube price</Label>
+              <Label htmlFor="tubePrice">
+                {t("badminton.session.shuttleCalc.tubePriceLabel")}
+              </Label>
               <Input
                 id="tubePrice"
                 inputMode="numeric"
@@ -53,7 +59,9 @@ export function ShuttlePriceCalc({ onApply }: ShuttlePriceCalcProps) {
               />
             </div>
             <div className="grid grid-cols-3 items-center gap-4">
-              <Label htmlFor="shuttlesPerTube">Shuttles / tube</Label>
+              <Label htmlFor="shuttlesPerTube">
+                {t("badminton.session.shuttleCalc.perTubeLabel")}
+              </Label>
               <Input
                 id="shuttlesPerTube"
                 type="number"
@@ -71,7 +79,7 @@ export function ShuttlePriceCalc({ onApply }: ShuttlePriceCalcProps) {
           </div>
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              Per shuttle:{" "}
+              {t("badminton.session.shuttleCalc.perShuttleLabel")}{" "}
               <span className="font-medium text-foreground tabular-nums">
                 {formatVnd(unitPrice)} ₫
               </span>
@@ -82,7 +90,7 @@ export function ShuttlePriceCalc({ onApply }: ShuttlePriceCalcProps) {
               disabled={unitPrice <= 0}
               onClick={() => onApply(Math.round(unitPrice))}
             >
-              Apply
+              {t("badminton.session.shuttleCalc.apply")}
             </Button>
           </div>
         </div>

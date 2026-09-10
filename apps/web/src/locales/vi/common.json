@@ -93,6 +93,109 @@
         "title": "Không tìm thấy",
         "description": "Liên kết chia sẻ không hợp lệ hoặc buổi đã bị xóa."
       }
+    },
+    "shareLink": {
+      "copySuccess": "Đã sao chép liên kết chia sẻ",
+      "copyError": "Không thể sao chép liên kết",
+      "ariaLabel": "Liên kết chia sẻ công khai",
+      "copyButton": "Sao chép liên kết"
+    },
+    "summary": {
+      "title": "Tổng kết chia tiền",
+      "courtFee": "Tiền sân",
+      "shuttleFee": "Tiền cầu",
+      "shuttleCount": "{{count}} quả cầu",
+      "defaultHours": "Mặc định {{hours}}h",
+      "qrCode": "Mã QR",
+      "qrAlt": "Mã QR thanh toán: {{label}}",
+      "copy": "Sao chép",
+      "copySuccess": "Đã sao chép tổng kết vào bộ nhớ tạm",
+      "copyError": "Không thể sao chép — kiểm tra quyền truy cập bộ nhớ tạm",
+      "roundingResidual": "{{amount}} trong tổng chi phí chưa được thu từ ai — có thể vì mọi người chơi đều không tính giờ sân hoặc trọng số cầu.",
+      "table": {
+        "player": "Người chơi",
+        "court": "Sân",
+        "shuttle": "Cầu",
+        "total": "Tổng",
+        "payment": "Thanh toán"
+      },
+      "totalCollected": "Tổng đã thu",
+      "empty": {
+        "title": "Chưa có gì để chia",
+        "description": "Thêm người chơi và chi phí để xem phần chia của mỗi người."
+      },
+      "pay": "Thanh toán",
+      "markPaid": "Đánh dấu đã trả",
+      "markUnpaid": "Đánh dấu chưa trả",
+      "paid": "Đã trả",
+      "unpaid": "Chưa trả"
+    },
+    "paymentMethod": {
+      "loading": "Đang tải…",
+      "choosePlaceholder": "Chọn phương thức thanh toán",
+      "title": "Phương thức thanh toán",
+      "description": "Chọn hoặc thêm mã QR/số điện thoại MoMo để hiển thị trên trang chia sẻ.",
+      "qrImageLabel": "Ảnh QR",
+      "empty": "Chưa có phương thức thanh toán nào.",
+      "updateError": "Không thể đổi phương thức thanh toán",
+      "deleteError": "Xóa thất bại",
+      "deleteAria": "Xóa {{label}}",
+      "form": {
+        "labelRequired": "Nhãn là bắt buộc",
+        "phoneInvalid": "Nhập 9-11 chữ số, không dấu cách hoặc mã quốc gia",
+        "fileRequired": "Tải lên ảnh QR",
+        "phoneTab": "Số điện thoại MoMo",
+        "imageTab": "Tải lên ảnh QR",
+        "labelPlaceholder": "Nhãn (vd: MoMo cá nhân)",
+        "add": "Thêm"
+      }
+    },
+    "players": {
+      "player": "Người chơi",
+      "hoursPlayed": "Giờ chơi",
+      "shuttleWeight": "Trọng số cầu",
+      "removeColumn": "Xóa",
+      "addPlayer": "Thêm người chơi",
+      "nameLabel": "Tên",
+      "genderLabel": "Giới tính",
+      "female": "Nữ",
+      "male": "Nam",
+      "removePlayerAria": "Xóa người chơi",
+      "registeredPlayers": "Người chơi đã đăng ký",
+      "previousGuests": "Khách trước đây",
+      "createGuestLabel": "“{{query}}” sẽ được lưu làm khách",
+      "noMatches": "Không có kết quả phù hợp",
+      "typeToSearch": "Nhập để tìm kiếm"
+    },
+    "session": {
+      "detailsTitle": "Chi tiết buổi",
+      "detailsDescription": "Chi phí sân và cầu cho buổi chơi.",
+      "paymentMethodLabel": "Phương thức thanh toán:",
+      "titleLabel": "Tiêu đề",
+      "titlePlaceholder": "Tối thứ Sáu",
+      "dateLabel": "Ngày",
+      "courtCostLabel": "Tiền sân",
+      "courtCostDescription": "Tổng chi phí sân, chia đều cho tất cả người chơi.",
+      "shuttlePriceLabel": "Giá cầu (mỗi quả)",
+      "shuttlePriceDescription": "Tổng tiền cầu = giá × tổng số cầu.",
+      "shuttlePriceAria": "Giá mỗi quả cầu",
+      "totalShuttlesLabel": "Tổng số cầu",
+      "totalShuttlesDescription": "Tổng số cầu dùng trong buổi, chia đều cho tất cả người chơi.",
+      "defaultHoursLabel": "Thời gian chơi mặc định",
+      "defaultHoursDescription": "Áp dụng cho mọi người chơi hiện tại và người được thêm sau.",
+      "playersTitle": "Người chơi",
+      "playersDescription": "Giờ chơi chia tiền sân. Trọng số cầu chia tiền cầu — bấm Nam/Nữ để dùng mặc định 6/4.",
+      "viewChanges": "Xem thay đổi",
+      "saveChanges": "Lưu thay đổi",
+      "saveSession": "Lưu buổi",
+      "shuttleCalc": {
+        "title": "Giá cầu",
+        "description": "Tính giá mỗi quả cầu từ tổng giá một ống.",
+        "tubePriceLabel": "Giá ống",
+        "perTubeLabel": "Số cầu / ống",
+        "perShuttleLabel": "Mỗi quả:",
+        "apply": "Áp dụng"
+      }
     }
   }
 }

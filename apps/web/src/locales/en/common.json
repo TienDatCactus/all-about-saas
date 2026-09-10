@@ -93,6 +93,109 @@
         "title": "Split not found",
         "description": "This share link is invalid or the session was removed."
       }
+    },
+    "shareLink": {
+      "copySuccess": "Share link copied",
+      "copyError": "Couldn't copy the link",
+      "ariaLabel": "Public share link",
+      "copyButton": "Copy link"
+    },
+    "summary": {
+      "title": "Split summary",
+      "courtFee": "Court fee",
+      "shuttleFee": "Shuttle fee",
+      "shuttleCount": "{{count}} shuttles",
+      "defaultHours": "Default {{hours}}h",
+      "qrCode": "QR code",
+      "qrAlt": "Payment QR: {{label}}",
+      "copy": "Copy",
+      "copySuccess": "Summary copied to clipboard",
+      "copyError": "Couldn't copy — check clipboard permissions",
+      "roundingResidual": "{{amount}} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.",
+      "table": {
+        "player": "Player",
+        "court": "Court",
+        "shuttle": "Shuttle",
+        "total": "Total",
+        "payment": "Payment"
+      },
+      "totalCollected": "Total collected",
+      "empty": {
+        "title": "Nothing to split yet",
+        "description": "Add players and costs to see each person's share."
+      },
+      "pay": "Pay",
+      "markPaid": "Mark as paid",
+      "markUnpaid": "Mark as unpaid",
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "paymentMethod": {
+      "loading": "Loading…",
+      "choosePlaceholder": "Choose a payment method",
+      "title": "Payment method",
+      "description": "Choose or add a MoMo QR/phone number to show on the share page.",
+      "qrImageLabel": "QR image",
+      "empty": "No payment methods yet.",
+      "updateError": "Couldn't change the payment method",
+      "deleteError": "Delete failed",
+      "deleteAria": "Delete {{label}}",
+      "form": {
+        "labelRequired": "Label is required",
+        "phoneInvalid": "Enter 9-11 digits, no spaces or country code",
+        "fileRequired": "Upload a QR image",
+        "phoneTab": "MoMo phone number",
+        "imageTab": "Upload QR image",
+        "labelPlaceholder": "Label (e.g. Personal MoMo)",
+        "add": "Add"
+      }
+    },
+    "players": {
+      "player": "Player",
+      "hoursPlayed": "Hours played",
+      "shuttleWeight": "Shuttle weight",
+      "removeColumn": "Remove",
+      "addPlayer": "Add player",
+      "nameLabel": "Name",
+      "genderLabel": "Gender",
+      "female": "Female",
+      "male": "Male",
+      "removePlayerAria": "Remove player",
+      "registeredPlayers": "Registered players",
+      "previousGuests": "Previous guests",
+      "createGuestLabel": "“{{query}}” will be saved as a guest",
+      "noMatches": "No matches",
+      "typeToSearch": "Type to search"
+    },
+    "session": {
+      "detailsTitle": "Session details",
+      "detailsDescription": "Court and shuttle costs for the day.",
+      "paymentMethodLabel": "Payment method:",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Friday night",
+      "dateLabel": "Date",
+      "courtCostLabel": "Court cost",
+      "courtCostDescription": "Total cost for the court, shared by all players.",
+      "shuttlePriceLabel": "Shuttle price (each)",
+      "shuttlePriceDescription": "Shuttle total = price × total shuttles.",
+      "shuttlePriceAria": "Shuttle price per shuttle",
+      "totalShuttlesLabel": "Total shuttles",
+      "totalShuttlesDescription": "Total shuttle count for the session, shared by all players.",
+      "defaultHoursLabel": "Default play time",
+      "defaultHoursDescription": "Applies to every current player and anyone added after.",
+      "playersTitle": "Players",
+      "playersDescription": "Hours played splits the court fee. Shuttle weight splits the shuttle pot — tap Male/Female for the 6/4 default.",
+      "viewChanges": "View Changes",
+      "saveChanges": "Save changes",
+      "saveSession": "Save session",
+      "shuttleCalc": {
+        "title": "Shuttle price",
+        "description": "Derive the per-shuttle price from a tube's total price.",
+        "tubePriceLabel": "Tube price",
+        "perTubeLabel": "Shuttles / tube",
+        "perShuttleLabel": "Per shuttle:",
+        "apply": "Apply"
+      }
     }
   }
 }

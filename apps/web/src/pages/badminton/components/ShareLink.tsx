@@ -1,4 +1,5 @@
 import { LinkIcon } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 import { toast } from "@/components/custom/toast"
 import {
   InputGroup,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/input-group"
 
 export function ShareLink({ shareToken }: { shareToken: string }) {
+  const { t } = useTranslation()
   const path = `/badminton/s/${shareToken}`
 
   const handleCopy = async () => {
@@ -15,9 +17,9 @@ export function ShareLink({ shareToken }: { shareToken: string }) {
       typeof window !== "undefined" ? `${window.location.origin}${path}` : path
     try {
       await navigator.clipboard.writeText(url)
-      toast.success("Share link copied")
+      toast.success(t("badminton.shareLink.copySuccess"))
     } catch {
-      toast.error("Couldn't copy the link")
+      toast.error(t("badminton.shareLink.copyError"))
     }
   }
 
@@ -29,7 +31,7 @@ export function ShareLink({ shareToken }: { shareToken: string }) {
       <InputGroupInput
         readOnly
         value={path}
-        aria-label="Public share link"
+        aria-label={t("badminton.shareLink.ariaLabel")}
         className="text-muted-foreground"
       />
       <InputGroupAddon align="inline-end">
@@ -41,7 +43,7 @@ export function ShareLink({ shareToken }: { shareToken: string }) {
             void handleCopy()
           }}
         >
-          Copy link
+          {t("badminton.shareLink.copyButton")}
         </InputGroupButton>
       </InputGroupAddon>
     </InputGroup>
