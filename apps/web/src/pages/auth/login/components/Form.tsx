@@ -45,7 +45,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        form.handleSubmit()
+        // onSubmit only calls the (sync, fire-and-forget) mutate, so this
+        // promise cannot reject — outcomes surface through mutation status.
+        void form.handleSubmit()
       }}
       method="post"
       className="space-y-4"
