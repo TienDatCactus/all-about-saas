@@ -3,6 +3,7 @@ import { CalendarIcon, ClockIcon, UserIcon } from "@phosphor-icons/react"
 import { parseISO, areIntervalsOverlapping, format } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
 
 import { Calendar } from "@/components/ui/calendar"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -31,6 +32,7 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
   const { selectedDate, setSelectedDate, visibleHours, workingHours } =
     useCalendar()
   const [, setCurrentTime] = useState(new Date())
+  const locale = useDateFnsLocale()
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60 * 1000)
@@ -63,7 +65,7 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
           <div className="relative z-20 flex border-b">
             <div className="w-18"></div>
             <span className="flex-1 border-l py-2 text-center text-xs font-medium text-muted-foreground">
-              {format(selectedDate, "EE")}{" "}
+              {format(selectedDate, "EE", { locale })}{" "}
               <span className="font-semibold text-foreground">
                 {format(selectedDate, "d")}
               </span>
@@ -80,7 +82,9 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
                   <div className="absolute -top-3 right-2 flex h-6 items-center">
                     {index !== 0 && (
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date().setHours(hour, 0, 0, 0), "hh a")}
+                        {format(new Date().setHours(hour, 0, 0, 0), "hh a", {
+                          locale,
+                        })}
                       </span>
                     )}
                   </div>
@@ -266,15 +270,20 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <CalendarIcon className="size-3.5" />
                         <span className="text-sm">
-                          {format(new Date(), "MMM d, yyyy")}
+                          {format(new Date(), "MMM d, yyyy", { locale })}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <ClockIcon className="size-3.5" />
                         <span className="text-sm">
-                          {format(parseISO(event.startDate), "h:mm a")} -{" "}
-                          {format(parseISO(event.endDate), "h:mm a")}
+                          {format(parseISO(event.startDate), "h:mm a", {
+                            locale,
+                          })}{" "}
+                          -{" "}
+                          {format(parseISO(event.endDate), "h:mm a", {
+                            locale,
+                          })}
                         </span>
                       </div>
                     </div>

@@ -8,6 +8,7 @@ import type { TCalendarView } from "../../types"
 import type { IEvent } from "../../interfaces"
 import { useCalendar } from "../../contexts/calendar-context"
 import { getEventsCount, navigateDate, rangeText } from "../../helpers"
+import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
 
 interface IProps {
   view: TCalendarView
@@ -16,8 +17,9 @@ interface IProps {
 
 export function DateNavigator({ view, events }: IProps) {
   const { selectedDate, setSelectedDate } = useCalendar()
+  const locale = useDateFnsLocale()
 
-  const month = formatDate(selectedDate, "MMMM")
+  const month = formatDate(selectedDate, "MMMM", { locale })
   const year = selectedDate.getFullYear()
 
   const eventCount = useMemo(
@@ -51,7 +53,7 @@ export function DateNavigator({ view, events }: IProps) {
         </Button>
 
         <p className="text-sm text-muted-foreground">
-          {rangeText(view, selectedDate)}
+          {rangeText(view, selectedDate, locale)}
         </p>
 
         <Button

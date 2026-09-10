@@ -8,6 +8,7 @@ import {
 } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
 
@@ -32,6 +33,7 @@ interface IProps {
 
 export function CalendarWeekView({ singleDayEvents }: IProps) {
   const { selectedDate, workingHours, visibleHours } = useCalendar()
+  const locale = useDateFnsLocale()
 
   const { hours, earliestEventHour, latestEventHour } = getVisibleHours(
     visibleHours,
@@ -59,7 +61,7 @@ export function CalendarWeekView({ singleDayEvents }: IProps) {
                   key={index}
                   className="py-2 text-center text-xs font-medium text-muted-foreground"
                 >
-                  {format(day, "EE")}{" "}
+                  {format(day, "EE", { locale })}{" "}
                   <span className="ml-1 font-semibold text-foreground">
                     {format(day, "d")}
                   </span>
@@ -78,7 +80,9 @@ export function CalendarWeekView({ singleDayEvents }: IProps) {
                   <div className="absolute -top-3 right-2 flex h-6 items-center">
                     {index !== 0 && (
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date().setHours(hour, 0, 0, 0), "hh a")}
+                        {format(new Date().setHours(hour, 0, 0, 0), "hh a", {
+                          locale,
+                        })}
                       </span>
                     )}
                   </div>

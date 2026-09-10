@@ -8,6 +8,7 @@ import {
 } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
 import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
 
 import { YearViewDayCell } from "@/components/full-calendar/components/year-view/year-view-day-cell"
@@ -22,8 +23,9 @@ interface IProps {
 export function YearViewMonth({ month, events }: IProps) {
   const setSearchParams = useSearchParamsSetter()
   const { setSelectedDate } = useCalendar()
+  const locale = useDateFnsLocale()
 
-  const monthName = format(month, "MMMM")
+  const monthName = format(month, "MMMM", { locale })
 
   const daysInMonth = useMemo(() => {
     const totalDays = getDaysInMonth(month)

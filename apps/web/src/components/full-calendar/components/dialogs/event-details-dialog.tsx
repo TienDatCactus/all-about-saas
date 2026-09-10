@@ -1,6 +1,8 @@
 import { cloneElement, isValidElement, useState } from "react"
 import { format, parseISO } from "date-fns"
 
+import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
+
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -36,6 +38,7 @@ interface IProps {
 
 export function EventDetailsDialog({ event, children }: IProps) {
   const { session } = event
+  const locale = useDateFnsLocale()
   const { isOpen, onOpen, onToggle } = useDisclosure()
   const cancel = useCancelSessionMutation()
   const complete = useCompleteSessionMutation()
@@ -59,7 +62,7 @@ export function EventDetailsDialog({ event, children }: IProps) {
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                {format(start, "d MMM yyyy")} · {session.startTime}–
+                {format(start, "d MMM yyyy", { locale })} · {session.startTime}–
                 {session.endTime}
               </span>
               <div className="flex gap-1">

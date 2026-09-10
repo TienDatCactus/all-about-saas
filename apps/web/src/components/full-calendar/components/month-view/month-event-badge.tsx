@@ -1,6 +1,7 @@
 import { endOfDay, format, parseISO, startOfDay } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
 
 import { DraggableEvent } from "@/components/full-calendar/components/dnd/draggable-event"
 import { EventDetailsDialog } from "@/components/full-calendar/components/dialogs/event-details-dialog"
@@ -21,6 +22,7 @@ interface IProps {
 
 export function MonthEventBadge({ event, cellDate, className }: IProps) {
   const { badgeVariant } = useCalendar()
+  const locale = useDateFnsLocale()
 
   const start = parseISO(event.startDate)
   const itemStart = startOfDay(start)
@@ -57,7 +59,11 @@ export function MonthEventBadge({ event, cellDate, className }: IProps) {
               : undefined
           }
           title={event.title}
-          action={<span className="text-xs">{format(start, "h:mm a")}</span>}
+          action={
+            <span className="text-xs">
+              {format(start, "h:mm a", { locale })}
+            </span>
+          }
           className={cn(
             "mx-1 h-6.5 cursor-pointer py-0 select-none",
             tone.surface,

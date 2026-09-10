@@ -25,12 +25,13 @@ import {
   isSameYear,
   isWithinInterval,
 } from "date-fns"
+import type { Locale } from "date-fns"
 import type { TCalendarView, TVisibleHours, TWorkingHours } from "./types"
 import type { ICalendarCell, IEvent } from "./interfaces"
 
 // ================ Header helper functions ================ //
 
-export function rangeText(view: TCalendarView, date: Date) {
+export function rangeText(view: TCalendarView, date: Date, locale?: Locale) {
   const formatString = "MMM d, yyyy"
   let start: Date
   let end: Date
@@ -53,12 +54,12 @@ export function rangeText(view: TCalendarView, date: Date) {
       end = endOfWeek(date)
       break
     case "day":
-      return format(date, formatString)
+      return format(date, formatString, { locale })
     default:
       return "Error while formatting "
   }
 
-  return `${format(start, formatString)} - ${format(end, formatString)}`
+  return `${format(start, formatString, { locale })} - ${format(end, formatString, { locale })}`
 }
 
 export function navigateDate(
