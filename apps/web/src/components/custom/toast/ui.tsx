@@ -9,6 +9,7 @@ import {
   XIcon,
 } from "@phosphor-icons/react"
 import React, { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { toast as sonnerToast } from "sonner"
 import type { ToastError } from "./normalize"
 import { Button } from "@/components/ui/button"
@@ -117,6 +118,7 @@ function ToastProgress({
 }
 
 export default function Toast(props: ToastProps) {
+  const { t } = useTranslation()
   const { id, options } = props
   const {
     status,
@@ -155,16 +157,16 @@ export default function Toast(props: ToastProps) {
   const copyToClipboard = () => {
     if (!error) return
     const text = [
-      error.title ? `Title: ${error.title}` : "",
-      error.message ? `Message: ${error.message}` : "",
-      error.status ? `Status: ${error.status}` : "",
-      error.code ? `Code: ${error.code}` : "",
-      error.path ? `Path: ${error.path}` : "",
-      error.traceId ? `Trace ID: ${error.traceId}` : "",
+      error.title ? `${t("common.toast.title")}: ${error.title}` : "",
+      error.message ? `${t("common.toast.message")}: ${error.message}` : "",
+      error.status ? `${t("common.toast.status")}: ${error.status}` : "",
+      error.code ? `${t("common.toast.code")}: ${error.code}` : "",
+      error.path ? `${t("common.toast.path")}: ${error.path}` : "",
+      error.traceId ? `${t("common.toast.traceId")}: ${error.traceId}` : "",
       error.validation
-        ? `Validation: ${JSON.stringify(error.validation, null, 2)}`
+        ? `${t("common.toast.validation")}: ${JSON.stringify(error.validation, null, 2)}`
         : "",
-      error.details ? `Details: ${error.details}` : "",
+      error.details ? `${t("common.toast.details")}: ${error.details}` : "",
     ]
       .filter(Boolean)
       .join("\n")
@@ -244,7 +246,7 @@ export default function Toast(props: ToastProps) {
                     }}
                   >
                     <ArrowClockwiseIcon />
-                    Retry
+                    {t("common.toast.retry")}
                   </Button>
                 )}
                 {action && (
@@ -287,7 +289,9 @@ export default function Toast(props: ToastProps) {
             <>
               {error.validation && (
                 <div className="space-y-1.5">
-                  <p className="font-medium text-foreground">Validation</p>
+                  <p className="font-medium text-foreground">
+                    {t("common.toast.validation")}
+                  </p>
 
                   {Object.entries(error.validation).map(([field, messages]) => (
                     <dl
@@ -315,28 +319,36 @@ export default function Toast(props: ToastProps) {
                   <dl className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1">
                     {error.status && (
                       <>
-                        <dt className="text-muted-foreground">Status</dt>
+                        <dt className="text-muted-foreground">
+                          {t("common.toast.status")}
+                        </dt>
                         <dd>{error.status}</dd>
                       </>
                     )}
 
                     {error.code && (
                       <>
-                        <dt className="text-muted-foreground">Code</dt>
+                        <dt className="text-muted-foreground">
+                          {t("common.toast.code")}
+                        </dt>
                         <dd className="font-mono">{error.code}</dd>
                       </>
                     )}
 
                     {error.path && (
                       <>
-                        <dt className="text-muted-foreground">Path</dt>
+                        <dt className="text-muted-foreground">
+                          {t("common.toast.path")}
+                        </dt>
                         <dd className="truncate font-mono">{error.path}</dd>
                       </>
                     )}
 
                     {error.traceId && (
                       <>
-                        <dt className="text-muted-foreground">Trace</dt>
+                        <dt className="text-muted-foreground">
+                          {t("common.toast.trace")}
+                        </dt>
                         <dd className="truncate font-mono">{error.traceId}</dd>
                       </>
                     )}
@@ -361,7 +373,7 @@ export default function Toast(props: ToastProps) {
                   size="sm"
                   onClick={copyToClipboard}
                 >
-                  {copied ? "Copied" : "Copy details"}
+                  {copied ? t("common.toast.copied") : t("common.toast.copyDetails")}
                 </Button>
               </div>
             </>
@@ -370,10 +382,13 @@ export default function Toast(props: ToastProps) {
         {!persistent && (
           <ItemFooter className="border-t bg-secondary p-2">
             <p className="text-xs text-muted-foreground">
-              This message will close in{" "}
-              <strong>{Math.ceil(remainingMs / 1000)}</strong> seconds.{" "}
+              {t("common.toast.closeIn")}{" "}
+              <strong>{Math.ceil(remainingMs / 1000)}</strong>{" "}
+              {t("common.toast.seconds")}{" "}
               <a onClick={toggleTimer} className="link text-foreground">
-                Click to {isPaused ? "resume" : "pause"}.
+                {isPaused
+                  ? t("common.toast.clickToResume")
+                  : t("common.toast.clickToPause")}
               </a>
             </p>
           </ItemFooter>

@@ -12,7 +12,6 @@
       "logout": "Log out"
     },
     "timetable": {
-      "crumb": "Timetable",
       "title": "Teaching schedule",
       "description": "Your teaching schedule and upcoming sessions."
     },
@@ -210,6 +209,70 @@
         "perShuttleLabel": "Per shuttle:",
         "apply": "Apply"
       }
+    },
+    "notFoundRoute": {
+      "title": "Page not found",
+      "description": "That link isn’t available."
+    },
+    "errorRoute": {
+      "title": "Something went wrong",
+      "description": "The page couldn't be loaded.",
+      "tryAgain": "Try again"
+    }
+  },
+  "common": {
+    "themeToggle": {
+      "toggle": "Toggle theme"
+    },
+    "routeDropdown": {
+      "home": "Home",
+      "pages": "Pages"
+    },
+    "userMenu": {
+      "login": "Login",
+      "signUp": "Sign up",
+      "account": "Account",
+      "billing": "Billing",
+      "notifications": "Notifications",
+      "signOut": "Sign Out"
+    },
+    "logo": {
+      "ariaLabel": "Go to homepage"
+    },
+    "attachment": {
+      "placeholder": "Upload a file",
+      "remove": "Remove attachment"
+    },
+    "pagination": {
+      "rows": "Rows",
+      "noResults": "No results",
+      "summary": "{{first}}–{{last}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next",
+      "previousAria": "Go to previous page",
+      "nextAria": "Go to next page",
+      "goToPage": "Go to page {{page}}"
+    },
+    "imagePreview": {
+      "download": "Download image"
+    },
+    "toast": {
+      "retry": "Retry",
+      "copyDetails": "Copy details",
+      "copied": "Copied",
+      "closeIn": "This message will close in",
+      "seconds": "seconds.",
+      "clickToPause": "Click to pause.",
+      "clickToResume": "Click to resume.",
+      "title": "Title",
+      "message": "Message",
+      "status": "Status",
+      "code": "Code",
+      "path": "Path",
+      "traceId": "Trace ID",
+      "trace": "Trace",
+      "validation": "Validation",
+      "details": "Details"
     }
   }
 }

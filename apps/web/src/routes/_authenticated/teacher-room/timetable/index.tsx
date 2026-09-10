@@ -10,7 +10,7 @@ const TeacherRoomSearchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/teacher-room/timetable/")(
   {
-    staticData: { crumb: () => i18n.t("teacherRoom.timetable.crumb") },
+    staticData: { crumb: () => i18n.t("teacherRoom.sidebar.timetable") },
     component: TeacherTimetablePage,
     validateSearch: TeacherRoomSearchSchema,
   }

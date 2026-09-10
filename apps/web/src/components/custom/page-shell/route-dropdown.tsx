@@ -1,5 +1,6 @@
 import { useRouter } from "@tanstack/react-router"
 import React, { useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import { DataDropdown } from "../data/dropdown"
 import { PathIcon } from "@phosphor-icons/react"
 interface RouteDropdownProps {
@@ -11,9 +12,9 @@ export const DEFAULT_HIDDEN_ROUTES = [
   "/auth/*",
 ]
 
-function routeTitle(path: string) {
+function routeTitle(path: string, homeLabel: string) {
   const segment = path.split("/").filter(Boolean).pop()
-  if (!segment) return "Home"
+  if (!segment) return homeLabel
   if (segment.startsWith("$")) return segment.slice(1)
   const words = segment.replace(/-/g, " ")
   return words.charAt(0).toUpperCase() + words.slice(1)
@@ -23,6 +24,7 @@ const RouteDropdown: React.FC<RouteDropdownProps> = ({
   hiddenRoutes = DEFAULT_HIDDEN_ROUTES,
 }) => {
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Absolute paths navigate() accepts — routesByPath keys index routes with a
   // trailing slash ("/badminton/") that `to` rejects, so keys are normalized
@@ -97,11 +99,11 @@ const RouteDropdown: React.FC<RouteDropdownProps> = ({
       items={routeTree}
       getKey={(node) => node.path}
       getChildren={(node) => node.children}
-      getTitle={(node) => routeTitle(node.path)}
+      getTitle={(node) => routeTitle(node.path, t("common.routeDropdown.home"))}
       getDescription={(node) => (node.children ? undefined : node.path)}
       getMedia={() => <PathIcon />}
       mediaVariant="icon"
-      label="Pages"
+      label={t("common.routeDropdown.pages")}
       align="start"
       contentClassName="w-64"
       onSelect={(node) => void router.navigate({ to: node.path })}

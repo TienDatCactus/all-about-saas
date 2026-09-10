@@ -12,7 +12,6 @@
       "logout": "Đăng xuất"
     },
     "timetable": {
-      "crumb": "Lịch dạy",
       "title": "Lịch dạy",
       "description": "Lịch dạy và các buổi học sắp tới."
     },
@@ -210,6 +209,70 @@
         "perShuttleLabel": "Mỗi quả:",
         "apply": "Áp dụng"
       }
+    },
+    "notFoundRoute": {
+      "title": "Không tìm thấy trang",
+      "description": "Liên kết này không khả dụng."
+    },
+    "errorRoute": {
+      "title": "Đã có lỗi xảy ra",
+      "description": "Không thể tải trang.",
+      "tryAgain": "Thử lại"
+    }
+  },
+  "common": {
+    "themeToggle": {
+      "toggle": "Bật/tắt giao diện"
+    },
+    "routeDropdown": {
+      "home": "Trang chủ",
+      "pages": "Trang"
+    },
+    "userMenu": {
+      "login": "Đăng nhập",
+      "signUp": "Đăng ký",
+      "account": "Tài khoản",
+      "billing": "Thanh toán",
+      "notifications": "Thông báo",
+      "signOut": "Đăng xuất"
+    },
+    "logo": {
+      "ariaLabel": "Về trang chủ"
+    },
+    "attachment": {
+      "placeholder": "Tải lên tệp",
+      "remove": "Xóa tệp đính kèm"
+    },
+    "pagination": {
+      "rows": "Số dòng",
+      "noResults": "Không có kết quả",
+      "summary": "{{first}}–{{last}} trong {{total}}",
+      "previous": "Trước",
+      "next": "Sau",
+      "previousAria": "Về trang trước",
+      "nextAria": "Đến trang sau",
+      "goToPage": "Đến trang {{page}}"
+    },
+    "imagePreview": {
+      "download": "Tải ảnh xuống"
+    },
+    "toast": {
+      "retry": "Thử lại",
+      "copyDetails": "Sao chép chi tiết",
+      "copied": "Đã sao chép",
+      "closeIn": "Thông báo này sẽ đóng sau",
+      "seconds": "giây.",
+      "clickToPause": "Bấm để tạm dừng.",
+      "clickToResume": "Bấm để tiếp tục.",
+      "title": "Tiêu đề",
+      "message": "Nội dung",
+      "status": "Trạng thái",
+      "code": "Mã",
+      "path": "Đường dẫn",
+      "traceId": "Mã theo dõi",
+      "trace": "Theo dõi",
+      "validation": "Xác thực",
+      "details": "Chi tiết"
     }
   }
 }

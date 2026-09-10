@@ -4,6 +4,7 @@ import {
   TrashIcon,
   UploadSimpleIcon,
 } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 import {
   Attachment,
   AttachmentAction,
@@ -39,12 +40,14 @@ export function DataAttachment({
   file,
   onFileChange,
   accept,
-  placeholder = "Upload a file",
+  placeholder,
   state,
   id,
   "aria-label": ariaLabel,
   className,
 }: DataAttachmentProps) {
+  const { t } = useTranslation()
+  const resolvedPlaceholder = placeholder ?? t("common.attachment.placeholder")
   const generatedId = React.useId()
   const inputId = id ?? generatedId
   const [previewUrl, setPreviewUrl] = React.useState<string>()
@@ -69,7 +72,7 @@ export function DataAttachment({
         id={inputId}
         type="file"
         accept={accept}
-        aria-label={ariaLabel ?? placeholder}
+        aria-label={ariaLabel ?? resolvedPlaceholder}
         className="sr-only"
         onChange={(e) => onFileChange(e.target.files?.[0])}
       />
@@ -82,7 +85,7 @@ export function DataAttachment({
             <UploadSimpleIcon />
           </AttachmentMedia>
           <AttachmentContent>
-            <AttachmentTitle>{placeholder}</AttachmentTitle>
+            <AttachmentTitle>{resolvedPlaceholder}</AttachmentTitle>
           </AttachmentContent>
         </>
       ) : (
@@ -106,7 +109,7 @@ export function DataAttachment({
             ) : (
               <AttachmentAction
                 type="button"
-                aria-label="Remove attachment"
+                aria-label={t("common.attachment.remove")}
                 onClick={() => onFileChange(undefined)}
               >
                 <TrashIcon />

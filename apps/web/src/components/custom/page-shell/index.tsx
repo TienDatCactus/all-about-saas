@@ -53,7 +53,7 @@ export function ShellHeader({
     >
       <div className="flex shrink-0 items-center gap-3">
         {actions ?? actions}
-        <Separator orientation="vertical" />
+        {actions ? <Separator orientation="vertical" /> : ""}
         <Button variant="ghost" className="font-semibold">
           <DesktopTowerIcon />
           All about Saas

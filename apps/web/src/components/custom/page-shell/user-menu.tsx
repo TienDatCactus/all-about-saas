@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/context/auth"
 import { DataAvatar } from "../data/avatar"
 import { Link } from "@tanstack/react-router"
@@ -24,14 +25,15 @@ import {
 
 export function UserMenu() {
   const { user, logout } = useAuth()
+  const { t } = useTranslation()
   if (!user) {
     return (
       <ButtonGroup>
         <Button variant={"outline"}>
-          <Link to={LoginRoute.path}>Login</Link>
+          <Link to={LoginRoute.path}>{t("common.userMenu.login")}</Link>
         </Button>
         <Button>
-          <Link to={SignUpRoute.path}>Sign up</Link>
+          <Link to={SignUpRoute.path}>{t("common.userMenu.signUp")}</Link>
         </Button>
       </ButtonGroup>
     )
@@ -47,21 +49,21 @@ export function UserMenu() {
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <CheckCircleIcon />
-            Account
+            {t("common.userMenu.account")}
           </DropdownMenuItem>
           <DropdownMenuItem>
             <CreditCardIcon />
-            Billing
+            {t("common.userMenu.billing")}
           </DropdownMenuItem>
           <DropdownMenuItem>
             <BellIcon />
-            Notifications
+            {t("common.userMenu.notifications")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
           <SignOutIcon />
-          Sign Out
+          {t("common.userMenu.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
