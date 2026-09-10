@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { ShareLink } from "../components/ShareLink"
 import { SessionEditor } from "../components/session-editor"
 import { sessionToValues } from "../lib/form"
@@ -10,19 +11,19 @@ import {
 } from "@/services/badminton/queries"
 
 export default function EditSessionPage({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation()
   const sessionQuery = useSessionQuery(sessionId)
   const setPaid = useSetParticipantPaidMutation(sessionId)
 
   return (
     <DataPage
       query={sessionQuery}
-      title={(session) => session?.title || "Session"}
+      title={(session) => session?.title || t("badminton.edit.defaultTitle")}
       description={(session) => (session ? session.playedOn : " ")}
       loading={<EditorSkeleton />}
       error={{
-        title: "Session not found",
-        description:
-          "It may have been deleted, or you don't have access to it.",
+        title: t("badminton.edit.notFound.title"),
+        description: t("badminton.edit.notFound.description"),
         content: null,
       }}
     >
@@ -44,7 +45,8 @@ export default function EditSessionPage({ sessionId }: { sessionId: string }) {
                   // The button's label comes from the query, so a failed
                   // mutation just left it showing the old status — silently
                   // indistinguishable from "the toggle didn't register".
-                  onError: () => toast.error("Couldn't update payment status"),
+                  onError: () =>
+                    toast.error(t("badminton.edit.paymentUpdateError")),
                 }
               )
             }

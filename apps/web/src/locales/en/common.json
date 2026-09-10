@@ -57,5 +57,42 @@
       "and": "and",
       "privacyPolicy": "privacy policy"
     }
+  },
+  "badminton": {
+    "crumb": "Badminton",
+    "list": {
+      "title": "Badminton sessions",
+      "description": "Your saved splits.",
+      "untitledSession": "Untitled session",
+      "deleteSession": "Delete session",
+      "loadError": {
+        "title": "Couldn't load your sessions",
+        "description": "Something went wrong fetching your saved splits. Check your connection and try again."
+      },
+      "empty": {
+        "title": "No sessions yet",
+        "description": "Create your first session to split court and shuttle costs."
+      }
+    },
+    "edit": {
+      "crumb": "Session Details",
+      "defaultTitle": "Session",
+      "paymentUpdateError": "Couldn't update payment status",
+      "notFound": {
+        "title": "Session not found",
+        "description": "It may have been deleted, or you don't have access to it."
+      }
+    },
+    "new": {
+      "title": "New session",
+      "description": "Enter the costs and players — the split updates live."
+    },
+    "share": {
+      "defaultTitle": "Badminton split",
+      "notFound": {
+        "title": "Split not found",
+        "description": "This share link is invalid or the session was removed."
+      }
+    }
   }
 }

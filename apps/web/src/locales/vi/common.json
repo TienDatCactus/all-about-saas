@@ -57,5 +57,42 @@
       "and": "và",
       "privacyPolicy": "chính sách bảo mật"
     }
+  },
+  "badminton": {
+    "crumb": "Cầu lông",
+    "list": {
+      "title": "Buổi cầu lông",
+      "description": "Các buổi chia tiền đã lưu của bạn.",
+      "untitledSession": "Buổi chưa đặt tên",
+      "deleteSession": "Xóa buổi",
+      "loadError": {
+        "title": "Không thể tải danh sách buổi",
+        "description": "Đã có lỗi khi tải các buổi đã lưu của bạn. Kiểm tra kết nối và thử lại."
+      },
+      "empty": {
+        "title": "Chưa có buổi nào",
+        "description": "Tạo buổi đầu tiên để chia tiền sân và cầu."
+      }
+    },
+    "edit": {
+      "crumb": "Chi tiết buổi",
+      "defaultTitle": "Buổi",
+      "paymentUpdateError": "Không thể cập nhật trạng thái thanh toán",
+      "notFound": {
+        "title": "Không tìm thấy buổi",
+        "description": "Buổi có thể đã bị xóa, hoặc bạn không có quyền truy cập."
+      }
+    },
+    "new": {
+      "title": "Buổi mới",
+      "description": "Nhập chi phí và người chơi — kết quả chia tiền cập nhật trực tiếp."
+    },
+    "share": {
+      "defaultTitle": "Chia tiền cầu lông",
+      "notFound": {
+        "title": "Không tìm thấy",
+        "description": "Liên kết chia sẻ không hợp lệ hoặc buổi đã bị xóa."
+      }
+    }
   }
 }

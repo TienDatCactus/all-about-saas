@@ -1,5 +1,6 @@
 import { PlusIcon, TrashIcon, UsersIcon } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import DataCard from "@/components/custom/data/card"
 import DataPage from "@/components/custom/data/page"
 
@@ -15,6 +16,7 @@ import DataPagination, {
 } from "@/components/custom/data/pagination"
 
 export default function SessionListPage() {
+  const { t } = useTranslation()
   const deleteSession = useUndoableDeleteSession()
   const pagination = usePagination({})
 
@@ -23,13 +25,13 @@ export default function SessionListPage() {
   return (
     <DataPage
       query={sessionsQuery}
-      title="Badminton sessions"
-      description="Your saved splits."
+      title={t("badminton.list.title")}
+      description={t("badminton.list.description")}
       actions={
         <Button asChild>
           <Link to="/badminton/new">
             <PlusIcon data-icon="inline-start" />
-            New session
+            {t("badminton.new.title")}
           </Link>
         </Button>
       }
@@ -41,22 +43,20 @@ export default function SessionListPage() {
         </div>
       }
       error={{
-        title: "Couldn't load your sessions",
-        description:
-          "Something went wrong fetching your saved splits. Check your connection and try again.",
+        title: t("badminton.list.loadError.title"),
+        description: t("badminton.list.loadError.description"),
       }}
       isEmpty={(page) => page.data.length === 0}
       empty={{
         className: "border",
         media: { variant: "icon", icon: <UsersIcon /> },
-        title: "No sessions yet",
-        description:
-          "Create your first session to split court and shuttle costs.",
+        title: t("badminton.list.empty.title"),
+        description: t("badminton.list.empty.description"),
         content: (
           <Button asChild>
             <Link to="/badminton/new">
               <PlusIcon data-icon="inline-start" />
-              New session
+              {t("badminton.new.title")}
             </Link>
           </Button>
         ),
@@ -79,7 +79,9 @@ export default function SessionListPage() {
                     className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <DataCard
-                      title={session.title || "Untitled session"}
+                      title={
+                        session.title || t("badminton.list.untitledSession")
+                      }
                       description={session.playedOn}
                       content={
                         <div className="flex items-center justify-between">
@@ -97,7 +99,7 @@ export default function SessionListPage() {
                         <Button
                           variant="destructive"
                           size="icon"
-                          aria-label="Delete session"
+                          aria-label={t("badminton.list.deleteSession")}
                           className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                           onClick={(e) => {
                             e.preventDefault()
