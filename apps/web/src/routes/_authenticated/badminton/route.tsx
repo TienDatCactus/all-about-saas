@@ -17,13 +17,7 @@ function BadmintonNotFound() {
   )
 }
 
-function BadmintonError({
-  error,
-  reset,
-}: {
-  error: Error
-  reset: () => void
-}) {
+function BadmintonError({ error, reset }: { error: Error; reset: () => void }) {
   const { t } = useTranslation()
   return (
     <DataError
