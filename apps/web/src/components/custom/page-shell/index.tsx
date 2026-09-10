@@ -1,6 +1,7 @@
 import { DesktopTowerIcon } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import { Button } from "../../ui/button"
+import { LanguageToggler } from "./language-toggle"
 import RouteDropdown from "./route-dropdown"
 import { ThemeToggler } from "./theme-toggle"
 import { UserMenu } from "./user-menu"
@@ -61,6 +62,7 @@ export function ShellHeader({
       </div>
       <div className="flex shrink-0 items-center gap-3">
         {/* <Separator orientation="vertical" /> */}
+        <LanguageToggler />
         <ThemeToggler />
         <UserMenu />
       </div>

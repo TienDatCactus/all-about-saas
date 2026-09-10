@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { CaretRightIcon } from "@phosphor-icons/react"
 import type { Icon } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 
 import {
   Collapsible,
@@ -33,9 +34,12 @@ export function NavMain({
     }[]
   }[]
 }) {
+  const { t } = useTranslation()
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Teacher room</SidebarGroupLabel>
+      <SidebarGroupLabel>
+        {t("teacherRoom.sidebar.groupLabel")}
+      </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
@@ -51,7 +55,9 @@ export function NavMain({
                   <CollapsibleTrigger asChild>
                     <SidebarMenuAction className="data-[state=open]:rotate-90">
                       <CaretRightIcon />
-                      <span className="sr-only">Toggle</span>
+                      <span className="sr-only">
+                        {t("teacherRoom.sidebar.toggle")}
+                      </span>
                     </SidebarMenuAction>
                   </CollapsibleTrigger>
                   <CollapsibleContent>

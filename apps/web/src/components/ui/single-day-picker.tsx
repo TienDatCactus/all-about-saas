@@ -43,7 +43,12 @@ function SingleDayPicker({
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={onToggle} modal>
+    // Not `modal` — nested inside DataDialog's own modal Dialog/Drawer, a
+    // second modal layer here fights it for focus/pointer-event trapping and
+    // gets stuck open (Escape and outside-click both stop working). The
+    // repo's other date picker (`date-picker.tsx`) already omits it for the
+    // same reason.
+    <Popover open={isOpen} onOpenChange={onToggle}>
       <PopoverTrigger asChild>
         <Button
           id={id}

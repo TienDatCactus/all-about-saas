@@ -122,7 +122,7 @@ export class TeacherRoomSchedulerService {
 					subtitle: `Các buổi sau vẫn đang ở trạng thái "chưa chốt": ${pendingSummary}`,
 					legend:
 						'Nhấn nút bên dưới để chốt buổi hôm nay: đánh dấu đã dạy xong, dời lịch, hoặc huỷ nếu không diễn ra. Buổi gắn nhãn [Ưu tiên cao] đã bị bỏ sót nhiều ngày.',
-					url: `${frontendUrl}/teacher-room`,
+					url: `${frontendUrl}/teacher-room/timetable`,
 				},
 			);
 		}
@@ -181,7 +181,7 @@ export class TeacherRoomSchedulerService {
 						subtitle: `Buổi với ${session.student.name} bắt đầu lúc ${session.startTime} hôm nay.${staleNote}`,
 						legend:
 							'Nhớ chuẩn bị bài. Sau khi dạy xong, nhớ quay lại chốt trạng thái buổi này.',
-						url: `${frontendUrl}/teacher-room`,
+						url: `${frontendUrl}/teacher-room/timetable`,
 					},
 				);
 			}
@@ -216,7 +216,7 @@ export class TeacherRoomSchedulerService {
 						subtitle: `Buổi với ${session.student.name} (${session.startTime}–${session.endTime}) vừa kết thúc và chưa chốt trạng thái.`,
 						legend:
 							'Nhấn nút bên dưới để đánh dấu đã dạy xong, dời lịch, hoặc huỷ.',
-						url: `${frontendUrl}/teacher-room`,
+						url: `${frontendUrl}/teacher-room/timetable`,
 					},
 				);
 			}

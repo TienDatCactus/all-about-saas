@@ -1,4 +1,5 @@
 import { CaretUpDownIcon, SignOutIcon } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 
 import { DataAvatar } from "@/components/custom/data/avatar"
 import {
@@ -20,6 +21,7 @@ import { useAuth } from "@/lib/context/auth"
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { user, logout } = useAuth()
+  const { t } = useTranslation()
 
   if (!user) return null
 
@@ -67,7 +69,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
               <SignOutIcon />
-              Log out
+              {t("teacherRoom.user.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
