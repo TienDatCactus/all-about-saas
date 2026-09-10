@@ -1,79 +1,112 @@
-import { useMemo } from "react";
-import { isToday, startOfDay } from "date-fns";
+import { useMemo } from "react"
+import { isToday, startOfDay } from "date-fns"
 
-import { useCalendar } from "@/components/full-calendar/contexts/calendar-context";
-import { useSearchParamsSetter } from "@/hooks/use-search-params-setter";
+import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
 
-import { EventBullet } from "@/components/full-calendar/components/month-view/event-bullet";
-import { DroppableDayCell } from "@/components/full-calendar/components/dnd/droppable-day-cell";
-import { MonthEventBadge } from "@/components/full-calendar/components/month-view/month-event-badge";
+import { EventBullet } from "@/components/full-calendar/components/month-view/event-bullet"
+import { DroppableDayCell } from "@/components/full-calendar/components/dnd/droppable-day-cell"
+import { MonthEventBadge } from "@/components/full-calendar/components/month-view/month-event-badge"
 
-import { cn } from "@/lib/utils";
-import { getMonthCellEvents } from "@/components/full-calendar/helpers";
+import { cn } from "@/lib/utils"
+import { getMonthCellEvents } from "@/components/full-calendar/helpers"
 
-import type { ICalendarCell, IEvent } from "@/components/full-calendar/interfaces";
+import type {
+  ICalendarCell,
+  IEvent,
+} from "@/components/full-calendar/interfaces"
 
 interface IProps {
-  cell: ICalendarCell;
-  events: IEvent[];
-  eventPositions: Record<string, number>;
+  cell: ICalendarCell
+  events: IEvent[]
+  eventPositions: Record<string, number>
 }
 
-const MAX_VISIBLE_EVENTS = 3;
+const MAX_VISIBLE_EVENTS = 3
 
 export function DayCell({ cell, events, eventPositions }: IProps) {
-  const setSearchParams = useSearchParamsSetter();
-  const { setSelectedDate } = useCalendar();
+  const setSearchParams = useSearchParamsSetter()
+  const { setSelectedDate } = useCalendar()
 
-  const { day, currentMonth, date } = cell;
+  const { day, currentMonth, date } = cell
 
-  const cellEvents = useMemo(() => getMonthCellEvents(date, events, eventPositions), [date, events, eventPositions]);
-  const isSunday = date.getDay() === 0;
+  const cellEvents = useMemo(
+    () => getMonthCellEvents(date, events, eventPositions),
+    [date, events, eventPositions]
+  )
+  const isSunday = date.getDay() === 0
 
   const handleClick = () => {
-    setSelectedDate(date);
-    setSearchParams({ view: "day" });
-  };
+    setSelectedDate(date)
+    setSearchParams({ view: "day" })
+  }
 
   return (
     <DroppableDayCell cell={cell}>
-      <div className={cn("flex h-full flex-col gap-1 border-l border-t py-1.5 lg:pb-2 lg:pt-1", isSunday && "border-l-0")}>
+      <div
+        className={cn(
+          "flex h-full flex-col gap-1 border-t border-l py-1.5 lg:pt-1 lg:pb-2",
+          isSunday && "border-l-0"
+        )}
+      >
         <button
           onClick={handleClick}
           className={cn(
-            "flex size-6 translate-x-1 items-center justify-center rounded-full text-xs font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring lg:px-2",
+            "flex size-6 translate-x-1 items-center justify-center rounded-full text-xs font-semibold hover:bg-accent focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none lg:px-2",
             !currentMonth && "opacity-20",
-            isToday(date) && "bg-primary font-bold text-primary-foreground hover:bg-primary"
+            isToday(date) &&
+              "bg-primary font-bold text-primary-foreground hover:bg-primary"
           )}
         >
           {day}
         </button>
 
-        <div className={cn("flex h-6 gap-1 px-2 lg:h-[94px] lg:flex-col lg:gap-2 lg:px-0", !currentMonth && "opacity-50")}>
-          {[0, 1, 2].map(position => {
-            const event = cellEvents.find(e => e.position === position);
-            const eventKey = event ? `event-${event.id}-${position}` : `empty-${position}`;
+        <div
+          className={cn(
+            "flex h-6 gap-1 px-2 lg:h-[94px] lg:flex-col lg:gap-2 lg:px-0",
+            !currentMonth && "opacity-50"
+          )}
+        >
+          {[0, 1, 2].map((position) => {
+            const event = cellEvents.find((e) => e.position === position)
+            const eventKey = event
+              ? `event-${event.id}-${position}`
+              : `empty-${position}`
 
             return (
               <div key={eventKey} className="lg:flex-1">
                 {event && (
                   <>
                     <EventBullet className="lg:hidden" color={event.color} />
-                    <MonthEventBadge className="hidden lg:flex" event={event} cellDate={startOfDay(date)} />
+                    <MonthEventBadge
+                      className="hidden lg:flex"
+                      event={event}
+                      cellDate={startOfDay(date)}
+                    />
                   </>
                 )}
               </div>
-            );
+            )
           })}
         </div>
 
         {cellEvents.length > MAX_VISIBLE_EVENTS && (
-          <p className={cn("h-4.5 px-1.5 text-xs font-semibold text-muted-foreground", !currentMonth && "opacity-50")}>
-            <span className="sm:hidden">+{cellEvents.length - MAX_VISIBLE_EVENTS}</span>
-            <span className="hidden sm:inline"> {cellEvents.length - MAX_VISIBLE_EVENTS} more...</span>
+          <p
+            className={cn(
+              "h-4.5 px-1.5 text-xs font-semibold text-muted-foreground",
+              !currentMonth && "opacity-50"
+            )}
+          >
+            <span className="sm:hidden">
+              +{cellEvents.length - MAX_VISIBLE_EVENTS}
+            </span>
+            <span className="hidden sm:inline">
+              {" "}
+              {cellEvents.length - MAX_VISIBLE_EVENTS} more...
+            </span>
           </p>
         )}
       </div>
     </DroppableDayCell>
-  );
+  )
 }

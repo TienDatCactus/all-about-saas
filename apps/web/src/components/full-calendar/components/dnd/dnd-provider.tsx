@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { DndProvider } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
 
-import { CustomDragLayer } from "@/components/full-calendar/components/dnd/custom-drag-layer";
+import { CustomDragLayer } from "@/components/full-calendar/components/dnd/custom-drag-layer"
 
 interface DndProviderWrapperProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function DndProviderWrapper({ children }: DndProviderWrapperProps) {
@@ -15,5 +15,5 @@ export function DndProviderWrapper({ children }: DndProviderWrapperProps) {
       {children}
       <CustomDragLayer />
     </DndProvider>
-  );
+  )
 }

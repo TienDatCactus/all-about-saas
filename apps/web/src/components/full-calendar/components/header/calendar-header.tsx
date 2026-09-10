@@ -1,14 +1,14 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { useSearchParamsSetter } from "@/hooks/use-search-params-setter";
-import type { IEvent } from "../../interfaces";
-import type { TCalendarView } from "../../types";
-import { TodayButton } from "./today-button";
-import { DateNavigator } from "./date-navigator";
+} from "@/components/ui/popover"
+import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
+import type { IEvent } from "../../interfaces"
+import type { TCalendarView } from "../../types"
+import { TodayButton } from "./today-button"
+import { DateNavigator } from "./date-navigator"
 import {
   CalendarDotIcon,
   ColumnsIcon,
@@ -17,19 +17,19 @@ import {
   GridNineIcon,
   ListIcon,
   PlusIcon,
-} from "@phosphor-icons/react";
-import { AddEventDialog } from "../dialogs/add-event-dialog";
-import { ChangeBadgeVariantInput } from "../change-badge-variant-input";
-import { ChangeWorkingHoursInput } from "../change-working-hours-input";
-import { ChangeVisibleHoursInput } from "../change-visible-hours-input";
+} from "@phosphor-icons/react"
+import { AddEventDialog } from "../dialogs/add-event-dialog"
+import { ChangeBadgeVariantInput } from "../change-badge-variant-input"
+import { ChangeWorkingHoursInput } from "../change-working-hours-input"
+import { ChangeVisibleHoursInput } from "../change-visible-hours-input"
 
 interface IProps {
-  view: TCalendarView;
-  events: IEvent[];
+  view: TCalendarView
+  events: IEvent[]
 }
 
 export function CalendarHeader({ view, events }: IProps) {
-  const setSearchParams = useSearchParamsSetter();
+  const setSearchParams = useSearchParamsSetter()
 
   return (
     <div className="flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
@@ -114,5 +114,5 @@ export function CalendarHeader({ view, events }: IProps) {
         </AddEventDialog>
       </div>
     </div>
-  );
+  )
 }

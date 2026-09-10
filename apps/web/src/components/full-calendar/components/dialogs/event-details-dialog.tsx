@@ -4,10 +4,7 @@ import { format, parseISO } from "date-fns"
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import DataDialog from "@/components/custom/data/dialog"
 import {
   useCancelSessionMutation,
@@ -102,15 +99,12 @@ export function EventDetailsDialog({ event, children }: IProps) {
                   onChange={(e) =>
                     setPriority.mutate({
                       id: session.id,
-                      priority: e.target
-                        .value as TeachingSession["priority"],
+                      priority: e.target.value as TeachingSession["priority"],
                     })
                   }
                 >
                   {(
-                    Object.keys(
-                      PRIORITY_LABEL
-                    ) as TeachingSession["priority"][]
+                    Object.keys(PRIORITY_LABEL) as TeachingSession["priority"][]
                   ).map((p) => (
                     <NativeSelectOption key={p} value={p}>
                       {PRIORITY_LABEL[p]}

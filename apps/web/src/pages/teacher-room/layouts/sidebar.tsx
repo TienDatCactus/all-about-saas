@@ -1,14 +1,14 @@
-import * as React from "react";
-import { Link } from "@tanstack/react-router";
+import * as React from "react"
+import { Link } from "@tanstack/react-router"
 import {
   CalendarDotIcon,
   ChalkboardTeacherIcon,
   HouseIcon,
-} from "@phosphor-icons/react";
+} from "@phosphor-icons/react"
 
-import { NavMain } from "@/pages/teacher-room/layouts/components/nav-main";
-import { NavSecondary } from "@/pages/teacher-room/layouts/components/nav-secondary";
-import { NavUser } from "@/pages/teacher-room/layouts/components/nav-user";
+import { NavMain } from "@/pages/teacher-room/layouts/components/nav-main"
+import { NavSecondary } from "@/pages/teacher-room/layouts/components/nav-secondary"
+import { NavUser } from "@/pages/teacher-room/layouts/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +17,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 const data = {
   navMain: [
@@ -34,7 +34,7 @@ const data = {
       icon: HouseIcon,
     },
   ],
-};
+}
 
 export function TeacherRoomSidebar({
   ...props
@@ -66,5 +66,5 @@ export function TeacherRoomSidebar({
         <NavUser />
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

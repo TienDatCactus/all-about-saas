@@ -1,12 +1,12 @@
-import { Link } from "@tanstack/react-router";
-import { CaretRightIcon } from "@phosphor-icons/react";
-import type { Icon } from "@phosphor-icons/react";
+import { Link } from "@tanstack/react-router"
+import { CaretRightIcon } from "@phosphor-icons/react"
+import type { Icon } from "@phosphor-icons/react"
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@/components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -17,21 +17,21 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 export function NavMain({
   items,
 }: {
   items: {
-    title: string;
-    url: string;
-    icon: Icon;
-    isActive?: boolean;
+    title: string
+    url: string
+    icon: Icon
+    isActive?: boolean
     items?: {
-      title: string;
-      url: string;
-    }[];
-  }[];
+      title: string
+      url: string
+    }[]
+  }[]
 }) {
   return (
     <SidebarGroup>
@@ -74,5 +74,5 @@ export function NavMain({
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  );
+  )
 }

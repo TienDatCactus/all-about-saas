@@ -1,18 +1,18 @@
-import { format } from "date-fns";
+import { format } from "date-fns"
 
-import { useDisclosure } from "@/hooks/use-disclosure";
+import { useDisclosure } from "@/hooks/use-disclosure"
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes } from "react"
 
 // ================================== //
 
@@ -20,11 +20,11 @@ type TProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
   "onSelect" | "value"
 > & {
-  onSelect: (value: Date | undefined) => void;
-  value?: Date | undefined;
-  placeholder: string;
-  labelVariant?: "P" | "PP" | "PPP";
-};
+  onSelect: (value: Date | undefined) => void
+  value?: Date | undefined
+  placeholder: string
+  labelVariant?: "P" | "PP" | "PPP"
+}
 
 function SingleDayPicker({
   id,
@@ -35,12 +35,12 @@ function SingleDayPicker({
   value,
   ...props
 }: TProps) {
-  const { isOpen, onClose, onToggle } = useDisclosure();
+  const { isOpen, onClose, onToggle } = useDisclosure()
 
   const handleSelect = (date: Date | undefined) => {
-    onSelect(date);
-    onClose();
-  };
+    onSelect(date)
+    onClose()
+  }
 
   return (
     <Popover open={isOpen} onOpenChange={onToggle} modal>
@@ -49,8 +49,8 @@ function SingleDayPicker({
           id={id}
           variant="outline"
           className={cn(
-            "group relative h-9 w-full justify-start whitespace-nowrap px-3 py-2 font-normal hover:bg-inherit",
-            className,
+            "group relative h-9 w-full justify-start px-3 py-2 font-normal whitespace-nowrap hover:bg-inherit",
+            className
           )}
           {...props}
         >
@@ -70,9 +70,9 @@ function SingleDayPicker({
         />
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 // ================================== //
 
-export { SingleDayPicker };
+export { SingleDayPicker }

@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { format, parseISO } from "date-fns";
-import { cva } from "class-variance-authority";
+import { format, parseISO } from "date-fns"
+import { cva } from "class-variance-authority"
 
-import type { VariantProps } from "class-variance-authority";
-import type { IEvent } from "../../interfaces";
-import { useCalendar } from "../../contexts/calendar-context";
-import { EventDetailsDialog } from "../dialogs/event-details-dialog";
-import { ClockIcon, TextAaIcon, UserIcon } from "@phosphor-icons/react";
+import type { VariantProps } from "class-variance-authority"
+import type { IEvent } from "../../interfaces"
+import { useCalendar } from "../../contexts/calendar-context"
+import { EventDetailsDialog } from "../dialogs/event-details-dialog"
+import { ClockIcon, TextAaIcon, UserIcon } from "@phosphor-icons/react"
 
 const agendaEventCardVariants = cva(
-  "flex select-none items-center justify-between gap-3 rounded-md border p-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+  "flex items-center justify-between gap-3 rounded-md border p-3 text-sm select-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none",
   {
     variants: {
       color: {
@@ -47,13 +47,13 @@ const agendaEventCardVariants = cva(
     defaultVariants: {
       color: "blue-dot",
     },
-  },
-);
+  }
+)
 
 interface IProps {
-  event: IEvent;
-  eventCurrentDay?: number;
-  eventTotalDays?: number;
+  event: IEvent
+  eventCurrentDay?: number
+  eventTotalDays?: number
 }
 
 export function AgendaEventCard({
@@ -61,23 +61,23 @@ export function AgendaEventCard({
   eventCurrentDay,
   eventTotalDays,
 }: IProps) {
-  const { badgeVariant } = useCalendar();
+  const { badgeVariant } = useCalendar()
 
-  const startDate = parseISO(event.startDate);
-  const endDate = parseISO(event.endDate);
+  const startDate = parseISO(event.startDate)
+  const endDate = parseISO(event.endDate)
 
   const color = (
     badgeVariant === "dot" ? `${event.color}-dot` : event.color
-  ) as VariantProps<typeof agendaEventCardVariants>["color"];
+  ) as VariantProps<typeof agendaEventCardVariants>["color"]
 
-  const agendaEventCardClasses = agendaEventCardVariants({ color });
+  const agendaEventCardClasses = agendaEventCardVariants({ color })
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      if (e.currentTarget instanceof HTMLElement) e.currentTarget.click();
+      e.preventDefault()
+      if (e.currentTarget instanceof HTMLElement) e.currentTarget.click()
     }
-  };
+  }
 
   return (
     <EventDetailsDialog event={event}>
@@ -129,5 +129,5 @@ export function AgendaEventCard({
         </div>
       </div>
     </EventDetailsDialog>
-  );
+  )
 }

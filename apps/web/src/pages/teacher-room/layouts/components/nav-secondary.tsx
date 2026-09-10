@@ -1,6 +1,6 @@
-import * as React from "react";
-import { Link } from "@tanstack/react-router";
-import type { Icon } from "@phosphor-icons/react";
+import * as React from "react"
+import { Link } from "@tanstack/react-router"
+import type { Icon } from "@phosphor-icons/react"
 
 import {
   SidebarGroup,
@@ -8,17 +8,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 export function NavSecondary({
   items,
   ...props
 }: {
   items: {
-    title: string;
-    url: string;
-    icon: Icon;
-  }[];
+    title: string
+    url: string
+    icon: Icon
+  }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup {...props}>
@@ -37,5 +37,5 @@ export function NavSecondary({
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  );
+  )
 }

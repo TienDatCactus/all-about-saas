@@ -1,13 +1,12 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
-import { Breadcrumbs } from "@/components/custom/breadcrumb";
-import { Separator } from "@/components/ui/separator";
+import { ShellHeader } from "@/components/custom/page-shell"
+import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { TeacherRoomSidebar } from "@/pages/teacher-room/layouts/sidebar";
-import { ShellHeader } from "@/components/custom/page-shell";
+} from "@/components/ui/sidebar"
+import { TeacherRoomSidebar } from "@/pages/teacher-room/layouts/sidebar"
+import { Outlet, createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_authenticated/teacher-room")({
   staticData: { crumb: "Teacher room" },
@@ -33,4 +32,4 @@ export const Route = createFileRoute("/_authenticated/teacher-room")({
       </SidebarInset>
     </SidebarProvider>
   ),
-});
+})

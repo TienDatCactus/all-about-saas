@@ -1,17 +1,17 @@
-import { differenceInDays, format, parseISO, startOfDay } from "date-fns";
-import type { IEvent } from "../../interfaces";
-import { AgendaEventCard } from "./agenda-event-card";
+import { differenceInDays, format, parseISO, startOfDay } from "date-fns"
+import type { IEvent } from "../../interfaces"
+import { AgendaEventCard } from "./agenda-event-card"
 
 interface IProps {
-  date: Date;
-  events: IEvent[];
-  multiDayEvents: IEvent[];
+  date: Date
+  events: IEvent[]
+  multiDayEvents: IEvent[]
 }
 
 export function AgendaDayGroup({ date, events, multiDayEvents }: IProps) {
   const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-  );
+    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+  )
 
   return (
     <div className="space-y-4">
@@ -24,13 +24,13 @@ export function AgendaDayGroup({ date, events, multiDayEvents }: IProps) {
       <div className="space-y-2">
         {multiDayEvents.length > 0 &&
           multiDayEvents.map((event) => {
-            const eventStart = startOfDay(parseISO(event.startDate));
-            const eventEnd = startOfDay(parseISO(event.endDate));
-            const currentDate = startOfDay(date);
+            const eventStart = startOfDay(parseISO(event.startDate))
+            const eventEnd = startOfDay(parseISO(event.endDate))
+            const currentDate = startOfDay(date)
 
-            const eventTotalDays = differenceInDays(eventEnd, eventStart) + 1;
+            const eventTotalDays = differenceInDays(eventEnd, eventStart) + 1
             const eventCurrentDay =
-              differenceInDays(currentDate, eventStart) + 1;
+              differenceInDays(currentDate, eventStart) + 1
             return (
               <AgendaEventCard
                 key={event.id}
@@ -38,7 +38,7 @@ export function AgendaDayGroup({ date, events, multiDayEvents }: IProps) {
                 eventCurrentDay={eventCurrentDay}
                 eventTotalDays={eventTotalDays}
               />
-            );
+            )
           })}
 
         {sortedEvents.length > 0 &&
@@ -47,5 +47,5 @@ export function AgendaDayGroup({ date, events, multiDayEvents }: IProps) {
           ))}
       </div>
     </div>
-  );
+  )
 }

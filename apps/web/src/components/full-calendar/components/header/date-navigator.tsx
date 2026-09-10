@@ -1,34 +1,34 @@
-import { useMemo } from "react";
-import { formatDate } from "date-fns";
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { useMemo } from "react"
+import { formatDate } from "date-fns"
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { TCalendarView } from "../../types";
-import type { IEvent } from "../../interfaces";
-import { useCalendar } from "../../contexts/calendar-context";
-import { getEventsCount, navigateDate, rangeText } from "../../helpers";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import type { TCalendarView } from "../../types"
+import type { IEvent } from "../../interfaces"
+import { useCalendar } from "../../contexts/calendar-context"
+import { getEventsCount, navigateDate, rangeText } from "../../helpers"
 
 interface IProps {
-  view: TCalendarView;
-  events: IEvent[];
+  view: TCalendarView
+  events: IEvent[]
 }
 
 export function DateNavigator({ view, events }: IProps) {
-  const { selectedDate, setSelectedDate } = useCalendar();
+  const { selectedDate, setSelectedDate } = useCalendar()
 
-  const month = formatDate(selectedDate, "MMMM");
-  const year = selectedDate.getFullYear();
+  const month = formatDate(selectedDate, "MMMM")
+  const year = selectedDate.getFullYear()
 
   const eventCount = useMemo(
     () => getEventsCount(events, selectedDate, view),
-    [events, selectedDate, view],
-  );
+    [events, selectedDate, view]
+  )
 
   const handlePrevious = () =>
-    setSelectedDate(navigateDate(selectedDate, view, "previous"));
+    setSelectedDate(navigateDate(selectedDate, view, "previous"))
   const handleNext = () =>
-    setSelectedDate(navigateDate(selectedDate, view, "next"));
+    setSelectedDate(navigateDate(selectedDate, view, "next"))
 
   return (
     <div className="space-y-0.5">
@@ -63,5 +63,5 @@ export function DateNavigator({ view, events }: IProps) {
         </Button>
       </div>
     </div>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-import { cva } from "class-variance-authority";
+import { cva } from "class-variance-authority"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-import type { TEventColor } from "@/components/full-calendar/types";
+import type { TEventColor } from "@/components/full-calendar/types"
 
 const eventBulletVariants = cva("size-2 rounded-full", {
   variants: {
@@ -19,8 +19,14 @@ const eventBulletVariants = cva("size-2 rounded-full", {
   defaultVariants: {
     color: "blue",
   },
-});
+})
 
-export function EventBullet({ color, className }: { color: TEventColor; className: string }) {
-  return <div className={cn(eventBulletVariants({ color, className }))} />;
+export function EventBullet({
+  color,
+  className,
+}: {
+  color: TEventColor
+  className: string
+}) {
+  return <div className={cn(eventBulletVariants({ color, className }))} />
 }

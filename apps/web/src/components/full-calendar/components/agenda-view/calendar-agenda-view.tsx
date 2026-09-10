@@ -1,77 +1,77 @@
-import { useMemo } from "react";
-import { parseISO, format, endOfDay, startOfDay, isSameMonth } from "date-fns";
+import { useMemo } from "react"
+import { parseISO, format, endOfDay, startOfDay, isSameMonth } from "date-fns"
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { IEvent } from "../../interfaces";
-import { useCalendar } from "../../contexts/calendar-context";
-import { AgendaDayGroup } from "./agenda-day-group";
-import { CalendarIcon } from "@phosphor-icons/react";
+import { ScrollArea } from "@/components/ui/scroll-area"
+import type { IEvent } from "../../interfaces"
+import { useCalendar } from "../../contexts/calendar-context"
+import { AgendaDayGroup } from "./agenda-day-group"
+import { CalendarIcon } from "@phosphor-icons/react"
 
 interface IProps {
-  singleDayEvents: IEvent[];
-  multiDayEvents: IEvent[];
+  singleDayEvents: IEvent[]
+  multiDayEvents: IEvent[]
 }
 
 export function CalendarAgendaView({
   singleDayEvents,
   multiDayEvents,
 }: IProps) {
-  const { selectedDate } = useCalendar();
+  const { selectedDate } = useCalendar()
 
   const eventsByDay = useMemo(() => {
     const allDates = new Map<
       string,
       { date: Date; events: IEvent[]; multiDayEvents: IEvent[] }
-    >();
+    >()
 
     singleDayEvents.forEach((event) => {
-      const eventDate = parseISO(event.startDate);
-      if (!isSameMonth(eventDate, selectedDate)) return;
+      const eventDate = parseISO(event.startDate)
+      if (!isSameMonth(eventDate, selectedDate)) return
 
-      const dateKey = format(eventDate, "yyyy-MM-dd");
+      const dateKey = format(eventDate, "yyyy-MM-dd")
 
       if (!allDates.has(dateKey)) {
         allDates.set(dateKey, {
           date: startOfDay(eventDate),
           events: [],
           multiDayEvents: [],
-        });
+        })
       }
 
-      allDates.get(dateKey)?.events.push(event);
-    });
+      allDates.get(dateKey)?.events.push(event)
+    })
 
     multiDayEvents.forEach((event) => {
-      const eventStart = parseISO(event.startDate);
-      const eventEnd = parseISO(event.endDate);
+      const eventStart = parseISO(event.startDate)
+      const eventEnd = parseISO(event.endDate)
 
-      let currentDate = startOfDay(eventStart);
-      const lastDate = endOfDay(eventEnd);
+      let currentDate = startOfDay(eventStart)
+      const lastDate = endOfDay(eventEnd)
 
       while (currentDate <= lastDate) {
         if (isSameMonth(currentDate, selectedDate)) {
-          const dateKey = format(currentDate, "yyyy-MM-dd");
+          const dateKey = format(currentDate, "yyyy-MM-dd")
 
           if (!allDates.has(dateKey)) {
             allDates.set(dateKey, {
               date: new Date(currentDate),
               events: [],
               multiDayEvents: [],
-            });
+            })
           }
 
-          allDates.get(dateKey)?.multiDayEvents.push(event);
+          allDates.get(dateKey)?.multiDayEvents.push(event)
         }
-        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1))
       }
-    });
+    })
 
     return Array.from(allDates.values()).sort(
-      (a, b) => a.date.getTime() - b.date.getTime(),
-    );
-  }, [singleDayEvents, multiDayEvents, selectedDate]);
+      (a, b) => a.date.getTime() - b.date.getTime()
+    )
+  }, [singleDayEvents, multiDayEvents, selectedDate])
 
-  const hasAnyEvents = singleDayEvents.length > 0 || multiDayEvents.length > 0;
+  const hasAnyEvents = singleDayEvents.length > 0 || multiDayEvents.length > 0
 
   return (
     <div className="h-[800px]">
@@ -97,5 +97,5 @@ export function CalendarAgendaView({
         </div>
       </ScrollArea>
     </div>
-  );
+  )
 }

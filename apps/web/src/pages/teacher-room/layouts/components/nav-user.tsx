@@ -1,6 +1,6 @@
-import { CaretUpDownIcon, SignOutIcon } from "@phosphor-icons/react";
+import { CaretUpDownIcon, SignOutIcon } from "@phosphor-icons/react"
 
-import { DataAvatar } from "@/components/custom/data/avatar";
+import { DataAvatar } from "@/components/custom/data/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,20 +8,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { useAuth } from "@/lib/context/auth";
+} from "@/components/ui/sidebar"
+import { useAuth } from "@/lib/context/auth"
 
 export function NavUser() {
-  const { isMobile } = useSidebar();
-  const { user, logout } = useAuth();
+  const { isMobile } = useSidebar()
+  const { user, logout } = useAuth()
 
-  if (!user) return null;
+  if (!user) return null
 
   return (
     <SidebarMenu>
@@ -73,5 +73,5 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  );
+  )
 }
