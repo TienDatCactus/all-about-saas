@@ -1,10 +1,6 @@
 import * as React from "react"
 import { Link } from "@tanstack/react-router"
-import {
-  CalendarDotIcon,
-  ChalkboardTeacherIcon,
-  HouseIcon,
-} from "@phosphor-icons/react"
+import { CalendarDotIcon, HouseIcon } from "@phosphor-icons/react"
 
 import { NavMain } from "@/pages/teacher-room/layouts/components/nav-main"
 import { NavSecondary } from "@/pages/teacher-room/layouts/components/nav-secondary"
@@ -18,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import Logo from "@/components/custom/logo"
 
 const data = {
   navMain: [
@@ -46,12 +43,12 @@ export function TeacherRoomSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/teacher-room/timetable">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <ChalkboardTeacherIcon className="size-4" />
-                </div>
+                <Logo alt="logo" className="h-12 w-12" />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Teacher room</span>
-                  <span className="truncate text-xs">Lịch dạy động</span>
+                  <span className="truncate text-xs">
+                    Quản lý lịch dạy & lớp học
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>

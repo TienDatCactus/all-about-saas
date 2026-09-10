@@ -5,12 +5,12 @@ import { format } from "date-fns"
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { useCreateAdHocSessionMutation } from "@/services/teacher-room/queries"
 
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { SingleDayPicker } from "@/components/ui/single-day-picker"
+import { TimePicker } from "@/components/ui/time-picker"
 import { FormField } from "@/components/custom/form-field"
 import { toast } from "@/components/custom/toast"
 import { Button as StatefulButton } from "@/components/custom/stateful-button"
-import { SingleDayPicker } from "@/components/ui/single-day-picker"
 import DataDialog from "@/components/custom/data/dialog"
 
 import { StudentCombobox } from "./student-combobox"
@@ -58,16 +58,16 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
     onSubmit: async ({ value }) => {
       if (!value.studentName.trim()) {
         toast.error("Cần nhập tên học sinh")
-        return
+        throw new Error("studentName required")
       }
       if (!value.scheduledDate) {
         toast.error("Cần chọn ngày dạy")
-        return
+        throw new Error("scheduledDate required")
       }
       // Zero-padded 'HH:mm' from <input type="time"> compares lexically.
       if (value.endTime <= value.startTime) {
         toast.error("Giờ kết thúc phải sau giờ bắt đầu")
-        return
+        throw new Error("endTime must be after startTime")
       }
       await createSession.mutateAsync({
         studentName: value.studentName,
@@ -123,22 +123,10 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
 
             <div className="grid grid-cols-2 gap-4">
               <FormField form={form} name="startTime" label="Giờ bắt đầu">
-                {({ field }) => (
-                  <Input
-                    type="time"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                )}
+                {({ inputProps }) => <TimePicker {...inputProps} />}
               </FormField>
               <FormField form={form} name="endTime" label="Giờ kết thúc">
-                {({ field }) => (
-                  <Input
-                    type="time"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                )}
+                {({ inputProps }) => <TimePicker {...inputProps} />}
               </FormField>
             </div>
 
@@ -151,7 +139,11 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
               )}
             </FormField>
 
-            <StatefulButton type="submit" mutationState={createSession.status}>
+            <StatefulButton
+              type="button"
+              mutationState={createSession.status}
+              onClick={form.handleSubmit}
+            >
               Tạo buổi dạy
             </StatefulButton>
           </form>

@@ -1,5 +1,4 @@
 import { ShellHeader } from "@/components/custom/page-shell"
-import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
@@ -14,19 +13,8 @@ export const Route = createFileRoute("/_authenticated/teacher-room")({
     <SidebarProvider>
       <TeacherRoomSidebar />
       <SidebarInset>
-        <ShellHeader
-          compact
-          actions={
-            <div className="flex items-center gap-2">
-              <SidebarTrigger />
-              <Separator
-                orientation="vertical"
-                className="data-[orientation=vertical]:h-4"
-              />
-            </div>
-          }
-        />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <ShellHeader compact actions={<SidebarTrigger />} />
+        <div className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
         </div>
       </SidebarInset>

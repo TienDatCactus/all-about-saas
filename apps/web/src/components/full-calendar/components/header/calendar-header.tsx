@@ -22,6 +22,7 @@ import { AddEventDialog } from "../dialogs/add-event-dialog"
 import { ChangeBadgeVariantInput } from "../change-badge-variant-input"
 import { ChangeWorkingHoursInput } from "../change-working-hours-input"
 import { ChangeVisibleHoursInput } from "../change-visible-hours-input"
+import { ButtonGroup } from "@/components/ui/button-group"
 
 interface IProps {
   view: TCalendarView
@@ -39,59 +40,52 @@ export function CalendarHeader({ view, events }: IProps) {
       </div>
 
       <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-between">
-        <div className="flex w-full items-center gap-1.5">
-          <div className="inline-flex first:rounded-r-none last:rounded-l-none [&:not(:first-child):not(:last-child)]:rounded-none">
-            <Button
-              aria-label="View by day"
-              size="icon"
-              variant={view === "day" ? "default" : "outline"}
-              className="rounded-r-none [&_svg]:size-5"
-              onClick={() => setSearchParams({ view: "day" })}
-            >
-              <ListIcon strokeWidth={1.8} />
-            </Button>
+        <ButtonGroup>
+          <Button
+            aria-label="View by day"
+            size="icon"
+            variant={view === "day" ? "default" : "outline"}
+            onClick={() => setSearchParams({ view: "day" })}
+          >
+            <ListIcon strokeWidth={1.8} />
+          </Button>
 
-            <Button
-              aria-label="View by week"
-              size="icon"
-              variant={view === "week" ? "default" : "outline"}
-              className="-ml-px rounded-none [&_svg]:size-5"
-              onClick={() => setSearchParams({ view: "week" })}
-            >
-              <ColumnsIcon strokeWidth={1.8} />
-            </Button>
+          <Button
+            aria-label="View by week"
+            size="icon"
+            variant={view === "week" ? "default" : "outline"}
+            onClick={() => setSearchParams({ view: "week" })}
+          >
+            <ColumnsIcon strokeWidth={1.8} />
+          </Button>
 
-            <Button
-              aria-label="View by month"
-              size="icon"
-              variant={view === "month" ? "default" : "outline"}
-              className="-ml-px rounded-none [&_svg]:size-5"
-              onClick={() => setSearchParams({ view: "month" })}
-            >
-              <GridFourIcon strokeWidth={1.8} />
-            </Button>
+          <Button
+            aria-label="View by month"
+            size="icon"
+            variant={view === "month" ? "default" : "outline"}
+            onClick={() => setSearchParams({ view: "month" })}
+          >
+            <GridFourIcon strokeWidth={1.8} />
+          </Button>
 
-            <Button
-              aria-label="View by year"
-              size="icon"
-              variant={view === "year" ? "default" : "outline"}
-              className="-ml-px rounded-none [&_svg]:size-5"
-              onClick={() => setSearchParams({ view: "year" })}
-            >
-              <GridNineIcon strokeWidth={1.8} />
-            </Button>
+          <Button
+            aria-label="View by year"
+            size="icon"
+            variant={view === "year" ? "default" : "outline"}
+            onClick={() => setSearchParams({ view: "year" })}
+          >
+            <GridNineIcon strokeWidth={1.8} />
+          </Button>
 
-            <Button
-              aria-label="View by agenda"
-              size="icon"
-              variant={view === "agenda" ? "default" : "outline"}
-              className="-ml-px rounded-l-none [&_svg]:size-5"
-              onClick={() => setSearchParams({ view: "agenda" })}
-            >
-              <CalendarDotIcon strokeWidth={1.8} />
-            </Button>
-          </div>
-        </div>
+          <Button
+            aria-label="View by agenda"
+            size="icon"
+            variant={view === "agenda" ? "default" : "outline"}
+            onClick={() => setSearchParams({ view: "agenda" })}
+          >
+            <CalendarDotIcon strokeWidth={1.8} />
+          </Button>
+        </ButtonGroup>
 
         <Popover>
           <PopoverTrigger asChild>

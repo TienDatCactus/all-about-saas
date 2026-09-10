@@ -4,7 +4,13 @@ import { format, parseISO } from "date-fns"
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import DataDialog from "@/components/custom/data/dialog"
 import {
   useCancelSessionMutation,
@@ -94,23 +100,30 @@ export function EventDetailsDialog({ event, children }: IProps) {
                 {/* Manual escalation — a session sitting unconfirmed across
                     days can be marked HIGH so it surfaces first in the
                     pending banner and reminder email. */}
-                <NativeSelect
+                <Select
                   value={session.priority}
-                  onChange={(e) =>
+                  onValueChange={(priority) =>
                     setPriority.mutate({
                       id: session.id,
-                      priority: e.target.value as TeachingSession["priority"],
+                      priority: priority as TeachingSession["priority"],
                     })
                   }
                 >
-                  {(
-                    Object.keys(PRIORITY_LABEL) as TeachingSession["priority"][]
-                  ).map((p) => (
-                    <NativeSelectOption key={p} value={p}>
-                      {PRIORITY_LABEL[p]}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
+                  <SelectTrigger size="sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(
+                      Object.keys(
+                        PRIORITY_LABEL
+                      ) as TeachingSession["priority"][]
+                    ).map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {PRIORITY_LABEL[p]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </>
             )}
 

@@ -9,23 +9,28 @@ import {
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
-interface DataCardProp {
-  title: string
+interface DataCardProp extends Omit<
+  React.ComponentProps<typeof Card>,
+  "title" | "children" | "content"
+> {
+  title: React.ReactNode
   description?: string | React.ReactNode
   action?: React.ReactNode
-  className?: string
   content: React.ReactNode | string
 }
 
+/** Extra props (onClick, onKeyDown, role, tabIndex, style, ...) pass straight
+ *  through to the underlying Card — e.g. to make it keyboard-activatable. */
 export default function DataCard({
   title,
   description,
   action,
   className,
   content,
+  ...rest
 }: DataCardProp) {
   return (
-    <Card className={cn(className)}>
+    <Card className={cn(className)} {...rest}>
       <CardHeader>
         <CardTitle className="truncate">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
