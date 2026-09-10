@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import React from "react"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import { FormField } from "@/components/custom/form-field"
@@ -10,6 +11,7 @@ import { ResetPasswordSchema, useResetPasswordMutation } from "@/services/auth"
 import { toast } from "@/components/custom/toast"
 
 const ChangePasswordForm: React.FC = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { selector, token } = useSearch({ from: "/auth/change-password" })
   // This page is reached from the emailed reset link, so it completes a reset
@@ -28,7 +30,7 @@ const ChangePasswordForm: React.FC = () => {
           rePassword: ResetPasswordSchema.shape.rePassword,
         })
         .refine((val) => val.password === val.rePassword, {
-          message: "Passwords do not match",
+          message: t("auth.changePassword.passwordMismatch"),
           path: ["rePassword"],
         }),
     },
@@ -41,7 +43,7 @@ const ChangePasswordForm: React.FC = () => {
         },
         {
           onSuccess: () => {
-            toast.success("Password changed successfully! You can now log in.")
+            toast.success(t("auth.changePassword.successMessage"))
             // Fire-and-forget: nothing to do after the redirect settles.
             void navigate({
               to: "/auth/login",
@@ -51,7 +53,7 @@ const ChangePasswordForm: React.FC = () => {
             const message =
               err?.response?.data?.message ||
               err?.message ||
-              "Failed to change password."
+              t("auth.changePassword.errorFallback")
             toast.error(message)
           },
         }
@@ -71,22 +73,30 @@ const ChangePasswordForm: React.FC = () => {
       className="mt-6 space-y-4"
     >
       <FieldGroup>
-        <FormField form={form} name="password" label="New Password">
+        <FormField
+          form={form}
+          name="password"
+          label={t("auth.changePassword.newPassword")}
+        >
           {({ inputProps }) => (
             <Input
               mutationState={status}
               isPassword
-              placeholder="New Password"
+              placeholder={t("auth.changePassword.newPassword")}
               {...inputProps}
             />
           )}
         </FormField>
-        <FormField form={form} name="rePassword" label="Confirm Password">
+        <FormField
+          form={form}
+          name="rePassword"
+          label={t("auth.changePassword.confirmPassword")}
+        >
           {({ inputProps }) => (
             <Input
               mutationState={status}
               isPassword
-              placeholder="Confirm Password"
+              placeholder={t("auth.changePassword.confirmPassword")}
               {...inputProps}
             />
           )}
@@ -97,7 +107,7 @@ const ChangePasswordForm: React.FC = () => {
         className="mt-4 w-full py-2 font-medium"
         mutationState={status}
       >
-        Reset Password
+        {t("auth.changePassword.submit")}
       </Button>
     </form>
   )

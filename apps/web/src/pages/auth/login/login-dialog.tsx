@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ import Providers from "./components/Providers"
  * on a blank page. No close button, and outside-click/Escape are swallowed.
  */
 export function LoginDialog() {
+  const { t } = useTranslation()
   return (
     <Dialog open>
       <DialogContent
@@ -27,10 +29,9 @@ export function LoginDialog() {
         onEscapeKeyDown={(event) => event.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Sign in to continue</DialogTitle>
+          <DialogTitle>{t("auth.login.dialogTitle")}</DialogTitle>
           <DialogDescription>
-            This page needs an account. After signing in you&apos;ll stay right
-            here.
+            {t("auth.login.dialogDescription")}
           </DialogDescription>
         </DialogHeader>
         <LoginForm redirectTo={null} />
@@ -40,7 +41,7 @@ export function LoginDialog() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              or with
+              {t("auth.login.orWith")}
             </span>
           </div>
         </div>

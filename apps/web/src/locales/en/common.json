@@ -1,0 +1,61 @@
+{
+  "teacherRoom": {
+    "sidebar": {
+      "title": "Teacher room",
+      "subtitle": "Manage teaching schedule & classes",
+      "groupLabel": "Teacher room",
+      "toggle": "Toggle",
+      "timetable": "Timetable",
+      "backHome": "Back to home"
+    },
+    "user": {
+      "logout": "Log out"
+    }
+  },
+  "auth": {
+    "login": {
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "title": "Log in or",
+      "createAccount": "create account",
+      "forgotPassword": "Forgot your password?",
+      "resetPasswordLink": "Reset password",
+      "orWith": "or with",
+      "dialogTitle": "Sign in to continue",
+      "dialogDescription": "This page needs an account. After signing in you'll stay right here.",
+      "signInWithProvider": "Sign in with {{provider}}"
+    },
+    "signUp": {
+      "title": "Sign up for AAS account",
+      "backToLogin": "Back to Login",
+      "or": "or ",
+      "rePassword": "Re-Enter Password",
+      "submit": "Sign up",
+      "checkInbox": "Check your inbox",
+      "activationEmailSent": "We have sent you an activation email"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "backToLogin": "Back to Login",
+      "or": "or ",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "submit": "Confirm"
+    },
+    "changePassword": {
+      "title": "Reset your password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "passwordMismatch": "Passwords do not match",
+      "submit": "Reset Password",
+      "successMessage": "Password changed successfully! You can now log in.",
+      "errorFallback": "Failed to change password."
+    },
+    "layout": {
+      "termsPrefix": "By continuing to use our services, you agree to our",
+      "termsOfService": "terms of service",
+      "and": "and",
+      "privacyPolicy": "privacy policy"
+    }
+  }
+}

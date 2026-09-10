@@ -1,6 +1,7 @@
 import { formOptions, useForm } from "@tanstack/react-form"
 import { useNavigate } from "@tanstack/react-router"
 import React from "react"
+import { useTranslation } from "react-i18next"
 import type { SignUpIn } from "@/services/auth"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import { FormField } from "@/components/custom/form-field"
@@ -19,6 +20,7 @@ const formOpts = formOptions({
   },
 })
 const SignUpForm: React.FC = () => {
+  const { t } = useTranslation()
   const { mutate, status } = useSignupMutation()
   const navigate = useNavigate()
   const form = useForm({
@@ -26,8 +28,8 @@ const SignUpForm: React.FC = () => {
     onSubmit: (submission) => {
       mutate(LoginInSchema.parse(submission.value), {
         onSuccess: () => {
-          toast.success("Check your inbox", {
-            description: "We have sent you an activation email",
+          toast.success(t("auth.signUp.checkInbox"), {
+            description: t("auth.signUp.activationEmailSent"),
           })
           // Fire-and-forget: nothing to do after the redirect settles.
           void navigate({
@@ -50,33 +52,41 @@ const SignUpForm: React.FC = () => {
       className="space-y-4"
     >
       <FieldGroup>
-        <FormField form={form} name="email" label="Email">
+        <FormField form={form} name="email" label={t("auth.login.email")}>
           {({ inputProps }) => (
-            <Input mutationState={status} placeholder="Email" {...inputProps} />
+            <Input
+              mutationState={status}
+              placeholder={t("auth.login.email")}
+              {...inputProps}
+            />
           )}
         </FormField>
 
         <FormField
           form={form}
           name="password"
-          label="Password"
+          label={t("auth.login.password")}
           showError={false}
         >
           {({ inputProps }) => (
             <PasswordStrengthInput
               mutationState={status}
               isPassword
-              placeholder="Password"
+              placeholder={t("auth.login.password")}
               {...inputProps}
             />
           )}
         </FormField>
-        <FormField form={form} name="rePassword" label="Re-Enter Password">
+        <FormField
+          form={form}
+          name="rePassword"
+          label={t("auth.signUp.rePassword")}
+        >
           {({ inputProps }) => (
             <Input
               mutationState={status}
               isPassword
-              placeholder="Password"
+              placeholder={t("auth.login.password")}
               {...inputProps}
             />
           )}
@@ -87,7 +97,7 @@ const SignUpForm: React.FC = () => {
         className="mt-4 w-full py-2 font-medium"
         disabled={status === "pending"}
       >
-        Sign up
+        {t("auth.signUp.submit")}
       </Button>
     </form>
   )

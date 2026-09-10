@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { cn, loadAsset } from "@/lib/utils"
 import { authApi } from "@/services/auth"
 import React from "react"
+import { useTranslation } from "react-i18next"
 import { ReactSVG } from "react-svg"
 
 interface Provider {
@@ -42,6 +43,7 @@ const providers: Array<Provider> = [
   },
 ]
 const Providers: React.FC = () => {
+  const { t } = useTranslation()
   return (
     <ul className="space-y-4">
       {providers.map((provider) => (
@@ -63,7 +65,7 @@ const Providers: React.FC = () => {
             <ReactSVG src={provider.darkIconUrl} aria-hidden={true} />
           )}
           <span className="text-sm font-medium">
-            Sign in with {provider.name}
+            {t("auth.login.signInWithProvider", { provider: provider.name })}
           </span>
         </Button>
       ))}

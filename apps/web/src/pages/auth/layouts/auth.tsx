@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import Logo from "@/components/custom/logo"
 import { Separator } from "@/components/ui/separator"
 
@@ -25,6 +26,7 @@ export default function AuthLayout({
   legend,
   action,
 }: AuthLayoutProps) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-1 flex-col justify-center px-4 py-10 lg:px-6">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
@@ -41,13 +43,13 @@ export default function AuthLayout({
             )}
           </h2>{" "}
           <p className="mt-4 text-center text-xs text-pretty text-muted-foreground dark:text-muted-foreground">
-            By continuing to use our services, you agree to our{" "}
+            {t("auth.layout.termsPrefix")}{" "}
             <a href="#" className="underline underline-offset-4">
-              terms of service
+              {t("auth.layout.termsOfService")}
             </a>{" "}
-            and{" "}
+            {t("auth.layout.and")}{" "}
             <a href="#" className="underline underline-offset-4">
-              privacy policy
+              {t("auth.layout.privacyPolicy")}
             </a>
             .
           </p>
