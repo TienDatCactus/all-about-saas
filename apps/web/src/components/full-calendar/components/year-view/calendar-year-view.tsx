@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { addMonths, startOfYear } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { YearViewMonth } from "@/components/full-calendar/components/year-view/year-view-month"
 
@@ -20,16 +21,21 @@ export function CalendarYearView({ allEvents }: IProps) {
   }, [selectedDate])
 
   return (
-    <div className="p-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {months.map((month) => (
-          <YearViewMonth
-            key={month.toString()}
-            month={month}
-            events={allEvents}
-          />
-        ))}
+    // Same fixed-height + internal scroll as the day/agenda views — without
+    // it, 12 month tiles stacked 1-2 per row (narrow/@container-squeezed
+    // widths) push the whole page height way out instead of scrolling.
+    <ScrollArea className="h-[800px]" type="always">
+      <div className="p-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {months.map((month) => (
+            <YearViewMonth
+              key={month.toString()}
+              month={month}
+              events={allEvents}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 }

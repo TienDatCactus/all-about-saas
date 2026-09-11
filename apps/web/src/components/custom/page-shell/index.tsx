@@ -46,9 +46,13 @@ export function ShellHeader({
   return (
     <header
       className={cn(
-        compact
-          ? "flex h-12 w-full shrink-0 items-center justify-between gap-2 border-b border-border px-4"
-          : "sticky top-0 z-100 flex h-12 w-full shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4"
+        // flex-wrap + auto height below `sm`: the left (brand/nav) and right
+        // (language/theme/user) clusters both refuse to shrink, so below
+        // ~480px combined they no longer fit on one row. Without wrap, the
+        // right cluster — including sign-out — was pushed past the
+        // viewport edge with no scrollbar to reach it.
+        "flex h-auto min-h-12 w-full flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2 sm:h-12 sm:flex-nowrap sm:py-0",
+        !compact && "sticky top-0 z-100 bg-background"
       )}
     >
       <div className="flex shrink-0 items-center gap-3">

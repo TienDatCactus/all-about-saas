@@ -52,7 +52,12 @@ export const Route = createFileRoute("/_authenticated/teacher-room")({
       <TeacherRoomSidebar />
       <SidebarInset>
         <ShellHeader compact actions={<SidebarTrigger />} />
-        <div className="flex flex-1 flex-col gap-4 p-4">
+        {/* min-w-0: flex items default to min-width:auto, so without it this
+            never shrinks below its content's intrinsic width — a table or
+            button row that's slightly too wide for the space beside the
+            sidebar pushes the whole page wider instead of being contained
+            (and reacted to via @container, see full-calendar's ClientContainer). */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
           <Outlet />
         </div>
       </SidebarInset>

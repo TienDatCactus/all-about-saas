@@ -127,7 +127,11 @@ export function ClientContainer({ view }: IProps) {
   }, [filteredEvents])
 
   return (
-    <div className="overflow-hidden rounded-xl border">
+    // Container query root: this box's own width, not the viewport's — a
+    // persistent sidebar can leave less room than the viewport implies (a
+    // "tablet" 768px viewport with a 256px sidebar only has ~510px here),
+    // so viewport breakpoints alone under-react to that.
+    <div className="@container overflow-hidden rounded-xl border">
       <CalendarHeader view={view} events={filteredEvents} />
 
       <DndProviderWrapper>
