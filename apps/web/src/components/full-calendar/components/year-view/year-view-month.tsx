@@ -6,6 +6,7 @@ import {
   getDaysInMonth,
   startOfMonth,
 } from "date-fns"
+import { useTranslation } from "react-i18next"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
 import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
@@ -21,6 +22,7 @@ interface IProps {
 }
 
 export function YearViewMonth({ month, events }: IProps) {
+  const { t } = useTranslation()
   const setSearchParams = useSearchParamsSetter()
   const { setSelectedDate } = useCalendar()
   const locale = useDateFnsLocale()
@@ -37,7 +39,15 @@ export function YearViewMonth({ month, events }: IProps) {
     return [...blanks, ...days]
   }, [month])
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const weekDays = [
+    t("calendar.yearView.weekdays.sun"),
+    t("calendar.yearView.weekdays.mon"),
+    t("calendar.yearView.weekdays.tue"),
+    t("calendar.yearView.weekdays.wed"),
+    t("calendar.yearView.weekdays.thu"),
+    t("calendar.yearView.weekdays.fri"),
+    t("calendar.yearView.weekdays.sat"),
+  ]
 
   const handleClick = () => {
     setSelectedDate(new Date(month.getFullYear(), month.getMonth(), 1))

@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { formatDate } from "date-fns"
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,7 @@ interface IProps {
 }
 
 export function DateNavigator({ view, events }: IProps) {
+  const { t } = useTranslation()
   const { selectedDate, setSelectedDate } = useCalendar()
   const locale = useDateFnsLocale()
 
@@ -39,7 +41,7 @@ export function DateNavigator({ view, events }: IProps) {
           {month} {year}
         </span>
         <Badge variant="outline" className="px-1.5">
-          {eventCount} events
+          {t("calendar.header.eventsCount", { count: eventCount })}
         </Badge>
       </div>
 

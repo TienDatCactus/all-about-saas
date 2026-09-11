@@ -14,6 +14,118 @@
       "low": "Low",
       "normal": "Normal",
       "high": "High"
+    },
+    "badgeVariant": {
+      "label": "Change badge variant",
+      "dot": "Dot",
+      "colored": "Colored",
+      "mixed": "Mixed"
+    },
+    "agenda": {
+      "noEvents": "No events scheduled for the selected month",
+      "columnStudent": "Student",
+      "columnType": "Type",
+      "columnStatus": "Status",
+      "columnTime": "Time"
+    },
+    "header": {
+      "viewDay": "Day view",
+      "viewWeek": "Week view",
+      "viewMonth": "Month view",
+      "viewYear": "Year view",
+      "viewAgenda": "Agenda view",
+      "settingsAria": "Calendar settings",
+      "addEvent": "Add Event",
+      "eventsCount_one": "{{count}} event",
+      "eventsCount_other": "{{count}} events"
+    },
+    "visibleHours": {
+      "title": "Change visible hours",
+      "tooltip": "If an event falls outside the specified visible hours, the visible hours will automatically adjust to include that event.",
+      "from": "From",
+      "to": "To",
+      "apply": "Apply"
+    },
+    "dialogs": {
+      "reschedule": {
+        "title": "Reschedule",
+        "datePlaceholder": "Pick a new date",
+        "confirm": "Confirm"
+      },
+      "studentCombobox": {
+        "createLabel": "Add new student \"{{query}}\"",
+        "placeholder": "Student name",
+        "empty": "No student found"
+      },
+      "eventDetails": {
+        "complete": "Complete",
+        "reschedule": "Reschedule",
+        "cancel": "Cancel",
+        "reopen": "Reopen"
+      },
+      "addEvent": {
+        "title": "Add teaching session",
+        "studentLabel": "Student",
+        "dateLabel": "Teaching date",
+        "datePlaceholder": "Pick a date",
+        "startTimeLabel": "Start time",
+        "endTimeLabel": "End time",
+        "noteLabel": "Note (optional)",
+        "submit": "Create session",
+        "studentRequired": "Student name is required",
+        "dateRequired": "Teaching date is required",
+        "endAfterStart": "End time must be after start time"
+      }
+    },
+    "weekView": {
+      "mobileUnavailable": "Weekly view is not available on smaller devices.",
+      "mobileSwitchHint": "Please switch to daily or monthly view."
+    },
+    "dayView": {
+      "happeningNow": "Happening now",
+      "noAppointments": "No appointments or consultations at the moment"
+    },
+    "monthView": {
+      "moreEvents": "{{count}} more..."
+    },
+    "month": {
+      "weekday": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      }
+    },
+    "yearView": {
+      "weekdays": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      }
+    },
+    "workingHours": {
+      "title": "Change working hours",
+      "tooltip": "This will apply a dashed background to the hour cells that fall outside the working hours — only for week and day views.",
+      "from": "From",
+      "to": "To",
+      "closed": "Closed",
+      "apply": "Apply",
+      "days": {
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday"
+      }
     }
   },
   "teacherRoom": {

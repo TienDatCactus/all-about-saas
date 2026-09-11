@@ -1,6 +1,7 @@
 import { cloneElement, isValidElement } from "react"
 import { useForm } from "@tanstack/react-form"
 import { format } from "date-fns"
+import { useTranslation } from "react-i18next"
 
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { useCreateAdHocSessionMutation } from "@/services/teacher-room/queries"
@@ -40,6 +41,7 @@ function defaultEndTime(hour: number, minute: number) {
 }
 
 export function AddEventDialog({ children, startDate, startTime }: IProps) {
+  const { t } = useTranslation()
   const { isOpen, onOpen, onClose, onToggle } = useDisclosure()
   const createSession = useCreateAdHocSessionMutation()
 
@@ -57,16 +59,16 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
     } as AddEventFormValues,
     onSubmit: async ({ value }) => {
       if (!value.studentName.trim()) {
-        toast.error("Cần nhập tên học sinh")
+        toast.error(t("calendar.dialogs.addEvent.studentRequired"))
         throw new Error("studentName required")
       }
       if (!value.scheduledDate) {
-        toast.error("Cần chọn ngày dạy")
+        toast.error(t("calendar.dialogs.addEvent.dateRequired"))
         throw new Error("scheduledDate required")
       }
       // Zero-padded 'HH:mm' from <input type="time"> compares lexically.
       if (value.endTime <= value.startTime) {
-        toast.error("Giờ kết thúc phải sau giờ bắt đầu")
+        toast.error(t("calendar.dialogs.addEvent.endAfterStart"))
         throw new Error("endTime must be after startTime")
       }
       await createSession.mutateAsync({
@@ -93,7 +95,7 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
           onToggle()
           if (!next) form.reset()
         }}
-        title="Thêm buổi dạy"
+        title={t("calendar.dialogs.addEvent.title")}
         content={
           <form
             className="flex flex-col gap-4"
@@ -102,7 +104,11 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
               form.handleSubmit().catch(() => undefined)
             }}
           >
-            <FormField form={form} name="studentName" label="Học sinh">
+            <FormField
+              form={form}
+              name="studentName"
+              label={t("calendar.dialogs.addEvent.studentLabel")}
+            >
               {({ field }) => (
                 <StudentCombobox
                   value={field.state.value}
@@ -111,26 +117,42 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
               )}
             </FormField>
 
-            <FormField form={form} name="scheduledDate" label="Ngày dạy">
+            <FormField
+              form={form}
+              name="scheduledDate"
+              label={t("calendar.dialogs.addEvent.dateLabel")}
+            >
               {({ field }) => (
                 <SingleDayPicker
                   value={field.state.value}
                   onSelect={field.handleChange}
-                  placeholder="Chọn ngày"
+                  placeholder={t("calendar.dialogs.addEvent.datePlaceholder")}
                 />
               )}
             </FormField>
 
             <div className="grid grid-cols-2 gap-4">
-              <FormField form={form} name="startTime" label="Giờ bắt đầu">
+              <FormField
+                form={form}
+                name="startTime"
+                label={t("calendar.dialogs.addEvent.startTimeLabel")}
+              >
                 {({ inputProps }) => <TimePicker {...inputProps} />}
               </FormField>
-              <FormField form={form} name="endTime" label="Giờ kết thúc">
+              <FormField
+                form={form}
+                name="endTime"
+                label={t("calendar.dialogs.addEvent.endTimeLabel")}
+              >
                 {({ inputProps }) => <TimePicker {...inputProps} />}
               </FormField>
             </div>
 
-            <FormField form={form} name="note" label="Ghi chú (tuỳ chọn)">
+            <FormField
+              form={form}
+              name="note"
+              label={t("calendar.dialogs.addEvent.noteLabel")}
+            >
               {({ field }) => (
                 <Textarea
                   value={field.state.value}
@@ -144,7 +166,7 @@ export function AddEventDialog({ children, startDate, startTime }: IProps) {
               mutationState={createSession.status}
               onClick={form.handleSubmit}
             >
-              Tạo buổi dạy
+              {t("calendar.dialogs.addEvent.submit")}
             </StatefulButton>
           </form>
         }

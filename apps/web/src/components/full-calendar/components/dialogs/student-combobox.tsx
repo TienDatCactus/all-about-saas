@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import DataAutocomplete from "@/components/custom/data/autocomplete"
 import { useStudentSuggestQuery } from "@/services/teacher-room/queries"
 import type { DataAutocompleteOption } from "@/components/custom/data/autocomplete"
@@ -21,8 +22,9 @@ interface StudentComboboxProps {
 export function StudentCombobox({
   value,
   onChange,
-  placeholder = "Tên học sinh",
+  placeholder,
 }: StudentComboboxProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = React.useState("")
   const suggestQuery = useStudentSuggestQuery(query)
 
@@ -38,10 +40,12 @@ export function StudentCombobox({
       onSearch={setQuery}
       options={options}
       creatable
-      createLabel={(q) => `Thêm học sinh mới "${q}"`}
+      createLabel={(q) =>
+        t("calendar.dialogs.studentCombobox.createLabel", { query: q })
+      }
       loading={suggestQuery.isFetching}
-      placeholder={placeholder}
-      emptyMessage="Không tìm thấy học sinh"
+      placeholder={placeholder ?? t("calendar.dialogs.studentCombobox.placeholder")}
+      emptyMessage={t("calendar.dialogs.studentCombobox.empty")}
     />
   )
 }

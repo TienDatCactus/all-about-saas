@@ -1,4 +1,5 @@
 import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import { parseISO, format, endOfDay, startOfDay, isSameMonth } from "date-fns"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -17,6 +18,7 @@ export function CalendarAgendaView({
   multiDayEvents,
 }: IProps) {
   const { selectedDate } = useCalendar()
+  const { t } = useTranslation()
 
   const eventsByDay = useMemo(() => {
     const allDates = new Map<
@@ -82,7 +84,6 @@ export function CalendarAgendaView({
               key={format(dayGroup.date, "yyyy-MM-dd")}
               date={dayGroup.date}
               events={dayGroup.events}
-              multiDayEvents={dayGroup.multiDayEvents}
             />
           ))}
 
@@ -90,7 +91,7 @@ export function CalendarAgendaView({
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
               <CalendarIcon className="size-10" />
               <p className="text-sm md:text-base">
-                No events scheduled for the selected month
+                {t("calendar.agenda.noEvents")}
               </p>
             </div>
           )}

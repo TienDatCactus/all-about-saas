@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, useState } from "react"
 import { format, parseISO } from "date-fns"
+import { useTranslation } from "react-i18next"
 
 import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
@@ -21,9 +22,9 @@ import {
   useSetPriorityMutation,
 } from "@/services/teacher-room/queries"
 import {
-  PRIORITY_LABEL,
-  STATUS_LABEL,
-  TYPE_LABEL,
+  PRIORITY_LABEL_KEY,
+  STATUS_LABEL_KEY,
+  TYPE_LABEL_KEY,
 } from "@/components/full-calendar/adapter"
 
 import { RescheduleDialog } from "./reschedule-dialog"
@@ -37,6 +38,7 @@ interface IProps {
 }
 
 export function EventDetailsDialog({ event, children }: IProps) {
+  const { t } = useTranslation()
   const { session } = event
   const locale = useDateFnsLocale()
   const { isOpen, onOpen, onToggle } = useDisclosure()
@@ -66,8 +68,10 @@ export function EventDetailsDialog({ event, children }: IProps) {
                 {session.endTime}
               </span>
               <div className="flex gap-1">
-                <Badge variant="secondary">{TYPE_LABEL[session.type]}</Badge>
-                <Badge>{STATUS_LABEL[session.status]}</Badge>
+                <Badge variant="secondary">
+                  {t(TYPE_LABEL_KEY[session.type])}
+                </Badge>
+                <Badge>{t(STATUS_LABEL_KEY[session.status])}</Badge>
               </div>
             </div>
 
@@ -82,21 +86,21 @@ export function EventDetailsDialog({ event, children }: IProps) {
                     size="sm"
                     onClick={() => complete.mutate({ id: session.id })}
                   >
-                    Hoàn thành
+                    {t("calendar.dialogs.eventDetails.complete")}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setRescheduling(true)}
                   >
-                    Dời lịch
+                    {t("calendar.dialogs.eventDetails.reschedule")}
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
                     onClick={() => cancel.mutate({ id: session.id })}
                   >
-                    Huỷ
+                    {t("calendar.dialogs.eventDetails.cancel")}
                   </Button>
                 </div>
 
@@ -118,11 +122,11 @@ export function EventDetailsDialog({ event, children }: IProps) {
                   <SelectContent>
                     {(
                       Object.keys(
-                        PRIORITY_LABEL
+                        PRIORITY_LABEL_KEY
                       ) as TeachingSession["priority"][]
                     ).map((p) => (
                       <SelectItem key={p} value={p}>
-                        {PRIORITY_LABEL[p]}
+                        {t(PRIORITY_LABEL_KEY[p])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -136,7 +140,7 @@ export function EventDetailsDialog({ event, children }: IProps) {
                 variant="outline"
                 onClick={() => reopen.mutate({ id: session.id })}
               >
-                Mở lại
+                {t("calendar.dialogs.eventDetails.reopen")}
               </Button>
             )}
           </div>

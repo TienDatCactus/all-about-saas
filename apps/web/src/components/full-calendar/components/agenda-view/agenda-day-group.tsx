@@ -1,8 +1,9 @@
 import { format, parseISO } from "date-fns"
+import { useTranslation } from "react-i18next"
 
 import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 import { EventDetailsDialog } from "../dialogs/event-details-dialog"
-import { EVENT_TONE, STATUS_LABEL, TYPE_LABEL } from "../../adapter"
+import { EVENT_TONE, STATUS_LABEL_KEY, TYPE_LABEL_KEY } from "../../adapter"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DataAvatar } from "@/components/custom/data/avatar"
@@ -26,6 +27,7 @@ interface IProps {
 // + name, a status badge, a monospace-ish detail column, time right-aligned.
 export function AgendaDayGroup({ date, events }: IProps) {
   const locale = useDateFnsLocale()
+  const { t } = useTranslation()
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
   )
@@ -51,10 +53,12 @@ export function AgendaDayGroup({ date, events }: IProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Học sinh</TableHead>
-              <TableHead>Loại</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="text-right">Giờ</TableHead>
+              <TableHead>{t("calendar.agenda.columnStudent")}</TableHead>
+              <TableHead>{t("calendar.agenda.columnType")}</TableHead>
+              <TableHead>{t("calendar.agenda.columnStatus")}</TableHead>
+              <TableHead className="text-right">
+                {t("calendar.agenda.columnTime")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,12 +89,12 @@ export function AgendaDayGroup({ date, events }: IProps) {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {TYPE_LABEL[event.session.type]}
+                        {t(TYPE_LABEL_KEY[event.session.type])}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={tone.surface}>
-                        {STATUS_LABEL[event.session.status]}
+                        {t(STATUS_LABEL_KEY[event.session.status])}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right text-sm text-muted-foreground">

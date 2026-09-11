@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { CalendarIcon, ClockIcon, UserIcon } from "@phosphor-icons/react"
 import { parseISO, areIntervalsOverlapping, format } from "date-fns"
 
@@ -33,6 +34,7 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
     useCalendar()
   const [, setCurrentTime] = useState(new Date())
   const locale = useDateFnsLocale()
+  const { t } = useTranslation()
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60 * 1000)
@@ -241,12 +243,12 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
               </span>
 
               <p className="text-sm font-semibold text-foreground">
-                Happening now
+                {t("calendar.dayView.happeningNow")}
               </p>
             </div>
           ) : (
             <p className="p-4 text-center text-sm text-muted-foreground italic">
-              No appointments or consultations at the moment
+              {t("calendar.dayView.noAppointments")}
             </p>
           )}
 

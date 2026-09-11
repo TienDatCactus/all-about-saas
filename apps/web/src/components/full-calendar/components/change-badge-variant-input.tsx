@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslation } from "react-i18next"
+
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
 
 import {
@@ -11,11 +13,12 @@ import {
 } from "@/components/ui/select"
 
 export function ChangeBadgeVariantInput() {
+  const { t } = useTranslation()
   const { badgeVariant, setBadgeVariant } = useCalendar()
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-semibold">Change badge variant</p>
+      <p className="text-sm font-semibold">{t("calendar.badgeVariant.label")}</p>
 
       <Select value={badgeVariant} onValueChange={setBadgeVariant}>
         <SelectTrigger className="w-48">
@@ -23,9 +26,9 @@ export function ChangeBadgeVariantInput() {
         </SelectTrigger>
 
         <SelectContent>
-          <SelectItem value="dot">Dot</SelectItem>
-          <SelectItem value="colored">Colored</SelectItem>
-          <SelectItem value="mixed">Mixed</SelectItem>
+          <SelectItem value="dot">{t("calendar.badgeVariant.dot")}</SelectItem>
+          <SelectItem value="colored">{t("calendar.badgeVariant.colored")}</SelectItem>
+          <SelectItem value="mixed">{t("calendar.badgeVariant.mixed")}</SelectItem>
         </SelectContent>
       </Select>
     </div>

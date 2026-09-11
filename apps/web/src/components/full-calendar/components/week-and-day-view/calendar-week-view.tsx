@@ -7,6 +7,8 @@ import {
   areIntervalsOverlapping,
 } from "date-fns"
 
+import { useTranslation } from "react-i18next"
+
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
 import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
@@ -34,6 +36,7 @@ interface IProps {
 export function CalendarWeekView({ singleDayEvents }: IProps) {
   const { selectedDate, workingHours, visibleHours } = useCalendar()
   const locale = useDateFnsLocale()
+  const { t } = useTranslation()
 
   const { hours, earliestEventHour, latestEventHour } = getVisibleHours(
     visibleHours,
@@ -46,8 +49,8 @@ export function CalendarWeekView({ singleDayEvents }: IProps) {
   return (
     <>
       <div className="flex flex-col items-center justify-center border-b py-4 text-sm text-muted-foreground sm:hidden">
-        <p>Weekly view is not available on smaller devices.</p>
-        <p>Please switch to daily or monthly view.</p>
+        <p>{t("calendar.weekView.mobileUnavailable")}</p>
+        <p>{t("calendar.weekView.mobileSwitchHint")}</p>
       </div>
 
       <div className="hidden flex-col sm:flex">

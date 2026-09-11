@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { isToday, startOfDay } from "date-fns"
+import { useTranslation } from "react-i18next"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
 import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
@@ -25,6 +26,7 @@ interface IProps {
 const MAX_VISIBLE_EVENTS = 3
 
 export function DayCell({ cell, events, eventPositions }: IProps) {
+  const { t } = useTranslation()
   const setSearchParams = useSearchParamsSetter()
   const { setSelectedDate } = useCalendar()
 
@@ -102,7 +104,9 @@ export function DayCell({ cell, events, eventPositions }: IProps) {
             </span>
             <span className="hidden sm:inline">
               {" "}
-              {cellEvents.length - MAX_VISIBLE_EVENTS} more...
+              {t("calendar.monthView.moreEvents", {
+                count: cellEvents.length - MAX_VISIBLE_EVENTS,
+              })}
             </span>
           </p>
         )}

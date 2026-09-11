@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { InfoIcon, MoonIcon } from "@phosphor-icons/react"
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
 
@@ -10,16 +11,17 @@ import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 const DAYS_OF_WEEK = [
-  { index: 0, name: "Sunday" },
-  { index: 1, name: "Monday" },
-  { index: 2, name: "Tuesday" },
-  { index: 3, name: "Wednesday" },
-  { index: 4, name: "Thursday" },
-  { index: 5, name: "Friday" },
-  { index: 6, name: "Saturday" },
-]
+  { index: 0, name: "Sunday", key: "sunday" },
+  { index: 1, name: "Monday", key: "monday" },
+  { index: 2, name: "Tuesday", key: "tuesday" },
+  { index: 3, name: "Wednesday", key: "wednesday" },
+  { index: 4, name: "Thursday", key: "thursday" },
+  { index: 5, name: "Friday", key: "friday" },
+  { index: 6, name: "Saturday", key: "saturday" },
+] as const
 
 export function ChangeWorkingHoursInput() {
+  const { t } = useTranslation()
   const { workingHours, setWorkingHours } = useCalendar()
 
   const [localWorkingHours, setLocalWorkingHours] = useState({
@@ -80,7 +82,9 @@ export function ChangeWorkingHoursInput() {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <p className="text-sm font-semibold">Change working hours</p>
+        <p className="text-sm font-semibold">
+          {t("calendar.workingHours.title")}
+        </p>
 
         <TooltipProvider delayDuration={100}>
           <Tooltip>
@@ -89,10 +93,7 @@ export function ChangeWorkingHoursInput() {
             </TooltipTrigger>
 
             <TooltipContent className="max-w-80 text-center">
-              <p>
-                This will apply a dashed background to the hour cells that fall
-                outside the working hours — only for week and day views.
-              </p>
+              <p>{t("calendar.workingHours.tooltip")}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -111,13 +112,15 @@ export function ChangeWorkingHoursInput() {
                   checked={isDayActive}
                   onCheckedChange={() => handleToggleDay(day.index)}
                 />
-                <span className="text-sm font-medium">{day.name}</span>
+                <span className="text-sm font-medium">
+                  {t(`calendar.workingHours.days.${day.key}`)}
+                </span>
               </div>
 
               {isDayActive ? (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <span>From</span>
+                    <span>{t("calendar.workingHours.from")}</span>
                     <Input
                       id={`${day.name.toLowerCase()}-from`}
                       type="number"
@@ -136,7 +139,7 @@ export function ChangeWorkingHoursInput() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span>To</span>
+                    <span>{t("calendar.workingHours.to")}</span>
                     <Input
                       id={`${day.name.toLowerCase()}-to`}
                       type="number"
@@ -157,7 +160,7 @@ export function ChangeWorkingHoursInput() {
               ) : (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MoonIcon className="size-4" />
-                  <span>Closed</span>
+                  <span>{t("calendar.workingHours.closed")}</span>
                 </div>
               )}
             </div>
@@ -166,7 +169,7 @@ export function ChangeWorkingHoursInput() {
       </div>
 
       <Button className="mt-4 w-fit" onClick={handleSave}>
-        Apply
+        {t("calendar.workingHours.apply")}
       </Button>
     </div>
   )

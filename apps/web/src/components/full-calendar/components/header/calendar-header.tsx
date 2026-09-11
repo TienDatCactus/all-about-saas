@@ -4,6 +4,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useTranslation } from "react-i18next"
 import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
 import type { IEvent } from "../../interfaces"
 import type { TCalendarView } from "../../types"
@@ -30,6 +31,7 @@ interface IProps {
 }
 
 export function CalendarHeader({ view, events }: IProps) {
+  const { t } = useTranslation()
   const setSearchParams = useSearchParamsSetter()
 
   return (
@@ -42,7 +44,7 @@ export function CalendarHeader({ view, events }: IProps) {
       <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-between">
         <ButtonGroup>
           <Button
-            aria-label="View by day"
+            aria-label={t("calendar.header.viewDay")}
             size="icon"
             variant={view === "day" ? "default" : "outline"}
             onClick={() => setSearchParams({ view: "day" })}
@@ -51,7 +53,7 @@ export function CalendarHeader({ view, events }: IProps) {
           </Button>
 
           <Button
-            aria-label="View by week"
+            aria-label={t("calendar.header.viewWeek")}
             size="icon"
             variant={view === "week" ? "default" : "outline"}
             onClick={() => setSearchParams({ view: "week" })}
@@ -60,7 +62,7 @@ export function CalendarHeader({ view, events }: IProps) {
           </Button>
 
           <Button
-            aria-label="View by month"
+            aria-label={t("calendar.header.viewMonth")}
             size="icon"
             variant={view === "month" ? "default" : "outline"}
             onClick={() => setSearchParams({ view: "month" })}
@@ -69,7 +71,7 @@ export function CalendarHeader({ view, events }: IProps) {
           </Button>
 
           <Button
-            aria-label="View by year"
+            aria-label={t("calendar.header.viewYear")}
             size="icon"
             variant={view === "year" ? "default" : "outline"}
             onClick={() => setSearchParams({ view: "year" })}
@@ -78,7 +80,7 @@ export function CalendarHeader({ view, events }: IProps) {
           </Button>
 
           <Button
-            aria-label="View by agenda"
+            aria-label={t("calendar.header.viewAgenda")}
             size="icon"
             variant={view === "agenda" ? "default" : "outline"}
             onClick={() => setSearchParams({ view: "agenda" })}
@@ -89,7 +91,11 @@ export function CalendarHeader({ view, events }: IProps) {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Cài đặt lịch">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label={t("calendar.header.settingsAria")}
+            >
               <GearIcon />
             </Button>
           </PopoverTrigger>
@@ -103,7 +109,7 @@ export function CalendarHeader({ view, events }: IProps) {
         <AddEventDialog>
           <Button className="w-full sm:w-auto">
             <PlusIcon />
-            Thêm buổi dạy
+            {t("calendar.header.addEvent")}
           </Button>
         </AddEventDialog>
       </div>

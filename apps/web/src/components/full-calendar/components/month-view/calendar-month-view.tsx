@@ -1,4 +1,5 @@
 import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
 
@@ -16,9 +17,10 @@ interface IProps {
   multiDayEvents: IEvent[]
 }
 
-const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const WEEK_DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 
 export function CalendarMonthView({ singleDayEvents, multiDayEvents }: IProps) {
+  const { t } = useTranslation()
   const { selectedDate } = useCalendar()
 
   const allEvents = [...multiDayEvents, ...singleDayEvents]
@@ -38,10 +40,10 @@ export function CalendarMonthView({ singleDayEvents, multiDayEvents }: IProps) {
   return (
     <div>
       <div className="grid grid-cols-7 divide-x">
-        {WEEK_DAYS.map((day) => (
+        {WEEK_DAY_KEYS.map((day) => (
           <div key={day} className="flex items-center justify-center py-2">
             <span className="text-xs font-medium text-muted-foreground">
-              {day}
+              {t(`calendar.month.weekday.${day}`)}
             </span>
           </div>
         ))}

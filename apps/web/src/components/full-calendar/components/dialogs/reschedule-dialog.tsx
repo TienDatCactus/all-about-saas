@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { format, parseISO } from "date-fns"
+import { useTranslation } from "react-i18next"
 
 import DataDialog from "@/components/custom/data/dialog"
 import { Button as StatefulButton } from "@/components/custom/stateful-button"
@@ -16,6 +17,7 @@ export function RescheduleDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const reschedule = useRescheduleSessionMutation()
   const [newDate, setNewDate] = useState<Date | undefined>(
     parseISO(session.scheduledDate)
@@ -31,13 +33,13 @@ export function RescheduleDialog({
     <DataDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Dời lịch"
+      title={t("calendar.dialogs.reschedule.title")}
       content={
         <div className="flex flex-col gap-4">
           <SingleDayPicker
             value={newDate}
             onSelect={setNewDate}
-            placeholder="Chọn ngày mới"
+            placeholder={t("calendar.dialogs.reschedule.datePlaceholder")}
           />
           <StatefulButton
             mutationState={reschedule.status}
@@ -51,7 +53,7 @@ export function RescheduleDialog({
               onOpenChange(false)
             }}
           >
-            Xác nhận
+            {t("calendar.dialogs.reschedule.confirm")}
           </StatefulButton>
         </div>
       }

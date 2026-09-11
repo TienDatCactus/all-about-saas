@@ -14,6 +14,118 @@
       "low": "Thấp",
       "normal": "Bình thường",
       "high": "Cao"
+    },
+    "badgeVariant": {
+      "label": "Thay đổi kiểu huy hiệu",
+      "dot": "Chấm",
+      "colored": "Màu sắc",
+      "mixed": "Kết hợp"
+    },
+    "agenda": {
+      "noEvents": "Không có sự kiện nào được lên lịch cho tháng đã chọn",
+      "columnStudent": "Học sinh",
+      "columnType": "Loại",
+      "columnStatus": "Trạng thái",
+      "columnTime": "Giờ"
+    },
+    "header": {
+      "viewDay": "Xem theo ngày",
+      "viewWeek": "Xem theo tuần",
+      "viewMonth": "Xem theo tháng",
+      "viewYear": "Xem theo năm",
+      "viewAgenda": "Xem lịch trình",
+      "settingsAria": "Cài đặt lịch",
+      "addEvent": "Thêm sự kiện",
+      "eventsCount_one": "{{count}} sự kiện",
+      "eventsCount_other": "{{count}} sự kiện"
+    },
+    "visibleHours": {
+      "title": "Thay đổi khung giờ hiển thị",
+      "tooltip": "Nếu một sự kiện nằm ngoài khung giờ hiển thị đã chọn, khung giờ hiển thị sẽ tự động điều chỉnh để bao gồm sự kiện đó.",
+      "from": "Từ",
+      "to": "Đến",
+      "apply": "Áp dụng"
+    },
+    "dialogs": {
+      "reschedule": {
+        "title": "Dời lịch",
+        "datePlaceholder": "Chọn ngày mới",
+        "confirm": "Xác nhận"
+      },
+      "studentCombobox": {
+        "createLabel": "Thêm học sinh mới \"{{query}}\"",
+        "placeholder": "Tên học sinh",
+        "empty": "Không tìm thấy học sinh"
+      },
+      "eventDetails": {
+        "complete": "Hoàn thành",
+        "reschedule": "Dời lịch",
+        "cancel": "Hủy",
+        "reopen": "Mở lại"
+      },
+      "addEvent": {
+        "title": "Thêm buổi dạy",
+        "studentLabel": "Học sinh",
+        "dateLabel": "Ngày dạy",
+        "datePlaceholder": "Chọn ngày",
+        "startTimeLabel": "Giờ bắt đầu",
+        "endTimeLabel": "Giờ kết thúc",
+        "noteLabel": "Ghi chú (tuỳ chọn)",
+        "submit": "Tạo buổi dạy",
+        "studentRequired": "Cần nhập tên học sinh",
+        "dateRequired": "Cần chọn ngày dạy",
+        "endAfterStart": "Giờ kết thúc phải sau giờ bắt đầu"
+      }
+    },
+    "weekView": {
+      "mobileUnavailable": "Chế độ xem tuần không khả dụng trên thiết bị nhỏ.",
+      "mobileSwitchHint": "Vui lòng chuyển sang chế độ xem ngày hoặc tháng."
+    },
+    "dayView": {
+      "happeningNow": "Đang diễn ra",
+      "noAppointments": "Hiện không có lịch hẹn hoặc buổi tư vấn nào"
+    },
+    "monthView": {
+      "moreEvents": "{{count}} sự kiện khác"
+    },
+    "month": {
+      "weekday": {
+        "sun": "CN",
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7"
+      }
+    },
+    "yearView": {
+      "weekdays": {
+        "sun": "CN",
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7"
+      }
+    },
+    "workingHours": {
+      "title": "Thay đổi giờ làm việc",
+      "tooltip": "Thao tác này sẽ tô nền gạch ngang cho các ô giờ nằm ngoài giờ làm việc — chỉ áp dụng cho chế độ xem tuần và ngày.",
+      "from": "Từ",
+      "to": "Đến",
+      "closed": "Đóng cửa",
+      "apply": "Áp dụng",
+      "days": {
+        "sunday": "Chủ nhật",
+        "monday": "Thứ Hai",
+        "tuesday": "Thứ Ba",
+        "wednesday": "Thứ Tư",
+        "thursday": "Thứ Năm",
+        "friday": "Thứ Sáu",
+        "saturday": "Thứ Bảy"
+      }
     }
   },
   "teacherRoom": {
