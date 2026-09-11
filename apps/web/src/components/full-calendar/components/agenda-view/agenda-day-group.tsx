@@ -55,7 +55,11 @@ export function AgendaDayGroup({ date, events }: IProps) {
           <TableHeader>
             <TableRow>
               <TableHead>{t("calendar.agenda.columnStudent")}</TableHead>
-              <TableHead>{t("calendar.agenda.columnType")}</TableHead>
+              {/* Least essential column at a glance — dropped first so the
+                  row still fits a phone screen without horizontal scroll. */}
+              <TableHead className="hidden @sm:table-cell">
+                {t("calendar.agenda.columnType")}
+              </TableHead>
               <TableHead>{t("calendar.agenda.columnStatus")}</TableHead>
               <TableHead className="text-right">
                 {t("calendar.agenda.columnTime")}
@@ -76,8 +80,8 @@ export function AgendaDayGroup({ date, events }: IProps) {
                     onKeyDown={handleKeyDown}
                     className="h-16 cursor-pointer"
                   >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
+                    <TableCell className="px-2 @sm:px-3">
+                      <div className="flex items-center gap-2 @sm:gap-3">
                         <DataAvatar
                           item={event}
                           getName={(e) => e.title}
@@ -88,19 +92,24 @@ export function AgendaDayGroup({ date, events }: IProps) {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden @sm:table-cell">
                       <Badge variant="secondary">
                         {t(TYPE_LABEL_KEY[event.session.type])}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-2 @sm:px-3">
                       <Badge variant="outline" className={tone.surface}>
                         {t(STATUS_LABEL_KEY[event.session.status])}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground">
-                      {format(start, timeFormat.time, { locale })} –{" "}
-                      {format(end, timeFormat.time, { locale })}
+                    <TableCell className="px-2 text-right text-sm text-muted-foreground @sm:px-3">
+                      {format(start, timeFormat.time, { locale })}
+                      {/* End time only where there's room to spare — the
+                          start time alone still answers "when". */}
+                      <span className="hidden @sm:inline">
+                        {" "}
+                        – {format(end, timeFormat.time, { locale })}
+                      </span>
                     </TableCell>
                   </TableRow>
                 </EventDetailsDialog>

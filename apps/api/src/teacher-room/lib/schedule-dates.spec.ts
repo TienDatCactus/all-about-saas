@@ -1,4 +1,8 @@
-import { occurrenceDates, combineDateTime } from './schedule-dates';
+import {
+	occurrenceDates,
+	combineDateTime,
+	todayInTeacherTz,
+} from './schedule-dates';
 
 describe('occurrenceDates', () => {
 	it('returns every matching weekday in the next N weeks, inclusive of today', () => {
@@ -26,5 +30,19 @@ describe('combineDateTime', () => {
 		const dt = combineDateTime('2026-09-08', '15:30');
 		// 15:30 +07:00 = 08:30 UTC.
 		expect(dt.toISOString()).toBe('2026-09-08T08:30:00.000Z');
+	});
+});
+
+describe('todayInTeacherTz', () => {
+	it('reads the Vietnam calendar date, not the UTC one', () => {
+		// 23:30 UTC on the 8th = 06:30 Vietnam time on the 9th — a plain
+		// `toISOString().slice(0, 10)` would wrongly read this as the 8th.
+		const now = new Date('2026-09-08T23:30:00.000Z');
+		expect(todayInTeacherTz(now)).toBe('2026-09-09');
+	});
+
+	it('still agrees with the UTC date mid-day, when both are unambiguous', () => {
+		const now = new Date('2026-09-08T10:00:00.000Z');
+		expect(todayInTeacherTz(now)).toBe('2026-09-08');
 	});
 });

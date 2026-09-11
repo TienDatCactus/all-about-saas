@@ -35,79 +35,81 @@ export function CalendarHeader({ view, events }: IProps) {
   const setSearchParams = useSearchParamsSetter()
 
   return (
-    <div className="flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-4 border-b p-4 @lg:flex-row @lg:items-center @lg:justify-between">
       <div className="flex items-center gap-3">
         <TodayButton />
         <DateNavigator view={view} events={events} />
       </div>
 
-      <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-between">
-        <ButtonGroup>
-          <Button
-            aria-label={t("calendar.header.viewDay")}
-            size="icon"
-            variant={view === "day" ? "default" : "outline"}
-            onClick={() => setSearchParams({ view: "day" })}
-          >
-            <ListIcon strokeWidth={1.8} />
-          </Button>
-
-          <Button
-            aria-label={t("calendar.header.viewWeek")}
-            size="icon"
-            variant={view === "week" ? "default" : "outline"}
-            onClick={() => setSearchParams({ view: "week" })}
-          >
-            <ColumnsIcon strokeWidth={1.8} />
-          </Button>
-
-          <Button
-            aria-label={t("calendar.header.viewMonth")}
-            size="icon"
-            variant={view === "month" ? "default" : "outline"}
-            onClick={() => setSearchParams({ view: "month" })}
-          >
-            <GridFourIcon strokeWidth={1.8} />
-          </Button>
-
-          <Button
-            aria-label={t("calendar.header.viewYear")}
-            size="icon"
-            variant={view === "year" ? "default" : "outline"}
-            onClick={() => setSearchParams({ view: "year" })}
-          >
-            <GridNineIcon strokeWidth={1.8} />
-          </Button>
-
-          <Button
-            aria-label={t("calendar.header.viewAgenda")}
-            size="icon"
-            variant={view === "agenda" ? "default" : "outline"}
-            onClick={() => setSearchParams({ view: "agenda" })}
-          >
-            <CalendarDotIcon strokeWidth={1.8} />
-          </Button>
-        </ButtonGroup>
-
-        <Popover>
-          <PopoverTrigger asChild>
+      <div className="flex flex-col items-center gap-1.5 @sm:flex-row @sm:justify-between">
+        <div className="stack-row gap-2">
+          <ButtonGroup>
             <Button
-              variant="outline"
+              aria-label={t("calendar.header.viewDay")}
               size="icon"
-              aria-label={t("calendar.header.settingsAria")}
+              variant={view === "day" ? "default" : "outline"}
+              onClick={() => setSearchParams({ view: "day" })}
             >
-              <GearIcon />
+              <ListIcon strokeWidth={1.8} />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-auto space-y-4">
-            <ChangeBadgeVariantInput />
-            <ChangeWorkingHoursInput />
-            <ChangeVisibleHoursInput />
-          </PopoverContent>
-        </Popover>
+
+            <Button
+              aria-label={t("calendar.header.viewWeek")}
+              size="icon"
+              variant={view === "week" ? "default" : "outline"}
+              onClick={() => setSearchParams({ view: "week" })}
+            >
+              <ColumnsIcon strokeWidth={1.8} />
+            </Button>
+
+            <Button
+              aria-label={t("calendar.header.viewMonth")}
+              size="icon"
+              variant={view === "month" ? "default" : "outline"}
+              onClick={() => setSearchParams({ view: "month" })}
+            >
+              <GridFourIcon strokeWidth={1.8} />
+            </Button>
+
+            <Button
+              aria-label={t("calendar.header.viewYear")}
+              size="icon"
+              variant={view === "year" ? "default" : "outline"}
+              onClick={() => setSearchParams({ view: "year" })}
+            >
+              <GridNineIcon strokeWidth={1.8} />
+            </Button>
+
+            <Button
+              aria-label={t("calendar.header.viewAgenda")}
+              size="icon"
+              variant={view === "agenda" ? "default" : "outline"}
+              onClick={() => setSearchParams({ view: "agenda" })}
+            >
+              <CalendarDotIcon strokeWidth={1.8} />
+            </Button>
+          </ButtonGroup>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label={t("calendar.header.settingsAria")}
+              >
+                <GearIcon />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto space-y-4">
+              <ChangeBadgeVariantInput />
+              <ChangeWorkingHoursInput />
+              <ChangeVisibleHoursInput />
+            </PopoverContent>
+          </Popover>
+        </div>
 
         <AddEventDialog>
-          <Button className="w-full sm:w-auto">
+          <Button className="w-full @sm:w-auto">
             <PlusIcon />
             {t("calendar.header.addEvent")}
           </Button>
