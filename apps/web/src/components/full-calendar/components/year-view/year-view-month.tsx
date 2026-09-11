@@ -1,0 +1,104 @@
+import { useMemo } from "react"
+import {
+  format,
+  isSameDay,
+  parseISO,
+  getDaysInMonth,
+  startOfMonth,
+} from "date-fns"
+import { useTranslation } from "react-i18next"
+
+import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
+import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
+
+import { YearViewDayCell } from "@/components/full-calendar/components/year-view/year-view-day-cell"
+
+import type { IEvent } from "@/components/full-calendar/interfaces"
+
+interface IProps {
+  month: Date
+  events: IEvent[]
+}
+
+export function YearViewMonth({ month, events }: IProps) {
+  const { t } = useTranslation()
+  const setSearchParams = useSearchParamsSetter()
+  const { setSelectedDate } = useCalendar()
+  const locale = useDateFnsLocale()
+
+  const monthName = format(month, "MMMM", { locale })
+
+  const daysInMonth = useMemo(() => {
+    const totalDays = getDaysInMonth(month)
+    const firstDay = startOfMonth(month).getDay()
+
+    const days = Array.from({ length: totalDays }, (_, i) => i + 1)
+    const blanks = Array(firstDay).fill(null)
+
+    return [...blanks, ...days]
+  }, [month])
+
+  const weekDays = [
+    t("calendar.yearView.weekdays.sun"),
+    t("calendar.yearView.weekdays.mon"),
+    t("calendar.yearView.weekdays.tue"),
+    t("calendar.yearView.weekdays.wed"),
+    t("calendar.yearView.weekdays.thu"),
+    t("calendar.yearView.weekdays.fri"),
+    t("calendar.yearView.weekdays.sat"),
+  ]
+
+  const handleClick = () => {
+    setSelectedDate(new Date(month.getFullYear(), month.getMonth(), 1))
+    setSearchParams({ view: "month" })
+  }
+
+  return (
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={handleClick}
+        className="w-full rounded-t-lg border px-3 py-2 text-sm font-semibold hover:bg-accent focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+      >
+        {monthName}
+      </button>
+
+      <div className="flex-1 space-y-2 rounded-b-lg border border-t-0 p-3">
+        <div className="grid grid-cols-7 gap-x-0.5 text-center">
+          {weekDays.map((day, index) => (
+            <div
+              key={index}
+              className="text-xs font-medium text-muted-foreground"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-x-0.5 gap-y-2">
+          {daysInMonth.map((day, index) => {
+            if (day === null)
+              return <div key={`blank-${index}`} className="h-10" />
+
+            const date = new Date(month.getFullYear(), month.getMonth(), day)
+            const dayEvents = events.filter(
+              (event) =>
+                isSameDay(parseISO(event.startDate), date) ||
+                isSameDay(parseISO(event.endDate), date)
+            )
+
+            return (
+              <YearViewDayCell
+                key={`day-${day}`}
+                day={day}
+                date={date}
+                events={dayEvents}
+              />
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}

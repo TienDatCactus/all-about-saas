@@ -20,14 +20,17 @@ type Media =
       image: React.ReactNode
     }
 
-interface DataItemProp {
+interface DataItemProp extends Omit<
+  React.ComponentProps<typeof Item>,
+  "title" | "children" | "variant"
+> {
   media?: Media
   header?: React.ReactNode
-  title: string
+  title: React.ReactNode
   description?: string
   action?: React.ReactNode
-  className?: string
   variant?: "default" | "muted" | "outline"
+  size?: "default" | "sm" | "xs"
 }
 /*
 For lists, use with:
@@ -36,6 +39,9 @@ For lists, use with:
         <ItemSeparator />
         <DataItem />
     </ItemGroup>
+
+Extra props (onClick, onKeyDown, role, tabIndex, style, ...) pass straight
+through to the underlying Item — e.g. to make a row keyboard-activatable.
 */
 
 export default function DataItem({
@@ -46,9 +52,11 @@ export default function DataItem({
   header,
   className,
   variant,
+  size,
+  ...rest
 }: DataItemProp) {
   return (
-    <Item className={cn(className)} variant={variant}>
+    <Item className={cn(className)} variant={variant} size={size} {...rest}>
       {header && <ItemHeader>{header}</ItemHeader>}
       {media && (
         <ItemMedia variant={media.variant}>

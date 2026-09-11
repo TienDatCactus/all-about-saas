@@ -1,5 +1,6 @@
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import {
   Pagination,
@@ -149,6 +150,7 @@ export default function DataPagination({
   hideSummary,
   className,
 }: DataPaginationProps) {
+  const { t } = useTranslation()
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
 
   // Rows can vanish under the user — deleting the last row of the last page,
@@ -174,7 +176,9 @@ export default function DataPagination({
           className="text-sm text-muted-foreground tabular-nums"
           aria-live="polite"
         >
-          {total === 0 ? "No results" : `${first}–${last} of ${total}`}
+          {total === 0
+            ? t("common.pagination.noResults")
+            : t("common.pagination.summary", { first, last, total })}
         </p>
       )}
 
@@ -184,7 +188,7 @@ export default function DataPagination({
             id="rows-per-page-label"
             className="hidden text-sm text-muted-foreground sm:block"
           >
-            Rows
+            {t("common.pagination.rows")}
           </span>
           <Select
             value={String(pageSize)}
@@ -217,12 +221,14 @@ export default function DataPagination({
               <PaginationItem>
                 <Button
                   variant="ghost"
-                  aria-label="Go to previous page"
+                  aria-label={t("common.pagination.previousAria")}
                   disabled={page <= 1}
                   onClick={() => setPage(page - 1)}
                 >
                   <CaretLeftIcon data-icon="inline-start" />
-                  <span className="hidden sm:block">Previous</span>
+                  <span className="hidden sm:block">
+                    {t("common.pagination.previous")}
+                  </span>
                 </Button>
               </PaginationItem>
 
@@ -236,7 +242,7 @@ export default function DataPagination({
                     <Button
                       variant={p === page ? "outline" : "ghost"}
                       size="icon"
-                      aria-label={`Go to page ${p}`}
+                      aria-label={t("common.pagination.goToPage", { page: p })}
                       aria-current={p === page ? "page" : undefined}
                       onClick={() => setPage(p)}
                     >
@@ -249,11 +255,13 @@ export default function DataPagination({
               <PaginationItem>
                 <Button
                   variant="ghost"
-                  aria-label="Go to next page"
+                  aria-label={t("common.pagination.nextAria")}
                   disabled={page >= pageCount}
                   onClick={() => setPage(page + 1)}
                 >
-                  <span className="hidden sm:block">Next</span>
+                  <span className="hidden sm:block">
+                    {t("common.pagination.next")}
+                  </span>
                   <CaretRightIcon data-icon="inline-end" />
                 </Button>
               </PaginationItem>

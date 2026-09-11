@@ -1,0 +1,409 @@
+{
+  "calendar": {
+    "picker": {
+      "previousMonth": "Đến tháng trước",
+      "nextMonth": "Đến tháng sau",
+      "previousYears": "Đến {{count}} năm trước",
+      "nextYears": "Đến {{count}} năm sau"
+    },
+    "status": {
+      "scheduled": "Chưa chốt",
+      "completed": "Đã dạy",
+      "cancelled": "Đã huỷ"
+    },
+    "type": {
+      "regular": "Định kỳ",
+      "makeup": "Bù",
+      "extra": "Buổi thêm"
+    },
+    "priority": {
+      "low": "Thấp",
+      "normal": "Bình thường",
+      "high": "Cao"
+    },
+    "badgeVariant": {
+      "label": "Thay đổi kiểu huy hiệu",
+      "dot": "Chấm",
+      "colored": "Màu sắc",
+      "mixed": "Kết hợp"
+    },
+    "agenda": {
+      "noEvents": "Không có sự kiện nào được lên lịch cho tháng đã chọn",
+      "columnStudent": "Học sinh",
+      "columnType": "Loại",
+      "columnStatus": "Trạng thái",
+      "columnTime": "Giờ"
+    },
+    "header": {
+      "viewDay": "Xem theo ngày",
+      "viewWeek": "Xem theo tuần",
+      "viewMonth": "Xem theo tháng",
+      "viewYear": "Xem theo năm",
+      "viewAgenda": "Xem lịch trình",
+      "settingsAria": "Cài đặt lịch",
+      "addEvent": "Thêm sự kiện",
+      "eventsCount_one": "{{count}} sự kiện",
+      "eventsCount_other": "{{count}} sự kiện"
+    },
+    "visibleHours": {
+      "title": "Thay đổi khung giờ hiển thị",
+      "tooltip": "Nếu một sự kiện nằm ngoài khung giờ hiển thị đã chọn, khung giờ hiển thị sẽ tự động điều chỉnh để bao gồm sự kiện đó.",
+      "from": "Từ",
+      "to": "Đến",
+      "apply": "Áp dụng"
+    },
+    "dialogs": {
+      "reschedule": {
+        "title": "Dời lịch",
+        "datePlaceholder": "Chọn ngày mới",
+        "confirm": "Xác nhận"
+      },
+      "studentCombobox": {
+        "createLabel": "Thêm học sinh mới \"{{query}}\"",
+        "placeholder": "Tên học sinh",
+        "empty": "Không tìm thấy học sinh"
+      },
+      "eventDetails": {
+        "complete": "Hoàn thành",
+        "reschedule": "Dời lịch",
+        "cancel": "Hủy",
+        "reopen": "Mở lại"
+      },
+      "addEvent": {
+        "title": "Thêm buổi dạy",
+        "studentLabel": "Học sinh",
+        "dateLabel": "Ngày dạy",
+        "datePlaceholder": "Chọn ngày",
+        "startTimeLabel": "Giờ bắt đầu",
+        "endTimeLabel": "Giờ kết thúc",
+        "noteLabel": "Ghi chú (tuỳ chọn)",
+        "submit": "Tạo buổi dạy",
+        "studentRequired": "Cần nhập tên học sinh",
+        "dateRequired": "Cần chọn ngày dạy",
+        "endAfterStart": "Giờ kết thúc phải sau giờ bắt đầu"
+      }
+    },
+    "weekView": {
+      "mobileUnavailable": "Chế độ xem tuần không khả dụng trên thiết bị nhỏ.",
+      "mobileSwitchHint": "Vui lòng chuyển sang chế độ xem ngày hoặc tháng."
+    },
+    "dayView": {
+      "happeningNow": "Đang diễn ra",
+      "noAppointments": "Hiện không có lịch hẹn hoặc buổi tư vấn nào"
+    },
+    "monthView": {
+      "moreEvents": "{{count}} sự kiện khác"
+    },
+    "month": {
+      "weekday": {
+        "sun": "CN",
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7"
+      }
+    },
+    "yearView": {
+      "weekdays": {
+        "sun": "CN",
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7"
+      }
+    },
+    "workingHours": {
+      "title": "Thay đổi giờ làm việc",
+      "tooltip": "Thao tác này sẽ tô nền gạch ngang cho các ô giờ nằm ngoài giờ làm việc — chỉ áp dụng cho chế độ xem tuần và ngày.",
+      "from": "Từ",
+      "to": "Đến",
+      "closed": "Đóng cửa",
+      "apply": "Áp dụng",
+      "days": {
+        "sunday": "Chủ nhật",
+        "monday": "Thứ Hai",
+        "tuesday": "Thứ Ba",
+        "wednesday": "Thứ Tư",
+        "thursday": "Thứ Năm",
+        "friday": "Thứ Sáu",
+        "saturday": "Thứ Bảy"
+      }
+    }
+  },
+  "teacherRoom": {
+    "sidebar": {
+      "title": "Lớp cô Trang",
+      "subtitle": "Quản lý lịch dạy & lớp học",
+      "groupLabel": "Lớp cô Trang",
+      "toggle": "Bật/tắt",
+      "timetable": "Lịch dạy",
+      "backHome": "Về trang chủ"
+    },
+    "user": {
+      "logout": "Đăng xuất"
+    },
+    "timetable": {
+      "title": "Lịch dạy",
+      "description": "Lịch dạy và các buổi học sắp tới."
+    },
+    "notFound": {
+      "description": "Liên kết này không khả dụng trong Lớp cô Trang."
+    }
+  },
+  "auth": {
+    "login": {
+      "email": "Email",
+      "password": "Mật khẩu",
+      "submit": "Đăng nhập",
+      "title": "Đăng nhập hoặc",
+      "createAccount": "tạo tài khoản",
+      "forgotPassword": "Quên mật khẩu?",
+      "resetPasswordLink": "Đặt lại mật khẩu",
+      "orWith": "hoặc với",
+      "dialogTitle": "Đăng nhập để tiếp tục",
+      "dialogDescription": "Trang này yêu cầu tài khoản. Sau khi đăng nhập bạn sẽ ở lại đây.",
+      "signInWithProvider": "Đăng nhập với {{provider}}"
+    },
+    "signUp": {
+      "title": "Đăng ký tài khoản AAS",
+      "backToLogin": "Quay lại đăng nhập",
+      "or": "hoặc ",
+      "rePassword": "Nhập lại mật khẩu",
+      "submit": "Đăng ký",
+      "checkInbox": "Kiểm tra hộp thư của bạn",
+      "activationEmailSent": "Chúng tôi đã gửi email kích hoạt cho bạn"
+    },
+    "resetPassword": {
+      "title": "Đặt lại mật khẩu",
+      "backToLogin": "Quay lại đăng nhập",
+      "or": "hoặc ",
+      "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn liên kết để đặt lại mật khẩu.",
+      "submit": "Xác nhận"
+    },
+    "changePassword": {
+      "title": "Đặt lại mật khẩu của bạn",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "passwordMismatch": "Mật khẩu không khớp",
+      "submit": "Đặt lại mật khẩu",
+      "successMessage": "Đổi mật khẩu thành công! Bây giờ bạn có thể đăng nhập.",
+      "errorFallback": "Đổi mật khẩu thất bại."
+    },
+    "layout": {
+      "termsPrefix": "Khi tiếp tục sử dụng dịch vụ của chúng tôi, bạn đồng ý với",
+      "termsOfService": "điều khoản dịch vụ",
+      "and": "và",
+      "privacyPolicy": "chính sách bảo mật"
+    }
+  },
+  "badminton": {
+    "crumb": "Cầu lông",
+    "list": {
+      "title": "Buổi cầu lông",
+      "description": "Các buổi chia tiền đã lưu của bạn.",
+      "untitledSession": "Buổi chưa đặt tên",
+      "deleteSession": "Xóa buổi",
+      "loadError": {
+        "title": "Không thể tải danh sách buổi",
+        "description": "Đã có lỗi khi tải các buổi đã lưu của bạn. Kiểm tra kết nối và thử lại."
+      },
+      "empty": {
+        "title": "Chưa có buổi nào",
+        "description": "Tạo buổi đầu tiên để chia tiền sân và cầu."
+      }
+    },
+    "edit": {
+      "crumb": "Chi tiết buổi",
+      "defaultTitle": "Buổi",
+      "paymentUpdateError": "Không thể cập nhật trạng thái thanh toán",
+      "notFound": {
+        "title": "Không tìm thấy buổi",
+        "description": "Buổi có thể đã bị xóa, hoặc bạn không có quyền truy cập."
+      }
+    },
+    "new": {
+      "title": "Buổi mới",
+      "description": "Nhập chi phí và người chơi — kết quả chia tiền cập nhật trực tiếp."
+    },
+    "share": {
+      "defaultTitle": "Chia tiền cầu lông",
+      "notFound": {
+        "title": "Không tìm thấy",
+        "description": "Liên kết chia sẻ không hợp lệ hoặc buổi đã bị xóa."
+      }
+    },
+    "shareLink": {
+      "copySuccess": "Đã sao chép liên kết chia sẻ",
+      "copyError": "Không thể sao chép liên kết",
+      "ariaLabel": "Liên kết chia sẻ công khai",
+      "copyButton": "Sao chép liên kết"
+    },
+    "summary": {
+      "title": "Tổng kết chia tiền",
+      "courtFee": "Tiền sân",
+      "shuttleFee": "Tiền cầu",
+      "shuttleCount": "{{n}} quả cầu",
+      "defaultHours": "Mặc định {{hours}}h",
+      "qrCode": "Mã QR",
+      "qrAlt": "Mã QR thanh toán: {{label}}",
+      "copy": "Sao chép",
+      "copySuccess": "Đã sao chép tổng kết vào bộ nhớ tạm",
+      "copyError": "Không thể sao chép — kiểm tra quyền truy cập bộ nhớ tạm",
+      "roundingResidual": "{{amount}} trong tổng chi phí chưa được thu từ ai — có thể vì mọi người chơi đều không tính giờ sân hoặc trọng số cầu.",
+      "table": {
+        "player": "Người chơi",
+        "court": "Sân",
+        "shuttle": "Cầu",
+        "total": "Tổng",
+        "payment": "Thanh toán"
+      },
+      "totalCollected": "Tổng đã thu",
+      "empty": {
+        "title": "Chưa có gì để chia",
+        "description": "Thêm người chơi và chi phí để xem phần chia của mỗi người."
+      },
+      "pay": "Thanh toán",
+      "markPaid": "Đánh dấu đã trả",
+      "markUnpaid": "Đánh dấu chưa trả",
+      "paid": "Đã trả",
+      "unpaid": "Chưa trả"
+    },
+    "paymentMethod": {
+      "loading": "Đang tải…",
+      "choosePlaceholder": "Chọn phương thức thanh toán",
+      "title": "Phương thức thanh toán",
+      "description": "Chọn hoặc thêm mã QR/số điện thoại MoMo để hiển thị trên trang chia sẻ.",
+      "qrImageLabel": "Ảnh QR",
+      "empty": "Chưa có phương thức thanh toán nào.",
+      "updateError": "Không thể đổi phương thức thanh toán",
+      "deleteError": "Xóa thất bại",
+      "deleteAria": "Xóa {{label}}",
+      "form": {
+        "labelRequired": "Nhãn là bắt buộc",
+        "phoneInvalid": "Nhập 9-11 chữ số, không dấu cách hoặc mã quốc gia",
+        "fileRequired": "Tải lên ảnh QR",
+        "phoneTab": "Số điện thoại MoMo",
+        "imageTab": "Tải lên ảnh QR",
+        "labelPlaceholder": "Nhãn (vd: MoMo cá nhân)",
+        "add": "Thêm"
+      }
+    },
+    "players": {
+      "player": "Người chơi",
+      "hoursPlayed": "Giờ chơi",
+      "shuttleWeight": "Trọng số cầu",
+      "removeColumn": "Xóa",
+      "addPlayer": "Thêm người chơi",
+      "nameLabel": "Tên",
+      "genderLabel": "Giới tính",
+      "female": "Nữ",
+      "male": "Nam",
+      "removePlayerAria": "Xóa người chơi",
+      "registeredPlayers": "Người chơi đã đăng ký",
+      "previousGuests": "Khách trước đây",
+      "createGuestLabel": "“{{query}}” sẽ được lưu làm khách",
+      "noMatches": "Không có kết quả phù hợp",
+      "typeToSearch": "Nhập để tìm kiếm"
+    },
+    "session": {
+      "detailsTitle": "Chi tiết buổi",
+      "detailsDescription": "Chi phí sân và cầu cho buổi chơi.",
+      "paymentMethodLabel": "Phương thức thanh toán:",
+      "titleLabel": "Tiêu đề",
+      "titlePlaceholder": "Tối thứ Sáu",
+      "dateLabel": "Ngày",
+      "courtCostLabel": "Tiền sân",
+      "courtCostDescription": "Tổng chi phí sân, chia đều cho tất cả người chơi.",
+      "shuttlePriceLabel": "Giá cầu (mỗi quả)",
+      "shuttlePriceDescription": "Tổng tiền cầu = giá × tổng số cầu.",
+      "shuttlePriceAria": "Giá mỗi quả cầu",
+      "totalShuttlesLabel": "Tổng số cầu",
+      "totalShuttlesDescription": "Tổng số cầu dùng trong buổi, chia đều cho tất cả người chơi.",
+      "defaultHoursLabel": "Thời gian chơi mặc định",
+      "defaultHoursDescription": "Áp dụng cho mọi người chơi hiện tại và người được thêm sau.",
+      "playersTitle": "Người chơi",
+      "playersDescription": "Giờ chơi chia tiền sân. Trọng số cầu chia tiền cầu — bấm Nam/Nữ để dùng mặc định 6/4.",
+      "viewChanges": "Xem thay đổi",
+      "saveChanges": "Lưu thay đổi",
+      "saveSession": "Lưu buổi",
+      "shuttleCalc": {
+        "title": "Giá cầu",
+        "description": "Tính giá mỗi quả cầu từ tổng giá một ống.",
+        "tubePriceLabel": "Giá ống",
+        "perTubeLabel": "Số cầu / ống",
+        "perShuttleLabel": "Mỗi quả:",
+        "apply": "Áp dụng"
+      }
+    },
+    "notFound": {
+      "description": "Liên kết này không khả dụng."
+    }
+  },
+  "common": {
+    "themeToggle": {
+      "toggle": "Bật/tắt giao diện"
+    },
+    "routeError": {
+      "title": "Đã có lỗi xảy ra",
+      "description": "Không thể tải trang.",
+      "tryAgain": "Thử lại"
+    },
+    "routeNotFound": {
+      "title": "Không tìm thấy trang"
+    },
+    "routeDropdown": {
+      "home": "Trang chủ",
+      "pages": "Trang"
+    },
+    "userMenu": {
+      "login": "Đăng nhập",
+      "signUp": "Đăng ký",
+      "account": "Tài khoản",
+      "billing": "Thanh toán",
+      "notifications": "Thông báo",
+      "signOut": "Đăng xuất"
+    },
+    "logo": {
+      "ariaLabel": "Về trang chủ"
+    },
+    "attachment": {
+      "placeholder": "Tải lên tệp",
+      "remove": "Xóa tệp đính kèm"
+    },
+    "pagination": {
+      "rows": "Số dòng",
+      "noResults": "Không có kết quả",
+      "summary": "{{first}}–{{last}} trong {{total}}",
+      "previous": "Trước",
+      "next": "Sau",
+      "previousAria": "Về trang trước",
+      "nextAria": "Đến trang sau",
+      "goToPage": "Đến trang {{page}}"
+    },
+    "imagePreview": {
+      "download": "Tải ảnh xuống"
+    },
+    "toast": {
+      "retry": "Thử lại",
+      "copyDetails": "Sao chép chi tiết",
+      "copied": "Đã sao chép",
+      "closeIn": "Thông báo này sẽ đóng sau",
+      "seconds": "giây.",
+      "clickToPause": "Bấm để tạm dừng.",
+      "clickToResume": "Bấm để tiếp tục.",
+      "title": "Tiêu đề",
+      "message": "Nội dung",
+      "status": "Trạng thái",
+      "code": "Mã",
+      "path": "Đường dẫn",
+      "traceId": "Mã theo dõi",
+      "trace": "Theo dõi",
+      "validation": "Xác thực",
+      "details": "Chi tiết"
+    }
+  }
+}

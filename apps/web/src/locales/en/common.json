@@ -1,0 +1,409 @@
+{
+  "calendar": {
+    "picker": {
+      "previousMonth": "Go to the Previous Month",
+      "nextMonth": "Go to the Next Month",
+      "previousYears": "Go to the previous {{count}} years",
+      "nextYears": "Go to the next {{count}} years"
+    },
+    "status": {
+      "scheduled": "Not confirmed",
+      "completed": "Taught",
+      "cancelled": "Cancelled"
+    },
+    "type": {
+      "regular": "Regular",
+      "makeup": "Makeup",
+      "extra": "Extra"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "badgeVariant": {
+      "label": "Change badge variant",
+      "dot": "Dot",
+      "colored": "Colored",
+      "mixed": "Mixed"
+    },
+    "agenda": {
+      "noEvents": "No events scheduled for the selected month",
+      "columnStudent": "Student",
+      "columnType": "Type",
+      "columnStatus": "Status",
+      "columnTime": "Time"
+    },
+    "header": {
+      "viewDay": "Day view",
+      "viewWeek": "Week view",
+      "viewMonth": "Month view",
+      "viewYear": "Year view",
+      "viewAgenda": "Agenda view",
+      "settingsAria": "Calendar settings",
+      "addEvent": "Add Event",
+      "eventsCount_one": "{{count}} event",
+      "eventsCount_other": "{{count}} events"
+    },
+    "visibleHours": {
+      "title": "Change visible hours",
+      "tooltip": "If an event falls outside the specified visible hours, the visible hours will automatically adjust to include that event.",
+      "from": "From",
+      "to": "To",
+      "apply": "Apply"
+    },
+    "dialogs": {
+      "reschedule": {
+        "title": "Reschedule",
+        "datePlaceholder": "Pick a new date",
+        "confirm": "Confirm"
+      },
+      "studentCombobox": {
+        "createLabel": "Add new student \"{{query}}\"",
+        "placeholder": "Student name",
+        "empty": "No student found"
+      },
+      "eventDetails": {
+        "complete": "Complete",
+        "reschedule": "Reschedule",
+        "cancel": "Cancel",
+        "reopen": "Reopen"
+      },
+      "addEvent": {
+        "title": "Add teaching session",
+        "studentLabel": "Student",
+        "dateLabel": "Teaching date",
+        "datePlaceholder": "Pick a date",
+        "startTimeLabel": "Start time",
+        "endTimeLabel": "End time",
+        "noteLabel": "Note (optional)",
+        "submit": "Create session",
+        "studentRequired": "Student name is required",
+        "dateRequired": "Teaching date is required",
+        "endAfterStart": "End time must be after start time"
+      }
+    },
+    "weekView": {
+      "mobileUnavailable": "Weekly view is not available on smaller devices.",
+      "mobileSwitchHint": "Please switch to daily or monthly view."
+    },
+    "dayView": {
+      "happeningNow": "Happening now",
+      "noAppointments": "No appointments or consultations at the moment"
+    },
+    "monthView": {
+      "moreEvents": "{{count}} more..."
+    },
+    "month": {
+      "weekday": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      }
+    },
+    "yearView": {
+      "weekdays": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      }
+    },
+    "workingHours": {
+      "title": "Change working hours",
+      "tooltip": "This will apply a dashed background to the hour cells that fall outside the working hours — only for week and day views.",
+      "from": "From",
+      "to": "To",
+      "closed": "Closed",
+      "apply": "Apply",
+      "days": {
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday"
+      }
+    }
+  },
+  "teacherRoom": {
+    "sidebar": {
+      "title": "Lớp cô Trang",
+      "subtitle": "Manage teaching schedule & classes",
+      "groupLabel": "Lớp cô Trang",
+      "toggle": "Toggle",
+      "timetable": "Timetable",
+      "backHome": "Back to home"
+    },
+    "user": {
+      "logout": "Log out"
+    },
+    "timetable": {
+      "title": "Teaching schedule",
+      "description": "Your teaching schedule and upcoming sessions."
+    },
+    "notFound": {
+      "description": "That link isn’t available in Lớp cô Trang."
+    }
+  },
+  "auth": {
+    "login": {
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "title": "Log in or",
+      "createAccount": "create account",
+      "forgotPassword": "Forgot your password?",
+      "resetPasswordLink": "Reset password",
+      "orWith": "or with",
+      "dialogTitle": "Sign in to continue",
+      "dialogDescription": "This page needs an account. After signing in you'll stay right here.",
+      "signInWithProvider": "Sign in with {{provider}}"
+    },
+    "signUp": {
+      "title": "Sign up for AAS account",
+      "backToLogin": "Back to Login",
+      "or": "or ",
+      "rePassword": "Re-Enter Password",
+      "submit": "Sign up",
+      "checkInbox": "Check your inbox",
+      "activationEmailSent": "We have sent you an activation email"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "backToLogin": "Back to Login",
+      "or": "or ",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "submit": "Confirm"
+    },
+    "changePassword": {
+      "title": "Reset your password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "passwordMismatch": "Passwords do not match",
+      "submit": "Reset Password",
+      "successMessage": "Password changed successfully! You can now log in.",
+      "errorFallback": "Failed to change password."
+    },
+    "layout": {
+      "termsPrefix": "By continuing to use our services, you agree to our",
+      "termsOfService": "terms of service",
+      "and": "and",
+      "privacyPolicy": "privacy policy"
+    }
+  },
+  "badminton": {
+    "crumb": "Badminton",
+    "list": {
+      "title": "Badminton sessions",
+      "description": "Your saved splits.",
+      "untitledSession": "Untitled session",
+      "deleteSession": "Delete session",
+      "loadError": {
+        "title": "Couldn't load your sessions",
+        "description": "Something went wrong fetching your saved splits. Check your connection and try again."
+      },
+      "empty": {
+        "title": "No sessions yet",
+        "description": "Create your first session to split court and shuttle costs."
+      }
+    },
+    "edit": {
+      "crumb": "Session Details",
+      "defaultTitle": "Session",
+      "paymentUpdateError": "Couldn't update payment status",
+      "notFound": {
+        "title": "Session not found",
+        "description": "It may have been deleted, or you don't have access to it."
+      }
+    },
+    "new": {
+      "title": "New session",
+      "description": "Enter the costs and players — the split updates live."
+    },
+    "share": {
+      "defaultTitle": "Badminton split",
+      "notFound": {
+        "title": "Split not found",
+        "description": "This share link is invalid or the session was removed."
+      }
+    },
+    "shareLink": {
+      "copySuccess": "Share link copied",
+      "copyError": "Couldn't copy the link",
+      "ariaLabel": "Public share link",
+      "copyButton": "Copy link"
+    },
+    "summary": {
+      "title": "Split summary",
+      "courtFee": "Court fee",
+      "shuttleFee": "Shuttle fee",
+      "shuttleCount": "{{n}} shuttles",
+      "defaultHours": "Default {{hours}}h",
+      "qrCode": "QR code",
+      "qrAlt": "Payment QR: {{label}}",
+      "copy": "Copy",
+      "copySuccess": "Summary copied to clipboard",
+      "copyError": "Couldn't copy — check clipboard permissions",
+      "roundingResidual": "{{amount}} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.",
+      "table": {
+        "player": "Player",
+        "court": "Court",
+        "shuttle": "Shuttle",
+        "total": "Total",
+        "payment": "Payment"
+      },
+      "totalCollected": "Total collected",
+      "empty": {
+        "title": "Nothing to split yet",
+        "description": "Add players and costs to see each person's share."
+      },
+      "pay": "Pay",
+      "markPaid": "Mark as paid",
+      "markUnpaid": "Mark as unpaid",
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "paymentMethod": {
+      "loading": "Loading…",
+      "choosePlaceholder": "Choose a payment method",
+      "title": "Payment method",
+      "description": "Choose or add a MoMo QR/phone number to show on the share page.",
+      "qrImageLabel": "QR image",
+      "empty": "No payment methods yet.",
+      "updateError": "Couldn't change the payment method",
+      "deleteError": "Delete failed",
+      "deleteAria": "Delete {{label}}",
+      "form": {
+        "labelRequired": "Label is required",
+        "phoneInvalid": "Enter 9-11 digits, no spaces or country code",
+        "fileRequired": "Upload a QR image",
+        "phoneTab": "MoMo phone number",
+        "imageTab": "Upload QR image",
+        "labelPlaceholder": "Label (e.g. Personal MoMo)",
+        "add": "Add"
+      }
+    },
+    "players": {
+      "player": "Player",
+      "hoursPlayed": "Hours played",
+      "shuttleWeight": "Shuttle weight",
+      "removeColumn": "Remove",
+      "addPlayer": "Add player",
+      "nameLabel": "Name",
+      "genderLabel": "Gender",
+      "female": "Female",
+      "male": "Male",
+      "removePlayerAria": "Remove player",
+      "registeredPlayers": "Registered players",
+      "previousGuests": "Previous guests",
+      "createGuestLabel": "“{{query}}” will be saved as a guest",
+      "noMatches": "No matches",
+      "typeToSearch": "Type to search"
+    },
+    "session": {
+      "detailsTitle": "Session details",
+      "detailsDescription": "Court and shuttle costs for the day.",
+      "paymentMethodLabel": "Payment method:",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Friday night",
+      "dateLabel": "Date",
+      "courtCostLabel": "Court cost",
+      "courtCostDescription": "Total cost for the court, shared by all players.",
+      "shuttlePriceLabel": "Shuttle price (each)",
+      "shuttlePriceDescription": "Shuttle total = price × total shuttles.",
+      "shuttlePriceAria": "Shuttle price per shuttle",
+      "totalShuttlesLabel": "Total shuttles",
+      "totalShuttlesDescription": "Total shuttle count for the session, shared by all players.",
+      "defaultHoursLabel": "Default play time",
+      "defaultHoursDescription": "Applies to every current player and anyone added after.",
+      "playersTitle": "Players",
+      "playersDescription": "Hours played splits the court fee. Shuttle weight splits the shuttle pot — tap Male/Female for the 6/4 default.",
+      "viewChanges": "View Changes",
+      "saveChanges": "Save changes",
+      "saveSession": "Save session",
+      "shuttleCalc": {
+        "title": "Shuttle price",
+        "description": "Derive the per-shuttle price from a tube's total price.",
+        "tubePriceLabel": "Tube price",
+        "perTubeLabel": "Shuttles / tube",
+        "perShuttleLabel": "Per shuttle:",
+        "apply": "Apply"
+      }
+    },
+    "notFound": {
+      "description": "That link isn’t available."
+    }
+  },
+  "common": {
+    "themeToggle": {
+      "toggle": "Toggle theme"
+    },
+    "routeError": {
+      "title": "Something went wrong",
+      "description": "The page couldn't be loaded.",
+      "tryAgain": "Try again"
+    },
+    "routeNotFound": {
+      "title": "Page not found"
+    },
+    "routeDropdown": {
+      "home": "Home",
+      "pages": "Pages"
+    },
+    "userMenu": {
+      "login": "Login",
+      "signUp": "Sign up",
+      "account": "Account",
+      "billing": "Billing",
+      "notifications": "Notifications",
+      "signOut": "Sign Out"
+    },
+    "logo": {
+      "ariaLabel": "Go to homepage"
+    },
+    "attachment": {
+      "placeholder": "Upload a file",
+      "remove": "Remove attachment"
+    },
+    "pagination": {
+      "rows": "Rows",
+      "noResults": "No results",
+      "summary": "{{first}}–{{last}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next",
+      "previousAria": "Go to previous page",
+      "nextAria": "Go to next page",
+      "goToPage": "Go to page {{page}}"
+    },
+    "imagePreview": {
+      "download": "Download image"
+    },
+    "toast": {
+      "retry": "Retry",
+      "copyDetails": "Copy details",
+      "copied": "Copied",
+      "closeIn": "This message will close in",
+      "seconds": "seconds.",
+      "clickToPause": "Click to pause.",
+      "clickToResume": "Click to resume.",
+      "title": "Title",
+      "message": "Message",
+      "status": "Status",
+      "code": "Code",
+      "path": "Path",
+      "traceId": "Trace ID",
+      "trace": "Trace",
+      "validation": "Validation",
+      "details": "Details"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { formOptions, useForm } from "@tanstack/react-form"
 import React from "react"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import { FormField } from "@/components/custom/form-field"
@@ -22,6 +23,7 @@ const formOpts = formOptions({
   },
 })
 const ForgotPasswordForm: React.FC = () => {
+  const { t } = useTranslation()
   const { mutate, status } = useSendVerificationEmailMutation()
 
   const form = useForm({
@@ -34,8 +36,8 @@ const ForgotPasswordForm: React.FC = () => {
         },
         {
           onSuccess: () => {
-            toast.success("Check your inbox", {
-              description: "We have sent you an activation email",
+            toast.success(t("auth.signUp.checkInbox"), {
+              description: t("auth.signUp.activationEmailSent"),
             })
           },
         }
@@ -58,12 +60,15 @@ const ForgotPasswordForm: React.FC = () => {
         <FormField
           form={form}
           name="email"
-          label="Email"
-          description="Enter your email address and we'll send you a link to reset your
-            password."
+          label={t("auth.login.email")}
+          description={t("auth.resetPassword.description")}
         >
           {({ inputProps }) => (
-            <Input mutationState={status} placeholder="Email" {...inputProps} />
+            <Input
+              mutationState={status}
+              placeholder={t("auth.login.email")}
+              {...inputProps}
+            />
           )}
         </FormField>
       </FieldGroup>
@@ -72,7 +77,7 @@ const ForgotPasswordForm: React.FC = () => {
         className="mt-4 w-full py-2 font-medium"
         disabled={status === "pending"}
       >
-        Confirm
+        {t("auth.resetPassword.submit")}
       </Button>
     </form>
   )

@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button"
-import { cn, loadAsset } from "@/lib/utils"
+import { loadAsset } from "@/lib/utils"
 import { authApi } from "@/services/auth"
 import React from "react"
+import { useTranslation } from "react-i18next"
 import { ReactSVG } from "react-svg"
 
 interface Provider {
@@ -42,6 +43,7 @@ const providers: Array<Provider> = [
   },
 ]
 const Providers: React.FC = () => {
+  const { t } = useTranslation()
   return (
     <ul className="space-y-4">
       {providers.map((provider) => (
@@ -54,16 +56,12 @@ const Providers: React.FC = () => {
             void provider.callback(currentReturnTo())
           }}
         >
-          <ReactSVG
-            src={provider.iconUrl}
-            aria-hidden={true}
-            className={cn("", { "dark:hidden": !!provider.darkIconUrl })}
-          />
+          <ReactSVG src={provider.iconUrl} className="dark:hidden" />
           {provider?.darkIconUrl && (
-            <ReactSVG src={provider.darkIconUrl} aria-hidden={true} />
+            <ReactSVG src={provider.darkIconUrl} className="not-dark:hidden" />
           )}
           <span className="text-sm font-medium">
-            Sign in with {provider.name}
+            {t("auth.login.signInWithProvider", { provider: provider.name })}
           </span>
         </Button>
       ))}

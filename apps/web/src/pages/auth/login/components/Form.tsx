@@ -2,6 +2,7 @@ import { formOptions, useForm } from "@tanstack/react-form"
 import { useNavigate } from "@tanstack/react-router"
 import type { NavigateOptions } from "@tanstack/react-router"
 import React from "react"
+import { useTranslation } from "react-i18next"
 import type { LoginIn } from "@/services/auth"
 import { AddonInput as Input } from "@/components/custom/addon-input"
 import { FormField } from "@/components/custom/form-field"
@@ -23,6 +24,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { mutate, status } = useLoginMutation()
   const form = useForm({
     ...formOpts,
@@ -51,17 +53,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
       className="space-y-4"
     >
       <FieldGroup>
-        <FormField form={form} name="email" label="Email">
+        <FormField form={form} name="email" label={t("auth.login.email")}>
           {({ inputProps }) => (
-            <Input mutationState={status} placeholder="Email" {...inputProps} />
+            <Input
+              mutationState={status}
+              placeholder={t("auth.login.email")}
+              {...inputProps}
+            />
           )}
         </FormField>
-        <FormField form={form} name="password" label="Password">
+        <FormField form={form} name="password" label={t("auth.login.password")}>
           {({ inputProps }) => (
             <Input
               mutationState={status}
               isPassword
-              placeholder="Password"
+              placeholder={t("auth.login.password")}
               {...inputProps}
             />
           )}
@@ -72,7 +78,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
         className="mt-4 w-full py-2 font-medium"
         mutationState={status}
       >
-        Sign in
+        {t("auth.login.submit")}
       </Button>
     </form>
   )

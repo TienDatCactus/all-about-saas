@@ -6,6 +6,7 @@ import {
   WarningIcon,
   XIcon,
 } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 import type { ComputedSnapshot } from "@/services/badminton/types"
 import { DataImagePreview } from "@/components/custom/data/image-preview"
 import DataCard from "@/components/custom/data/card"
@@ -71,33 +72,40 @@ export function BadmintonSummary({
   paymentStatus,
   onTogglePaid,
 }: SummaryProps) {
+  const { t } = useTranslation()
   const hasRows = computed.rows.length > 0
 
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     try {
       e.preventDefault()
       await navigator.clipboard.writeText(buildSummaryText(computed, meta))
-      toast.success("Summary copied to clipboard")
+      toast.success(t("badminton.summary.copySuccess"))
     } catch {
-      toast.error("Couldn't copy — check clipboard permissions")
+      toast.error(t("badminton.summary.copyError"))
     }
   }
   return (
     <DataCard
-      title="Split summary"
+      title={t("badminton.summary.title")}
       description={
         <p className="text-sm text-muted-foreground">
-          Court fee{" "}
+          {t("badminton.summary.courtFee")}{" "}
           <span className="font-medium text-foreground">
             {formatDong(computed.courtCost)}
           </span>
-          {" · "}Shuttle fee{" "}
+          {" · "}
+          {t("badminton.summary.shuttleFee")}{" "}
           <span className="font-medium text-foreground">
             {formatDong(computed.shuttleCost)}
           </span>
           {" · "}
-          {meta?.totalShuttleCount ?? 0} shuttles
-          {" · "}Default {meta?.defaultHoursPlayed ?? 1}h
+          {t("badminton.summary.shuttleCount", {
+            n: meta?.totalShuttleCount ?? 0,
+          })}
+          {" · "}
+          {t("badminton.summary.defaultHours", {
+            hours: meta?.defaultHoursPlayed ?? 1,
+          })}
         </p>
       }
       action={
@@ -106,13 +114,15 @@ export function BadmintonSummary({
             <DataImagePreview
               image={{
                 src: paymentMethod.imageUrl,
-                alt: `Payment QR: ${paymentMethod.label}`,
+                alt: t("badminton.summary.qrAlt", {
+                  label: paymentMethod.label,
+                }),
                 downloadName: `${paymentMethod.label}-qr.png`,
               }}
             >
               <Button tabIndex={-1} variant="outline" size="sm">
                 <QrCodeIcon data-icon="inline-start" />
-                QR code
+                {t("badminton.summary.qrCode")}
               </Button>
             </DataImagePreview>
           )}
@@ -126,7 +136,7 @@ export function BadmintonSummary({
             disabled={!hasRows}
           >
             <CopyIcon data-icon="inline-start" />
-            Copy
+            {t("badminton.summary.copy")}
           </Button>
         </div>
       }
@@ -138,7 +148,9 @@ export function BadmintonSummary({
                 <Alert variant="destructive">
                   <WarningIcon />
                   <AlertDescription>
-                    {`${formatDong(computed.roundingResidual)} of the total expense was not collected from anyone — likely because every player was excluded from court hours or shuttle weight.`}
+                    {t("badminton.summary.roundingResidual", {
+                      amount: formatDong(computed.roundingResidual),
+                    })}
                   </AlertDescription>
                 </Alert>
               )}
@@ -146,12 +158,22 @@ export function BadmintonSummary({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Player</TableHead>
-                      <TableHead className="text-right">Court</TableHead>
-                      <TableHead className="text-right">Shuttle</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>
+                        {t("badminton.summary.table.player")}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t("badminton.summary.table.court")}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t("badminton.summary.table.shuttle")}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t("badminton.summary.table.total")}
+                      </TableHead>
                       {paymentMethod && (
-                        <TableHead className="text-center">Payment</TableHead>
+                        <TableHead className="text-center">
+                          {t("badminton.summary.table.payment")}
+                        </TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
@@ -196,7 +218,9 @@ export function BadmintonSummary({
                   </TableBody>
                   <TableFooter>
                     <TableRow>
-                      <TableCell>Total collected</TableCell>
+                      <TableCell>
+                        {t("badminton.summary.totalCollected")}
+                      </TableCell>
                       <TableCell className="text-right text-muted-foreground tabular-nums">
                         {formatVnd(computed.courtCost)}
                       </TableCell>
@@ -218,8 +242,8 @@ export function BadmintonSummary({
           ) : (
             <DataEmpty
               media={{ variant: "icon", icon: <CalculatorIcon /> }}
-              title="Nothing to split yet"
-              description="Add players and costs to see each person's share."
+              title={t("badminton.summary.empty.title")}
+              description={t("badminton.summary.empty.description")}
             />
           )}
         </div>
@@ -239,6 +263,7 @@ function PaymentCell({
   paid: boolean | undefined
   onTogglePaid?: (paid: boolean) => void
 }) {
+  const { t } = useTranslation()
   const payUrl =
     method.type === "phone" && method.phoneNumber
       ? `https://nhantien.momo.vn/${encodeURIComponent(method.phoneNumber)}?amount=${Math.round(row.total)}&note=${encodeURIComponent(row.name)}`
@@ -249,13 +274,17 @@ function PaymentCell({
       {payUrl && (
         <Button variant="outline" size="sm" asChild>
           <a href={payUrl} target="_blank" rel="noopener noreferrer">
-            Pay
+            {t("badminton.summary.pay")}
           </a>
         </Button>
       )}
       {paid === undefined ? null : onTogglePaid ? (
         <Toggle
-          aria-label={paid ? "Mark as unpaid" : "Mark as paid"}
+          aria-label={
+            paid
+              ? t("badminton.summary.markUnpaid")
+              : t("badminton.summary.markPaid")
+          }
           pressed={paid}
           onPressedChange={onTogglePaid}
           size="sm"
@@ -266,11 +295,11 @@ function PaymentCell({
           ) : (
             <XIcon data-icon="inline-start" />
           )}
-          {paid ? "Paid" : "Unpaid"}
+          {paid ? t("badminton.summary.paid") : t("badminton.summary.unpaid")}
         </Toggle>
       ) : (
         <Badge variant={paid ? "default" : "secondary"}>
-          {paid ? "Paid" : "Unpaid"}
+          {paid ? t("badminton.summary.paid") : t("badminton.summary.unpaid")}
         </Badge>
       )}
     </div>

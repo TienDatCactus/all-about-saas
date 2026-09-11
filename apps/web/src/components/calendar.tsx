@@ -2,13 +2,9 @@
 
 import { differenceInCalendarDays } from "date-fns"
 import * as React from "react"
-import {
-  DayPicker,
-  labelNext,
-  labelPrevious,
-  useDayPicker,
-} from "react-day-picker"
+import { DayPicker, useDayPicker } from "react-day-picker"
 import type { DayPickerProps } from "react-day-picker"
+import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
@@ -262,6 +258,7 @@ function Nav({
   onNextClick?: (date: Date) => void
 }) {
   const { nextMonth, previousMonth, goToMonth } = useDayPicker()
+  const { t } = useTranslation()
 
   const isPreviousDisabled = (() => {
     if (navView === "years") {
@@ -364,10 +361,10 @@ function Nav({
         disabled={isPreviousDisabled}
         aria-label={
           navView === "years"
-            ? `Go to the previous ${
-                displayYears.to - displayYears.from + 1
-              } years`
-            : labelPrevious(previousMonth)
+            ? t("calendar.picker.previousYears", {
+                count: displayYears.to - displayYears.from + 1,
+              })
+            : t("calendar.picker.previousMonth")
         }
         onClick={handlePreviousClick}
       >
@@ -382,8 +379,10 @@ function Nav({
         disabled={isNextDisabled}
         aria-label={
           navView === "years"
-            ? `Go to the next ${displayYears.to - displayYears.from + 1} years`
-            : labelNext(nextMonth)
+            ? t("calendar.picker.nextYears", {
+                count: displayYears.to - displayYears.from + 1,
+              })
+            : t("calendar.picker.nextMonth")
         }
         onClick={handleNextClick}
       >

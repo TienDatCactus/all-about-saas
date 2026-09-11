@@ -6,36 +6,47 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCreatePaymentMethodMutation } from "@/services/payment-methods/queries"
 import { PlusIcon } from "@phosphor-icons/react"
 import { useForm } from "@tanstack/react-form"
+import { useTranslation } from "react-i18next"
 import * as z from "zod"
 
 // Mirrors the backend's CreatePaymentMethodDto: phoneNumber's shape
 // (9-11 digits) and whether it's required depend on `type`, which
 // CreatePaymentMethodSchema alone doesn't express.
-const AddMethodSchema = z
-  .object({
-    type: z.enum(["image", "phone"]),
-    label: z.string().trim().min(1, "Label is required").max(120),
-    phoneNumber: z.string(),
-    file: z.instanceof(File).or(z.undefined()),
-  })
-  .superRefine((value, ctx) => {
-    if (value.type === "phone" && !/^\d{9,11}$/.test(value.phoneNumber)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["phoneNumber"],
-        message: "Enter 9-11 digits, no spaces or country code",
-      })
-    }
-    if (value.type === "image" && !value.file) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["file"],
-        message: "Upload a QR image",
-      })
-    }
-  })
+//
+// Built from `t` rather than a module-level constant so the messages
+// FieldError renders follow the active locale.
+function addMethodSchema(t: (key: string) => string) {
+  return z
+    .object({
+      type: z.enum(["image", "phone"]),
+      label: z
+        .string()
+        .trim()
+        .min(1, t("badminton.paymentMethod.form.labelRequired"))
+        .max(120),
+      phoneNumber: z.string(),
+      file: z.instanceof(File).or(z.undefined()),
+    })
+    .superRefine((value, ctx) => {
+      if (value.type === "phone" && !/^\d{9,11}$/.test(value.phoneNumber)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["phoneNumber"],
+          message: t("badminton.paymentMethod.form.phoneInvalid"),
+        })
+      }
+      if (value.type === "image" && !value.file) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["file"],
+          message: t("badminton.paymentMethod.form.fileRequired"),
+        })
+      }
+    })
+}
 
 export default function AddMethodForm() {
+  const { t } = useTranslation()
   const createMethod = useCreatePaymentMethodMutation()
 
   const form = useForm({
@@ -46,7 +57,7 @@ export default function AddMethodForm() {
       file: undefined as File | undefined,
     },
     validators: {
-      onSubmit: AddMethodSchema,
+      onSubmit: addMethodSchema(t),
     },
     onSubmit: ({ value }) => {
       createMethod.mutate(
@@ -86,13 +97,13 @@ export default function AddMethodForm() {
                 onClick={() => switchType(field, "phone")}
                 value="phone"
               >
-                MoMo phone number
+                {t("badminton.paymentMethod.form.phoneTab")}
               </TabsTrigger>
               <TabsTrigger
                 onClick={() => switchType(field, "image")}
                 value="image"
               >
-                Upload QR image
+                {t("badminton.paymentMethod.form.imageTab")}
               </TabsTrigger>
             </TabsList>
           )}
@@ -100,7 +111,10 @@ export default function AddMethodForm() {
         <div className="flex flex-col gap-2">
           <FormField form={form} name="label">
             {({ inputProps }) => (
-              <Input placeholder="Label (e.g. Personal MoMo)" {...inputProps} />
+              <Input
+                placeholder={t("badminton.paymentMethod.form.labelPlaceholder")}
+                {...inputProps}
+              />
             )}
           </FormField>
           <form.Subscribe
@@ -113,7 +127,7 @@ export default function AddMethodForm() {
                 {({ inputProps }) => (
                   <Input
                     type="tel"
-                    placeholder="MoMo phone number"
+                    placeholder={t("badminton.paymentMethod.form.phoneTab")}
                     {...inputProps}
                   />
                 )}
@@ -126,7 +140,7 @@ export default function AddMethodForm() {
                     accept="image/png,image/jpeg,image/webp"
                     file={field.state.value}
                     onFileChange={field.handleChange}
-                    placeholder="Upload QR image"
+                    placeholder={t("badminton.paymentMethod.form.imageTab")}
                     state={createMethod.isPending ? "uploading" : undefined}
                   />
                 )}
@@ -157,7 +171,7 @@ export default function AddMethodForm() {
                 }}
               >
                 <PlusIcon data-icon="inline-start" />
-                Add
+                {t("badminton.paymentMethod.form.add")}
               </Button>
             )}
           </form.Subscribe>

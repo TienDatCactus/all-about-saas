@@ -1,4 +1,5 @@
 import { computeSplit } from "@repo/badminton-calc"
+import { useTranslation } from "react-i18next"
 import { BadmintonSummary } from "../components/Summary"
 import type { PublicSession } from "@/services/badminton/types"
 import DataPage from "@/components/custom/data/page"
@@ -26,17 +27,18 @@ export default function BadmintonSummaryPage({
 }: {
   shareToken: string
 }) {
+  const { t } = useTranslation()
   const publicQuery = usePublicSessionQuery(shareToken)
 
   return (
     <DataPage
       query={publicQuery}
-      title={(session) => session?.title || "Badminton split"}
+      title={(session) => session?.title || t("badminton.share.defaultTitle")}
       description={(session) => (session ? session.playedOn : " ")}
       loading={<Skeleton className="h-80 w-full rounded-xl" />}
       error={{
-        title: "Split not found",
-        description: "This share link is invalid or the session was removed.",
+        title: t("badminton.share.notFound.title"),
+        description: t("badminton.share.notFound.description"),
         content: null,
       }}
     >

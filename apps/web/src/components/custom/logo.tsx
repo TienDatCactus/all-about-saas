@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import type { ImageProps } from "./image"
 import { Image } from "./image"
 
@@ -16,10 +17,11 @@ export default function Logo({
   ...props
 }: LogoProps) {
   const { isDarkMode } = useTheme()
+  const { t } = useTranslation()
   return (
     <Link
       to={to}
-      aria-label="Go to homepage"
+      aria-label={t("common.logo.ariaLabel")}
       className={cn("block", className)}
     >
       <Image

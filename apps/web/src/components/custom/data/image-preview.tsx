@@ -1,5 +1,6 @@
 import { DownloadIcon } from "@phosphor-icons/react"
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { PhotoProvider, PhotoView } from "react-photo-view"
 import "react-photo-view/dist/react-photo-view.css"
 
@@ -18,6 +19,7 @@ export interface DataImagePreviewProps {
 
 /** Zoomable/pannable image preview built on react-photo-view. */
 export function DataImagePreview({ image, children }: DataImagePreviewProps) {
+  const { t } = useTranslation()
   return (
     <PhotoProvider
       toolbarRender={() => (
@@ -25,7 +27,7 @@ export function DataImagePreview({ image, children }: DataImagePreviewProps) {
           href={image.src}
           download={image.downloadName ?? true}
           className="PhotoView-Slider__toolbarIcon"
-          aria-label="Download image"
+          aria-label={t("common.imagePreview.download")}
           onClick={(e) => e.stopPropagation()}
         >
           <DownloadIcon />

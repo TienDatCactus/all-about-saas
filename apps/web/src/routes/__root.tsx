@@ -11,8 +11,10 @@ import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { MotionProvider, useMotion } from "@/lib/context/animation"
 import { AuthProvider } from "@/lib/context/auth"
+import { LanguageProvider } from "@/lib/context/language"
 import { ThemeProvider } from "@/lib/context/theme"
-import { Dithered404 } from "@/components/dithered-404"
+import "@/lib/i18n"
+import { ErrorPage } from "@/components/error-page"
 
 export const Route = createRootRoute({
   staticData: { crumb: "Home" },
@@ -50,20 +52,15 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
-  notFoundComponent: () => (
-    <main className="container mx-auto p-4 pt-16">
-      <Dithered404 />
-    </main>
+  notFoundComponent: () => <ErrorPage />,
+  errorComponent: ({ error, reset }) => (
+    <ErrorPage
+      code="Error"
+      title="Something went wrong"
+      description={error.message || "An unexpected error occurred."}
+      onRetry={reset}
+    />
   ),
-  errorComponent: ({ error, reset }) => {
-    return (
-      <div>
-        <h2>Something went wrong!</h2>
-        <p>{error.message}</p>
-        <button onClick={() => reset()}>Try Again</button>
-      </div>
-    )
-  },
   shellComponent: Providers,
 })
 
@@ -89,7 +86,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     preference === "system" ? "user" : preference === "off" ? "always" : "never"
   return (
     <MotionConfig isValidProp={() => true} reducedMotion={reducedMotionMode}>
-      <html lang="en" suppressHydrationWarning>
+      <html lang="vi" suppressHydrationWarning>
         <head>
           <HeadContent />
         </head>
@@ -111,19 +108,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
-      <MotionProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <TooltipProvider>
-              <ConfirmProvider>
-                <RootDocument>{children}</RootDocument>
-              </ConfirmProvider>
-            </TooltipProvider>
-          </AuthProvider>
-          <Toaster position="top-right" />
-        </QueryClientProvider>
-      </MotionProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <MotionProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <TooltipProvider>
+                <ConfirmProvider>
+                  <RootDocument>{children}</RootDocument>
+                </ConfirmProvider>
+              </TooltipProvider>
+            </AuthProvider>
+            <Toaster position="top-right" />
+          </QueryClientProvider>
+        </MotionProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   )
 }

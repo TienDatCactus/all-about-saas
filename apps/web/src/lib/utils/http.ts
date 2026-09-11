@@ -7,6 +7,7 @@ import {
 import { AppConstants } from "./constants"
 import { trackRequestEnd, trackRequestStart } from "./loading-bar"
 import { storage } from "./local-storage"
+import { defaultLanguage, languages } from "@/lib/i18n"
 import type {
   AxiosInstance,
   AxiosRequestConfig,
@@ -89,6 +90,11 @@ export class HttpClient {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
+        const stored = storage.get<string>("language")
+        const language = (languages as readonly string[]).includes(stored ?? "")
+          ? stored
+          : defaultLanguage
+        config.headers["Accept-Language"] = language
         return config
       },
       (error) => {

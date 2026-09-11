@@ -5,6 +5,7 @@ import { flushSync } from "react-dom"
 
 import { cn } from "@/lib/utils"
 import { MoonIcon, SunIcon } from "@phosphor-icons/react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/lib/context/theme"
 
@@ -18,6 +19,7 @@ export const ThemeToggler = ({
   ...props
 }: AnimatedThemeTogglerProps) => {
   const { theme, setTheme } = useTheme()
+  const { t } = useTranslation()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -107,7 +109,7 @@ export const ThemeToggler = ({
       ) : (
         <MoonIcon aria-hidden="true" />
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{t("common.themeToggle.toggle")}</span>
     </Button>
   )
 }

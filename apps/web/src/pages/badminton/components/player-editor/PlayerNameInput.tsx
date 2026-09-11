@@ -1,5 +1,6 @@
 import * as React from "react"
 import { useDebounce } from "ahooks"
+import { useTranslation } from "react-i18next"
 import type { DataAutocompleteGroup } from "@/components/custom/data/autocomplete"
 import DataAutocomplete from "@/components/custom/data/autocomplete"
 import { useParticipantSuggestions } from "@/services/badminton/queries"
@@ -34,6 +35,7 @@ export function PlayerNameInput({
   onBlur,
   "aria-invalid": ariaInvalid,
 }: PlayerNameInputProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = React.useState("")
   const debouncedQuery = useDebounce(query, {
     wait: 300,
@@ -52,16 +54,19 @@ export function PlayerNameInput({
       u.name ? [{ value: u.name, meta: { userId: u.userId } }] : []
     )
     if (userOptions.length > 0) {
-      out.push({ label: "Registered players", options: userOptions })
+      out.push({
+        label: t("badminton.players.registeredPlayers"),
+        options: userOptions,
+      })
     }
     if (data.guests && data.guests.length > 0) {
       out.push({
-        label: "Previous guests",
+        label: t("badminton.players.previousGuests"),
         options: data.guests.map((g) => ({ value: g, meta: {} })),
       })
     }
     return out
-  }, [data])
+  }, [data, t])
 
   return (
     <DataAutocomplete<Suggestion>
@@ -77,10 +82,14 @@ export function PlayerNameInput({
       onSearch={setQuery}
       groups={groups.length > 0 ? groups : undefined}
       creatable
-      createLabel={(q) => `“${q}” will be saved as a guest`}
+      createLabel={(q) => t("badminton.players.createGuestLabel", { query: q })}
       loading={enabled && isFetching}
-      placeholder="Name"
-      emptyMessage={enabled ? "No matches" : "Type to search"}
+      placeholder={t("badminton.players.nameLabel")}
+      emptyMessage={
+        enabled
+          ? t("badminton.players.noMatches")
+          : t("badminton.players.typeToSearch")
+      }
       onBlur={onBlur}
       aria-invalid={ariaInvalid}
       className="w-32 lg:w-full"

@@ -1,0 +1,53 @@
+import * as React from "react"
+import { useTranslation } from "react-i18next"
+import DataAutocomplete from "@/components/custom/data/autocomplete"
+import { useStudentSuggestQuery } from "@/services/teacher-room/queries"
+import type { DataAutocompleteOption } from "@/components/custom/data/autocomplete"
+
+interface StudentComboboxProps {
+  value: string
+  onChange: (name: string) => void
+  placeholder?: string
+}
+
+/**
+ * Free-text student name field with suggestions drawn from existing
+ * students, built on the same `DataAutocomplete` primitive as badminton's
+ * `PlayerNameInput` — same "type a name, see suggestions, pick or keep
+ * typing to create" interaction. Simpler than `PlayerNameInput`: a student
+ * has no separate "registered account" to link, so there's a single flat
+ * suggestion list and no `onSelect` — picking a suggestion is just another
+ * way to set the same free-text value.
+ */
+export function StudentCombobox({
+  value,
+  onChange,
+  placeholder,
+}: StudentComboboxProps) {
+  const { t } = useTranslation()
+  const [query, setQuery] = React.useState("")
+  const suggestQuery = useStudentSuggestQuery(query)
+
+  const options = React.useMemo<Array<DataAutocompleteOption>>(
+    () => (suggestQuery.data ?? []).map((s) => ({ value: s.name })),
+    [suggestQuery.data]
+  )
+
+  return (
+    <DataAutocomplete
+      value={value}
+      onValueChange={onChange}
+      onSearch={setQuery}
+      options={options}
+      creatable
+      createLabel={(q) =>
+        t("calendar.dialogs.studentCombobox.createLabel", { query: q })
+      }
+      loading={suggestQuery.isFetching}
+      placeholder={
+        placeholder ?? t("calendar.dialogs.studentCombobox.placeholder")
+      }
+      emptyMessage={t("calendar.dialogs.studentCombobox.empty")}
+    />
+  )
+}

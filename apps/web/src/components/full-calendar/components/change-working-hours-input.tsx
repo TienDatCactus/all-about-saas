@@ -1,0 +1,176 @@
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { InfoIcon, MoonIcon } from "@phosphor-icons/react"
+import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { TooltipContent } from "@/components/ui/tooltip"
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip"
+
+const DAYS_OF_WEEK = [
+  { index: 0, name: "Sunday", key: "sunday" },
+  { index: 1, name: "Monday", key: "monday" },
+  { index: 2, name: "Tuesday", key: "tuesday" },
+  { index: 3, name: "Wednesday", key: "wednesday" },
+  { index: 4, name: "Thursday", key: "thursday" },
+  { index: 5, name: "Friday", key: "friday" },
+  { index: 6, name: "Saturday", key: "saturday" },
+] as const
+
+export function ChangeWorkingHoursInput() {
+  const { t } = useTranslation()
+  const { workingHours, setWorkingHours } = useCalendar()
+
+  const [localWorkingHours, setLocalWorkingHours] = useState({
+    ...workingHours,
+  })
+
+  // DAYS_OF_WEEK below always populates keys 0-6, so an index from it is
+  // never actually missing — the `!`s just satisfy noUncheckedIndexedAccess.
+  const handleToggleDay = (dayId: number) => {
+    setLocalWorkingHours((prev) => ({
+      ...prev,
+      [dayId]:
+        prev[dayId]!.from > 0 || prev[dayId]!.to > 0
+          ? { from: 0, to: 0 }
+          : { from: 9, to: 17 },
+    }))
+  }
+
+  const handleTimeChange = (
+    dayId: number,
+    timeType: "from" | "to",
+    hour: number
+  ) => {
+    if (Number.isNaN(hour)) return
+    const clamped = Math.min(24, Math.max(0, hour))
+
+    setLocalWorkingHours((prev) => {
+      const updatedDay = { ...prev[dayId]!, [timeType]: clamped }
+      if (timeType === "to" && clamped === 0 && updatedDay.from === 0)
+        updatedDay.to = 24
+      return { ...prev, [dayId]: updatedDay }
+    })
+  }
+
+  const handleSave = () => {
+    const updatedWorkingHours = { ...localWorkingHours }
+
+    for (const dayId in updatedWorkingHours) {
+      const day = updatedWorkingHours[parseInt(dayId)]!
+      const isDayActive =
+        localWorkingHours[parseInt(dayId)]!.from > 0 ||
+        localWorkingHours[parseInt(dayId)]!.to > 0
+
+      if (isDayActive) {
+        if (day.from === 0 && day.to === 0) {
+          updatedWorkingHours[dayId] = { from: 0, to: 24 }
+        } else if (day.to === 0 && day.from > 0) {
+          updatedWorkingHours[dayId] = { ...day, to: 24 }
+        }
+      } else {
+        updatedWorkingHours[dayId] = { from: 0, to: 0 }
+      }
+    }
+
+    setWorkingHours(updatedWorkingHours)
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <p className="text-sm font-semibold">
+          {t("calendar.workingHours.title")}
+        </p>
+
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger>
+              <InfoIcon className="size-3" />
+            </TooltipTrigger>
+
+            <TooltipContent className="max-w-80 text-center">
+              <p>{t("calendar.workingHours.tooltip")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      <div className="space-y-4">
+        {DAYS_OF_WEEK.map((day) => {
+          const isDayActive =
+            localWorkingHours[day.index]!.from > 0 ||
+            localWorkingHours[day.index]!.to > 0
+
+          return (
+            <div key={day.index} className="flex items-center gap-4">
+              <div className="flex w-40 items-center gap-2">
+                <Switch
+                  checked={isDayActive}
+                  onCheckedChange={() => handleToggleDay(day.index)}
+                />
+                <span className="text-sm font-medium">
+                  {t(`calendar.workingHours.days.${day.key}`)}
+                </span>
+              </div>
+
+              {isDayActive ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span>{t("calendar.workingHours.from")}</span>
+                    <Input
+                      id={`${day.name.toLowerCase()}-from`}
+                      type="number"
+                      min={0}
+                      max={24}
+                      className="w-16"
+                      value={localWorkingHours[day.index]!.from}
+                      onChange={(e) =>
+                        handleTimeChange(
+                          day.index,
+                          "from",
+                          e.target.valueAsNumber
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span>{t("calendar.workingHours.to")}</span>
+                    <Input
+                      id={`${day.name.toLowerCase()}-to`}
+                      type="number"
+                      min={0}
+                      max={24}
+                      className="w-16"
+                      value={localWorkingHours[day.index]!.to}
+                      onChange={(e) =>
+                        handleTimeChange(
+                          day.index,
+                          "to",
+                          e.target.valueAsNumber
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MoonIcon className="size-4" />
+                  <span>{t("calendar.workingHours.closed")}</span>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <Button className="mt-4 w-fit" onClick={handleSave}>
+        {t("calendar.workingHours.apply")}
+      </Button>
+    </div>
+  )
+}

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthenticatedBadmintonRouteRouteImport } from './routes/_authenticated/badminton/route'
+import { Route as AuthenticatedTeacherRoomRouteRouteImport } from './routes/_authenticated/teacher-room/route'
 import { Route as AuthChangePasswordRouteImport } from './routes/auth/change-password'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
@@ -21,6 +22,7 @@ import { Route as AuthenticatedBadmintonIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedBadmintonSessionIdRouteImport } from './routes/_authenticated/badminton/$sessionId'
 import { Route as AuthenticatedBadmintonNewRouteImport } from './routes/_authenticated/badminton/new'
 import { Route as BadmintonSShareTokenRouteImport } from './routes/badminton.s.$shareToken'
+import { Route as AuthenticatedTeacherRoomTimetableIndexRouteImport } from './routes/_authenticated/teacher-room/timetable/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +42,12 @@ const AuthenticatedBadmintonRouteRoute =
   AuthenticatedBadmintonRouteRouteImport.update({
     id: '/badminton',
     path: '/badminton',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTeacherRoomRouteRoute =
+  AuthenticatedTeacherRoomRouteRouteImport.update({
+    id: '/teacher-room',
+    path: '/teacher-room',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthChangePasswordRoute = AuthChangePasswordRouteImport.update({
@@ -85,11 +93,18 @@ const BadmintonSShareTokenRoute = BadmintonSShareTokenRouteImport.update({
   path: '/badminton/s/$shareToken',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTeacherRoomTimetableIndexRoute =
+  AuthenticatedTeacherRoomTimetableIndexRouteImport.update({
+    id: '/timetable/',
+    path: '/timetable/',
+    getParentRoute: () => AuthenticatedTeacherRoomRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/verify-email': typeof VerifyEmailRoute
   '/badminton': typeof AuthenticatedBadmintonRouteRouteWithChildren
+  '/teacher-room': typeof AuthenticatedTeacherRoomRouteRouteWithChildren
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -98,10 +113,12 @@ export interface FileRoutesByFullPath {
   '/badminton/new': typeof AuthenticatedBadmintonNewRoute
   '/badminton/s/$shareToken': typeof BadmintonSShareTokenRoute
   '/badminton/': typeof AuthenticatedBadmintonIndexRoute
+  '/teacher-room/timetable/': typeof AuthenticatedTeacherRoomTimetableIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/teacher-room': typeof AuthenticatedTeacherRoomRouteRouteWithChildren
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -110,6 +127,7 @@ export interface FileRoutesByTo {
   '/badminton/new': typeof AuthenticatedBadmintonNewRoute
   '/badminton/s/$shareToken': typeof BadmintonSShareTokenRoute
   '/badminton': typeof AuthenticatedBadmintonIndexRoute
+  '/teacher-room/timetable': typeof AuthenticatedTeacherRoomTimetableIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,6 +135,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/badminton': typeof AuthenticatedBadmintonRouteRouteWithChildren
+  '/_authenticated/teacher-room': typeof AuthenticatedTeacherRoomRouteRouteWithChildren
   '/auth/change-password': typeof AuthChangePasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -125,6 +144,7 @@ export interface FileRoutesById {
   '/_authenticated/badminton/new': typeof AuthenticatedBadmintonNewRoute
   '/badminton/s/$shareToken': typeof BadmintonSShareTokenRoute
   '/_authenticated/badminton/': typeof AuthenticatedBadmintonIndexRoute
+  '/_authenticated/teacher-room/timetable/': typeof AuthenticatedTeacherRoomTimetableIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -132,6 +152,7 @@ export interface FileRouteTypes {
     | '/'
     | '/verify-email'
     | '/badminton'
+    | '/teacher-room'
     | '/auth/change-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -140,10 +161,12 @@ export interface FileRouteTypes {
     | '/badminton/new'
     | '/badminton/s/$shareToken'
     | '/badminton/'
+    | '/teacher-room/timetable/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/verify-email'
+    | '/teacher-room'
     | '/auth/change-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -152,12 +175,14 @@ export interface FileRouteTypes {
     | '/badminton/new'
     | '/badminton/s/$shareToken'
     | '/badminton'
+    | '/teacher-room/timetable'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/verify-email'
     | '/_authenticated/badminton'
+    | '/_authenticated/teacher-room'
     | '/auth/change-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -166,6 +191,7 @@ export interface FileRouteTypes {
     | '/_authenticated/badminton/new'
     | '/badminton/s/$shareToken'
     | '/_authenticated/badminton/'
+    | '/_authenticated/teacher-room/timetable/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -207,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/badminton'
       fullPath: '/badminton'
       preLoaderRoute: typeof AuthenticatedBadmintonRouteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/teacher-room': {
+      id: '/_authenticated/teacher-room'
+      path: '/teacher-room'
+      fullPath: '/teacher-room'
+      preLoaderRoute: typeof AuthenticatedTeacherRoomRouteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/auth/change-password': {
@@ -265,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BadmintonSShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/teacher-room/timetable/': {
+      id: '/_authenticated/teacher-room/timetable/'
+      path: '/timetable'
+      fullPath: '/teacher-room/timetable/'
+      preLoaderRoute: typeof AuthenticatedTeacherRoomTimetableIndexRouteImport
+      parentRoute: typeof AuthenticatedTeacherRoomRouteRoute
+    }
   }
 }
 
@@ -286,13 +326,31 @@ const AuthenticatedBadmintonRouteRouteWithChildren =
     AuthenticatedBadmintonRouteRouteChildren,
   )
 
+interface AuthenticatedTeacherRoomRouteRouteChildren {
+  AuthenticatedTeacherRoomTimetableIndexRoute: typeof AuthenticatedTeacherRoomTimetableIndexRoute
+}
+
+const AuthenticatedTeacherRoomRouteRouteChildren: AuthenticatedTeacherRoomRouteRouteChildren =
+  {
+    AuthenticatedTeacherRoomTimetableIndexRoute:
+      AuthenticatedTeacherRoomTimetableIndexRoute,
+  }
+
+const AuthenticatedTeacherRoomRouteRouteWithChildren =
+  AuthenticatedTeacherRoomRouteRoute._addFileChildren(
+    AuthenticatedTeacherRoomRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedBadmintonRouteRoute: typeof AuthenticatedBadmintonRouteRouteWithChildren
+  AuthenticatedTeacherRoomRouteRoute: typeof AuthenticatedTeacherRoomRouteRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBadmintonRouteRoute:
     AuthenticatedBadmintonRouteRouteWithChildren,
+  AuthenticatedTeacherRoomRouteRoute:
+    AuthenticatedTeacherRoomRouteRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

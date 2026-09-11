@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -22,6 +23,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { MailModule } from './mail/mail.module';
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { RolesModule } from './roles/roles.module';
+import { TeacherRoomModule } from './teacher-room/teacher-room.module';
 import { UsersModule } from './users/users.module';
 
 // Mounted secrets (DATABASE_PASSWORD_FILE, JWT_SECRET_FILE) into process.env,
@@ -73,10 +75,12 @@ resolveFileSecrets();
 				},
 			],
 		}),
+		ScheduleModule.forRoot(),
 
 		MailModule,
 		BadmintonModule,
 		PaymentMethodsModule,
+		TeacherRoomModule,
 	],
 	controllers: [AppController],
 	providers: [
