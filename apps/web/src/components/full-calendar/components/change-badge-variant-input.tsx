@@ -18,7 +18,9 @@ export function ChangeBadgeVariantInput() {
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-semibold">{t("calendar.badgeVariant.label")}</p>
+      <p className="text-sm font-semibold">
+        {t("calendar.badgeVariant.label")}
+      </p>
 
       <Select value={badgeVariant} onValueChange={setBadgeVariant}>
         <SelectTrigger className="w-48">
@@ -27,8 +29,12 @@ export function ChangeBadgeVariantInput() {
 
         <SelectContent>
           <SelectItem value="dot">{t("calendar.badgeVariant.dot")}</SelectItem>
-          <SelectItem value="colored">{t("calendar.badgeVariant.colored")}</SelectItem>
-          <SelectItem value="mixed">{t("calendar.badgeVariant.mixed")}</SelectItem>
+          <SelectItem value="colored">
+            {t("calendar.badgeVariant.colored")}
+          </SelectItem>
+          <SelectItem value="mixed">
+            {t("calendar.badgeVariant.mixed")}
+          </SelectItem>
         </SelectContent>
       </Select>
     </div>

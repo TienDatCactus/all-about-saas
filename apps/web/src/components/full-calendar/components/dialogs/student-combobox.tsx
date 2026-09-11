@@ -44,7 +44,9 @@ export function StudentCombobox({
         t("calendar.dialogs.studentCombobox.createLabel", { query: q })
       }
       loading={suggestQuery.isFetching}
-      placeholder={placeholder ?? t("calendar.dialogs.studentCombobox.placeholder")}
+      placeholder={
+        placeholder ?? t("calendar.dialogs.studentCombobox.placeholder")
+      }
       emptyMessage={t("calendar.dialogs.studentCombobox.empty")}
     />
   )
