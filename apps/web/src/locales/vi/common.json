@@ -1,5 +1,11 @@
 {
   "calendar": {
+    "picker": {
+      "previousMonth": "Đến tháng trước",
+      "nextMonth": "Đến tháng sau",
+      "previousYears": "Đến {{count}} năm trước",
+      "nextYears": "Đến {{count}} năm sau"
+    },
     "status": {
       "scheduled": "Chưa chốt",
       "completed": "Đã dạy",

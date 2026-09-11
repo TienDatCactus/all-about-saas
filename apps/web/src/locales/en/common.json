@@ -1,5 +1,11 @@
 {
   "calendar": {
+    "picker": {
+      "previousMonth": "Go to the Previous Month",
+      "nextMonth": "Go to the Next Month",
+      "previousYears": "Go to the previous {{count}} years",
+      "nextYears": "Go to the next {{count}} years"
+    },
     "status": {
       "scheduled": "Not confirmed",
       "completed": "Taught",
