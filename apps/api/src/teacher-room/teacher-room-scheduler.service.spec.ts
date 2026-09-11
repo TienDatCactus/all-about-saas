@@ -120,11 +120,13 @@ describe('TeacherRoomSchedulerService.sendDailyReminders', () => {
 			'teacherRoomReminder',
 			expect.objectContaining({
 				title: 'Buổi dạy hôm nay chưa chốt trạng thái',
-				// HIGH-priority sessions are marked and sorted first in the digest.
-				subtitle: expect.stringContaining(
-					'[Ưu tiên cao] An 15:00–16:00; Bình 17:00–18:00',
-				),
-				url: 'https://app.example.com/teacher-room',
+				// HIGH-priority sessions are marked and sorted first in the digest,
+				// one row per session rather than one joined sentence.
+				items: [
+					{ title: 'An · 15:00–16:00', description: 'Ưu tiên cao' },
+					{ title: 'Bình · 17:00–18:00', description: undefined },
+				],
+				url: 'https://app.example.com/teacher-room/timetable',
 			}),
 		);
 	});
@@ -253,7 +255,7 @@ describe('TeacherRoomSchedulerService.sendUpcomingAndFollowupReminders', () => {
 			expect.objectContaining({
 				title: 'Sắp đến giờ dạy',
 				subtitle: expect.stringContaining('An'),
-				url: 'https://app.example.com/teacher-room',
+				url: 'https://app.example.com/teacher-room/timetable',
 			}),
 		);
 		expect(sessionRepo.save).toHaveBeenCalledWith(

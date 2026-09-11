@@ -9,6 +9,7 @@ import type { DayButton, Locale } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 function Calendar({
   className,
@@ -16,7 +17,6 @@ function Calendar({
   showOutsideDays = true,
   captionLayout = "label",
   buttonVariant = "ghost",
-  locale,
   formatters,
   components,
   ...props
@@ -24,7 +24,7 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
-
+  const locale = useDateFnsLocale()
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}

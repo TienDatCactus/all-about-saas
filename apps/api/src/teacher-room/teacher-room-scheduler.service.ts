@@ -16,7 +16,12 @@ import {
 } from './entities/teaching-session-history.entity';
 import { User } from '../users/entities/user.entity';
 import { MailService } from '../mail/mail.service';
-import { occurrenceDates, combineDateTime } from './lib/schedule-dates';
+import {
+	occurrenceDates,
+	combineDateTime,
+	todayInTeacherTz,
+	TEACHER_TZ,
+} from './lib/schedule-dates';
 
 const GENERATION_WEEKS = 6;
 const PRE_CLASS_REMINDER_MINUTES = 15;
@@ -37,9 +42,10 @@ export class TeacherRoomSchedulerService {
 		private readonly configService: ConfigService,
 	) {}
 
-	/** Monday 00:05 server time — tops up every active slot's generated SCHEDULED
-	 *  sessions to a rolling 6-week horizon from `from` (defaults to now). */
-	@Cron('5 0 * * 1')
+	/** Monday 00:05 Vietnam time — tops up every active slot's generated
+	 *  SCHEDULED sessions to a rolling 6-week horizon from `from` (defaults to
+	 *  now). */
+	@Cron('5 0 * * 1', { timeZone: TEACHER_TZ })
 	async topUpWeeklySchedules(from: Date = new Date()) {
 		const activeSlots = await this.slotRepo.find({ where: { active: true } });
 
@@ -79,10 +85,10 @@ export class TeacherRoomSchedulerService {
 		}
 	}
 
-	/** Every day at 20:00 server time. */
-	@Cron('0 20 * * *')
+	/** Every day at 20:00 Vietnam time. */
+	@Cron('0 20 * * *', { timeZone: TEACHER_TZ })
 	async sendDailyReminders() {
-		const today = new Date().toISOString().slice(0, 10);
+		const today = todayInTeacherTz(new Date());
 		const pending = await this.sessionRepo.find({
 			where: {
 				scheduledDate: LessThanOrEqual(today),
@@ -105,24 +111,24 @@ export class TeacherRoomSchedulerService {
 			const owner = await this.userRepo.findOne({ where: { id: ownerId } });
 			if (!owner?.email) continue;
 
-			const pendingSummary = sessions
-				.map((s) => {
-					const label = `${s.student.name} ${s.startTime}–${s.endTime}`;
-					return s.priority === SessionPriority.HIGH
-						? `[Ưu tiên cao] ${label}`
-						: label;
-				})
-				.join('; ');
+			// One row per session, rather than one semicolon-joined sentence — the
+			// digest can list any number of stale sessions and still read cleanly.
+			const items = sessions.map((s) => ({
+				title: `${s.student.name} · ${s.startTime}–${s.endTime}`,
+				description:
+					s.priority === SessionPriority.HIGH ? 'Ưu tiên cao' : undefined,
+			}));
 
 			await this.mailService.sendEmail(
 				{ to: owner.email },
 				'teacherRoomReminder',
 				{
 					title: 'Buổi dạy hôm nay chưa chốt trạng thái',
-					subtitle: `Các buổi sau vẫn đang ở trạng thái "chưa chốt": ${pendingSummary}`,
+					subtitle: 'Các buổi sau vẫn đang ở trạng thái "chưa chốt":',
 					legend:
-						'Nhấn nút bên dưới để chốt buổi hôm nay: đánh dấu đã dạy xong, dời lịch, hoặc huỷ nếu không diễn ra. Buổi gắn nhãn [Ưu tiên cao] đã bị bỏ sót nhiều ngày.',
+						'Nhấn nút bên dưới để chốt buổi hôm nay: đánh dấu đã dạy xong, dời lịch, hoặc huỷ nếu không diễn ra. Buổi ghi "Ưu tiên cao" bên dưới đã bị bỏ sót nhiều ngày.',
 					url: `${frontendUrl}/teacher-room/timetable`,
+					items,
 				},
 			);
 		}
@@ -134,7 +140,7 @@ export class TeacherRoomSchedulerService {
 	 *  delay past the trigger instant, not a missed or duplicated send. */
 	@Cron(CronExpression.EVERY_10_MINUTES)
 	async sendUpcomingAndFollowupReminders(now: Date = new Date()) {
-		const today = now.toISOString().slice(0, 10);
+		const today = todayInTeacherTz(now);
 		const frontendUrl = this.configService.get<string>('frontendUrl');
 
 		const upcoming = await this.sessionRepo.find({

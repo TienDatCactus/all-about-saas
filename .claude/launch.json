@@ -6,6 +6,12 @@
 			"runtimeExecutable": "npm",
 			"runtimeArgs": ["run", "dev", "--workspace", "@app/web"],
 			"port": 3000
+		},
+		{
+			"name": "email-preview",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "email", "--workspace", "@transactional/emails"],
+			"port": 4000
 		}
 	]
 }
