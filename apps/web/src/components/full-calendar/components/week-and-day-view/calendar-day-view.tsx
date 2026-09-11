@@ -4,7 +4,7 @@ import { CalendarIcon, ClockIcon, UserIcon } from "@phosphor-icons/react"
 import { parseISO, areIntervalsOverlapping, format } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
-import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
+import { useDateFnsLocale, useTimeFormat } from "@/hooks/use-date-fns-locale"
 
 import { Calendar } from "@/components/ui/calendar"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -34,6 +34,7 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
     useCalendar()
   const [, setCurrentTime] = useState(new Date())
   const locale = useDateFnsLocale()
+  const timeFormat = useTimeFormat()
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -84,9 +85,11 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
                   <div className="absolute -top-3 right-2 flex h-6 items-center">
                     {index !== 0 && (
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date().setHours(hour, 0, 0, 0), "hh a", {
-                          locale,
-                        })}
+                        {format(
+                          new Date().setHours(hour, 0, 0, 0),
+                          timeFormat.hour,
+                          { locale }
+                        )}
                       </span>
                     )}
                   </div>
@@ -279,11 +282,11 @@ export function CalendarDayView({ singleDayEvents }: IProps) {
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <ClockIcon className="size-3.5" />
                         <span className="text-sm">
-                          {format(parseISO(event.startDate), "h:mm a", {
+                          {format(parseISO(event.startDate), timeFormat.time, {
                             locale,
                           })}{" "}
                           -{" "}
-                          {format(parseISO(event.endDate), "h:mm a", {
+                          {format(parseISO(event.endDate), timeFormat.time, {
                             locale,
                           })}
                         </span>

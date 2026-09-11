@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns"
 import { useTranslation } from "react-i18next"
 
-import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
+import { useDateFnsLocale, useTimeFormat } from "@/hooks/use-date-fns-locale"
 import { EventDetailsDialog } from "../dialogs/event-details-dialog"
 import { EVENT_TONE, STATUS_LABEL_KEY, TYPE_LABEL_KEY } from "../../adapter"
 import { Card } from "@/components/ui/card"
@@ -27,6 +27,7 @@ interface IProps {
 // + name, a status badge, a monospace-ish detail column, time right-aligned.
 export function AgendaDayGroup({ date, events }: IProps) {
   const locale = useDateFnsLocale()
+  const timeFormat = useTimeFormat()
   const { t } = useTranslation()
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
@@ -98,8 +99,8 @@ export function AgendaDayGroup({ date, events }: IProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right text-sm text-muted-foreground">
-                      {format(start, "h:mm a", { locale })} –{" "}
-                      {format(end, "h:mm a", { locale })}
+                      {format(start, timeFormat.time, { locale })} –{" "}
+                      {format(end, timeFormat.time, { locale })}
                     </TableCell>
                   </TableRow>
                 </EventDetailsDialog>

@@ -1,7 +1,7 @@
 import { format, differenceInMinutes, parseISO } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
-import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
+import { useDateFnsLocale, useTimeFormat } from "@/hooks/use-date-fns-locale"
 
 import { DraggableEvent } from "@/components/full-calendar/components/dnd/draggable-event"
 import { EventDetailsDialog } from "@/components/full-calendar/components/dialogs/event-details-dialog"
@@ -20,6 +20,7 @@ interface IProps extends Pick<HTMLAttributes<HTMLDivElement>, "className"> {
 export function EventBlock({ event, className }: IProps) {
   const { badgeVariant } = useCalendar()
   const locale = useDateFnsLocale()
+  const timeFormat = useTimeFormat()
 
   const start = parseISO(event.startDate)
   const end = parseISO(event.endDate)
@@ -58,7 +59,7 @@ export function EventBlock({ event, className }: IProps) {
           title={event.title}
           description={
             durationInMinutes > 25
-              ? `${format(start, "h:mm a", { locale })} - ${format(end, "h:mm a", { locale })}`
+              ? `${format(start, timeFormat.time, { locale })} - ${format(end, timeFormat.time, { locale })}`
               : undefined
           }
           className={cn(

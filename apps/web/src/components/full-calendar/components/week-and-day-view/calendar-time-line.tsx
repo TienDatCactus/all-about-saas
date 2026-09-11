@@ -1,7 +1,7 @@
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
-import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
+import { useDateFnsLocale, useTimeFormat } from "@/hooks/use-date-fns-locale"
 
 interface IProps {
   firstVisibleHour: number
@@ -14,6 +14,7 @@ export function CalendarTimeline({
 }: IProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const locale = useDateFnsLocale()
+  const timeFormat = useTimeFormat()
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60 * 1000)
@@ -31,7 +32,7 @@ export function CalendarTimeline({
   }
 
   const formatCurrentTime = () => {
-    return format(currentTime, "h:mm a", { locale })
+    return format(currentTime, timeFormat.time, { locale })
   }
 
   const currentHour = currentTime.getHours()
