@@ -30,6 +30,25 @@ export const PRIORITY_LABEL: Record<TeachingSession["priority"], string> = {
   high: "Cao",
 }
 
+/** i18n keys for the labels above — use these (with `t()`) in rendered UI;
+ *  the plain-string maps above stay Vietnamese-only for `sessionToEvent`'s
+ *  `description` field, which is never displayed. */
+export const STATUS_LABEL_KEY: Record<TeachingSession["status"], string> = {
+  scheduled: "calendar.status.scheduled",
+  completed: "calendar.status.completed",
+  cancelled: "calendar.status.cancelled",
+}
+export const TYPE_LABEL_KEY: Record<TeachingSession["type"], string> = {
+  regular: "calendar.type.regular",
+  makeup: "calendar.type.makeup",
+  extra: "calendar.type.extra",
+}
+export const PRIORITY_LABEL_KEY: Record<TeachingSession["priority"], string> = {
+  low: "calendar.priority.low",
+  normal: "calendar.priority.normal",
+  high: "calendar.priority.high",
+}
+
 /**
  * Event card tone, keyed by the color `colorFor` assigns. Only blue/green/
  * red/purple/gray are ever produced (see `colorFor` above) — yellow/orange

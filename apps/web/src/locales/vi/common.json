@@ -1,4 +1,21 @@
 {
+  "calendar": {
+    "status": {
+      "scheduled": "Chưa chốt",
+      "completed": "Đã dạy",
+      "cancelled": "Đã huỷ"
+    },
+    "type": {
+      "regular": "Định kỳ",
+      "makeup": "Bù",
+      "extra": "Buổi thêm"
+    },
+    "priority": {
+      "low": "Thấp",
+      "normal": "Bình thường",
+      "high": "Cao"
+    }
+  },
   "teacherRoom": {
     "sidebar": {
       "title": "Lớp cô Trang",

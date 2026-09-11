@@ -1,4 +1,21 @@
 {
+  "calendar": {
+    "status": {
+      "scheduled": "Not confirmed",
+      "completed": "Taught",
+      "cancelled": "Cancelled"
+    },
+    "type": {
+      "regular": "Regular",
+      "makeup": "Makeup",
+      "extra": "Extra"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    }
+  },
   "teacherRoom": {
     "sidebar": {
       "title": "Lớp cô Trang",
