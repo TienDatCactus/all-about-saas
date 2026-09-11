@@ -8,7 +8,7 @@ import type { TCalendarView } from "../../types"
 import type { IEvent } from "../../interfaces"
 import { useCalendar } from "../../contexts/calendar-context"
 import { getEventsCount, navigateDate, rangeText } from "../../helpers"
-import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 interface IProps {
   view: TCalendarView

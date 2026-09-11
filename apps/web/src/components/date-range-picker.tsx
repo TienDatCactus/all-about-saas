@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { CalendarIcon } from "@phosphor-icons/react"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 export interface DateRangePickerProps {
   /** Controlled selected range. Pass this together with `onChange`. */
@@ -53,6 +54,7 @@ export default function DateRangePicker({
     defaultValue
   )
   const [open, setOpen] = React.useState(false)
+  const locale = useDateFnsLocale()
 
   const range = isControlled ? value : internal
 
@@ -87,11 +89,11 @@ export default function DateRangePicker({
             {range?.from ? (
               range.to ? (
                 <>
-                  {format(range.from, displayFormat)} -{" "}
-                  {format(range.to, displayFormat)}
+                  {format(range.from, displayFormat, { locale })} -{" "}
+                  {format(range.to, displayFormat, { locale })}
                 </>
               ) : (
-                format(range.from, displayFormat)
+                format(range.from, displayFormat, { locale })
               )
             ) : (
               <span>{placeholder}</span>
@@ -106,6 +108,7 @@ export default function DateRangePicker({
             selected={range}
             onSelect={handleSelect}
             numberOfMonths={numberOfMonths}
+            locale={locale}
           />
         </PopoverContent>
       </Popover>

@@ -1,7 +1,7 @@
 import { format, differenceInMinutes, parseISO } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
-import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 import { DraggableEvent } from "@/components/full-calendar/components/dnd/draggable-event"
 import { EventDetailsDialog } from "@/components/full-calendar/components/dialogs/event-details-dialog"

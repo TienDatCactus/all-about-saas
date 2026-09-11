@@ -8,7 +8,7 @@ import {
 } from "date-fns"
 
 import { useCalendar } from "@/components/full-calendar/contexts/calendar-context"
-import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 import { useSearchParamsSetter } from "@/hooks/use-search-params-setter"
 
 import { YearViewDayCell } from "@/components/full-calendar/components/year-view/year-view-day-cell"

@@ -1,7 +1,7 @@
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
-import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 interface IProps {
   firstVisibleHour: number

@@ -1,7 +1,7 @@
 import { cloneElement, isValidElement, useState } from "react"
 import { format, parseISO } from "date-fns"
 
-import { useDateFnsLocale } from "@/components/full-calendar/hooks/use-date-fns-locale"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { Badge } from "@/components/ui/badge"

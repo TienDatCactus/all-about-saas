@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { CalendarIcon } from "@phosphor-icons/react"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 export interface DatePickerProps {
   /** Controlled selected date. Pass this together with `onChange`. */
@@ -48,6 +49,7 @@ export default function DatePicker({
   const isControlled = value !== undefined || onChange !== undefined
   const [internal, setInternal] = React.useState<Date | undefined>(defaultValue)
   const [open, setOpen] = React.useState(false)
+  const locale = useDateFnsLocale()
 
   const selected = isControlled ? value : internal
 
@@ -82,7 +84,7 @@ export default function DatePicker({
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {selected ? (
-            format(selected, displayFormat)
+            format(selected, displayFormat, { locale })
           ) : (
             <span>{placeholder}</span>
           )}
@@ -95,6 +97,7 @@ export default function DatePicker({
           onSelect={handleSelect}
           defaultMonth={selected}
           autoFocus
+          locale={locale}
         />
       </PopoverContent>
     </Popover>

@@ -1,6 +1,7 @@
 import { format } from "date-fns"
 
 import { useDisclosure } from "@/hooks/use-disclosure"
+import { useDateFnsLocale } from "@/hooks/use-date-fns-locale"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -36,6 +37,7 @@ function SingleDayPicker({
   ...props
 }: TProps) {
   const { isOpen, onClose, onToggle } = useDisclosure()
+  const locale = useDateFnsLocale()
 
   const handleSelect = (date: Date | undefined) => {
     onSelect(date)
@@ -59,7 +61,7 @@ function SingleDayPicker({
           )}
           {...props}
         >
-          {value && <span>{format(value, labelVariant)}</span>}
+          {value && <span>{format(value, labelVariant, { locale })}</span>}
           {!value && (
             <span className="text-muted-foreground">{placeholder}</span>
           )}
@@ -72,6 +74,7 @@ function SingleDayPicker({
           selected={value}
           onSelect={handleSelect}
           autoFocus
+          locale={locale}
         />
       </PopoverContent>
     </Popover>
