@@ -9,6 +9,7 @@ import {
 import { Request, Response } from 'express';
 
 import { randomUUID } from 'crypto';
+import { VI_MESSAGES } from '../i18n/messages';
 
 /** Narrow an unknown value to something indexable, without asserting a shape. */
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -39,6 +40,13 @@ interface ThrownDetails {
 	message?: string;
 	stack?: string;
 	constructorName?: string;
+}
+
+/** 'vi' if the client's Accept-Language prefers Vietnamese, else 'en'. */
+function resolveLocale(request: Request): 'en' | 'vi' {
+	const header = request.headers['accept-language'];
+	const value = Array.isArray(header) ? header[0] : header;
+	return value?.toLowerCase().startsWith('vi') ? 'vi' : 'en';
 }
 
 function describeThrown(exception: unknown): ThrownDetails {
@@ -110,6 +118,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			}
 		} else {
 			code = thrown.constructorName || 'INTERNAL_SERVER_ERROR';
+		}
+
+		if (resolveLocale(request) === 'vi' && VI_MESSAGES[message]) {
+			message = VI_MESSAGES[message];
 		}
 
 		const traceId =
