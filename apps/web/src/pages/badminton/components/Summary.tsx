@@ -78,7 +78,7 @@ export function BadmintonSummary({
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     try {
       e.preventDefault()
-      await navigator.clipboard.writeText(buildSummaryText(computed, meta))
+      await navigator.clipboard.writeText(buildSummaryText(t, computed, meta))
       toast.success(t("badminton.summary.copySuccess"))
     } catch {
       toast.error(t("badminton.summary.copyError"))

@@ -1,4 +1,5 @@
-import { formatVnd } from "./format"
+import type { TFunction } from "i18next"
+import { formatDong, formatVnd } from "./format"
 import type { DisplaySnapshot } from "@/pages/badminton/components/Summary"
 
 /**
@@ -6,12 +7,28 @@ import type { DisplaySnapshot } from "@/pages/badminton/components/Summary"
  * Name-and-total, right-aligned amounts, kept simple so it pastes cleanly.
  */
 export function buildSummaryText(
+  t: TFunction,
   computed: DisplaySnapshot,
-  meta?: { title?: string | null; playedOn?: string }
+  meta?: {
+    title?: string | null
+    playedOn?: string
+    totalShuttleCount?: number
+    defaultHoursPlayed?: number
+  }
 ): string {
-  const heading = meta?.title?.trim() || "Badminton split"
+  const heading = meta?.title?.trim() || t("badminton.summary.title")
   const lines: Array<string> = [`- ${heading}`]
   if (meta?.playedOn) lines.push(meta.playedOn)
+  lines.push(
+    [
+      `${t("badminton.summary.courtFee")} ${formatDong(computed.courtCost)}`,
+      `${t("badminton.summary.shuttleFee")} ${formatDong(computed.shuttleCost)}`,
+      t("badminton.summary.shuttleCount", { n: meta?.totalShuttleCount ?? 0 }),
+      t("badminton.summary.defaultHours", {
+        hours: meta?.defaultHoursPlayed ?? 1,
+      }),
+    ].join(" · ")
+  )
   lines.push("")
 
   const nameWidth = Math.max(4, ...computed.rows.map((r) => r.name.length))
@@ -26,9 +43,10 @@ export function buildSummaryText(
     )
   }
 
+  const totalLabel = t("badminton.summary.table.total")
   lines.push("")
   lines.push(
-    `${"Total".padEnd(nameWidth)}  ${formatVnd(computed.grandTotal).padStart(amountWidth)} ₫`
+    `${totalLabel.padEnd(nameWidth)}  ${formatVnd(computed.grandTotal).padStart(amountWidth)} ₫`
   )
   return lines.join("\n")
 }

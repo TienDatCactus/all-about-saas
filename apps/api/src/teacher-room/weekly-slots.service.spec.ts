@@ -10,6 +10,12 @@ function mockRepo() {
 	};
 }
 
+/** A date comfortably inside the 6-week generation window, so these fixtures
+ * don't go stale the way a hardcoded date does. */
+const FUTURE_DATE = new Date(Date.now() + 30 * 86_400_000)
+	.toISOString()
+	.slice(0, 10);
+
 function mockStudentsService(
 	student = { id: 's1', ownerId: 'owner-1', name: 'An' },
 ) {
@@ -89,7 +95,7 @@ describe('WeeklySlotsService.updateSlot', () => {
 			.mockResolvedValueOnce([
 				{
 					id: 'sess-future-1',
-					scheduledDate: '2026-09-15',
+					scheduledDate: FUTURE_DATE,
 					status: 'scheduled',
 				},
 			])
@@ -145,7 +151,7 @@ describe('WeeklySlotsService.updateSlot', () => {
 				{
 					id: 'sess-future-1',
 					slotId: 'slot-1',
-					scheduledDate: '2026-09-15',
+					scheduledDate: FUTURE_DATE,
 					status: 'scheduled',
 				},
 			])
@@ -195,7 +201,7 @@ describe('WeeklySlotsService.updateSlot', () => {
 		sessionRepo.find = jest
 			.fn()
 			.mockResolvedValue([
-				{ id: 'sess-1', scheduledDate: '2026-09-15', status: 'scheduled' },
+				{ id: 'sess-1', scheduledDate: FUTURE_DATE, status: 'scheduled' },
 			]);
 		const service = new WeeklySlotsService(
 			slotRepo as never,

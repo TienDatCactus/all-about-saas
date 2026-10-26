@@ -129,13 +129,10 @@ export function SessionEditor({
           description={t("badminton.session.detailsDescription")}
           action={
             sessionId && (
-              <div className="flex items-center gap-2">
-                <p>{t("badminton.session.paymentMethodLabel")}</p>
-                <PaymentMethodPicker
-                  sessionId={sessionId}
-                  value={paymentMethodId}
-                />
-              </div>
+              <PaymentMethodPicker
+                sessionId={sessionId}
+                value={paymentMethodId}
+              />
             )
           }
           content={

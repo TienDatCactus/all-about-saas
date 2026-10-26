@@ -28,6 +28,7 @@ const providers: Array<Provider> = [
   {
     name: "Google",
     iconUrl: loadAsset("google.svg", "svg"),
+    darkIconUrl: loadAsset("google-dark.svg", "svg"),
     callback: authApi.loginWithGoogle,
   },
   {
@@ -39,6 +40,7 @@ const providers: Array<Provider> = [
   {
     name: "Facebook",
     iconUrl: loadAsset("facebook.svg", "svg"),
+    darkIconUrl: loadAsset("facebook-dark.svg", "svg"),
     callback: authApi.loginWithFacebook,
   },
 ]
