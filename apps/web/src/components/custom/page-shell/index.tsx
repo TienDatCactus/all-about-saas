@@ -3,19 +3,13 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "../../ui/button"
 import Logo from "../logo"
+import { DataSheet } from "../data/sheet"
 import { LanguageToggler } from "./language-toggle"
 import RouteDropdown from "./route-dropdown"
 import { ThemeToggler } from "./theme-toggle"
 import { UserMenu } from "./user-menu"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 
 /** "/auth/sign-up" → "Sign up", "/badminton/$sessionId" → "sessionId", "/" → "Home". */
 
@@ -77,27 +71,25 @@ export function ShellHeader({
         <ThemeToggler />
         <UserMenu />
       </div>
-      <Sheet>
-        <SheetTrigger asChild>
+      <DataSheet
+        title={t("common.shellHeader.menu")}
+        side="top"
+        trigger={
           <Button variant="ghost" size="icon" className="shrink-0 md:hidden">
             <ListIcon />
             <span className="sr-only">{t("common.shellHeader.openMenu")}</span>
           </Button>
-        </SheetTrigger>
-        <SheetContent side="top">
-          <SheetHeader>
-            <SheetTitle>{t("common.shellHeader.menu")}</SheetTitle>
-          </SheetHeader>
-          <div className="flex flex-col gap-3 p-6 pt-0">
-            <RouteDropdown />
-            <div className="flex items-center gap-3">
-              <LanguageToggler />
-              <ThemeToggler />
-              <UserMenu />
-            </div>
+        }
+      >
+        <div className="flex flex-col gap-3 p-6 pt-0">
+          <RouteDropdown />
+          <div className="flex items-center gap-3">
+            <LanguageToggler />
+            <ThemeToggler />
+            <UserMenu />
           </div>
-        </SheetContent>
-      </Sheet>
+        </div>
+      </DataSheet>
     </header>
   )
 }

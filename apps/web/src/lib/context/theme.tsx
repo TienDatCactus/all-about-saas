@@ -1,8 +1,15 @@
-import { createContext, useContext, useEffect, useState } from "react"
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
 import { ScriptOnce } from "@tanstack/react-router"
 import { storage } from "@/lib/utils/local-storage"
 
 type Theme = "dark" | "light" | "system"
+type ResolvedTheme = "dark" | "light"
 
 type ThemeProviderProps = {
   children: React.ReactNode
@@ -12,90 +19,207 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
   theme: Theme
+  resolvedTheme: ResolvedTheme
   setTheme: (theme: Theme) => void
   isDarkMode: boolean
 }
 
+const MEDIA_QUERY = "(prefers-color-scheme: dark)"
+
+function isTheme(value: unknown): value is Theme {
+  return value === "light" || value === "dark" || value === "system"
+}
+
+function getStoredTheme(storageKey: string, defaultTheme: Theme): Theme {
+  const stored = storage.get(storageKey)
+
+  return isTheme(stored) ? stored : defaultTheme
+}
+
+function resolveTheme(theme: Theme): ResolvedTheme {
+  if (theme !== "system") {
+    return theme
+  }
+
+  return window.matchMedia(MEDIA_QUERY).matches ? "dark" : "light"
+}
+
+/**
+ * Applies the resolved theme to the document root.
+ * This function must only run in the browser.
+ */
+function applyTheme(theme: Theme): ResolvedTheme {
+  const resolved = resolveTheme(theme)
+  const root = document.documentElement
+
+  root.classList.remove("light", "dark")
+  root.classList.add(resolved)
+  root.style.colorScheme = resolved
+
+  return resolved
+}
+
+/**
+ * Runs before the application renders to prevent theme flashing.
+ *
+ * Keep this logic synchronized with resolveTheme() and applyTheme().
+ */
 function getThemeScript(storageKey: string, defaultTheme: Theme) {
   const key = JSON.stringify(storageKey)
   const fallback = JSON.stringify(defaultTheme)
 
-  return `(function(){try{var t=localStorage.getItem(${key});if(t!=='light'&&t!=='dark'&&t!=='system'){t=${fallback}}var d=matchMedia('(prefers-color-scheme: dark)').matches;var r=t==='system'?(d?'dark':'light'):t;var e=document.documentElement;e.classList.add(r);e.style.colorScheme=r}catch(e){}})();`
+  return `
+    (function () {
+      try {
+        var stored = localStorage.getItem(${key});
+        var theme =
+          stored === "light" ||
+          stored === "dark" ||
+          stored === "system"
+            ? stored
+            : ${fallback};
+
+        var resolved =
+          theme === "system"
+            ? (window.matchMedia("${MEDIA_QUERY}").matches ? "dark" : "light")
+            : theme;
+
+        var root = document.documentElement;
+
+        root.classList.remove("light", "dark");
+        root.classList.add(resolved);
+        root.style.colorScheme = resolved;
+      } catch (_) {}
+    })();
+  `
 }
 
-// No default value on purpose: with one, the `undefined` check in useTheme
-// could never fire, and a component outside ThemeProvider would silently get
-// a no-op setTheme instead of the error naming the actual mistake.
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
   undefined
 )
-
-function applyTheme(theme: Theme) {
-  const root = document.documentElement
-  root.classList.remove("light", "dark")
-
-  const resolved =
-    theme === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light"
-      : theme
-
-  root.classList.add(resolved)
-  root.style.colorScheme = resolved
-}
 
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "theme",
 }: ThemeProviderProps) {
+  // Initialize from storage immediately in the browser.
+  // The bootstrap script handles the visual theme before React mounts.
   const [theme, setThemeState] = useState<Theme>(defaultTheme)
-  const [mounted, setMounted] = useState(false)
+
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
+    if (typeof document !== "undefined") {
+      const appliedTheme = document.documentElement.classList.contains("dark")
+        ? "dark"
+        : document.documentElement.classList.contains("light")
+          ? "light"
+          : null
+
+      if (appliedTheme) {
+        return appliedTheme
+      }
+    }
+
+    if (typeof window === "undefined") {
+      return defaultTheme === "dark" ? "dark" : "light"
+    }
+
+    return resolveTheme(getStoredTheme(storageKey, defaultTheme))
+  })
 
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey)
-    setThemeState(
+    const stored = storage.get<Theme>(storageKey)
+
+    const nextTheme =
       stored === "light" || stored === "dark" || stored === "system"
         ? stored
         : defaultTheme
-    )
-    setMounted(true)
+
+    setThemeState(nextTheme)
   }, [defaultTheme, storageKey])
 
+  const setTheme = useCallback(
+    (nextTheme: Theme) => {
+      storage.set(storageKey, nextTheme)
+
+      // Apply immediately instead of waiting for useEffect.
+      const resolved = applyTheme(nextTheme)
+
+      setResolvedTheme(resolved)
+      setThemeState(nextTheme)
+    },
+    [storageKey]
+  )
+
+  // Keep the DOM synchronized when the preference changes externally,
+  // or when the provider configuration changes.
   useEffect(() => {
-    if (!mounted) return
-    applyTheme(theme)
-  }, [theme, mounted])
+    const storedTheme = getStoredTheme(storageKey, defaultTheme)
 
+    setThemeState(storedTheme)
+    setResolvedTheme(applyTheme(storedTheme))
+  }, [defaultTheme, storageKey])
+
+  // Follow OS/browser preference only when the selected theme is "system".
   useEffect(() => {
-    if (!mounted || theme !== "system") return
+    if (theme !== "system") {
+      return
+    }
 
-    const media = window.matchMedia("(prefers-color-scheme: dark)")
-    const onChange = () => applyTheme("system")
-    media.addEventListener("change", onChange)
-    return () => media.removeEventListener("change", onChange)
-  }, [theme, mounted])
+    const media = window.matchMedia(MEDIA_QUERY)
 
-  const setTheme = (next: Theme) => {
-    // storage.set never throws (Safari private mode, storage disabled by
-    // policy) — a raw localStorage.setItem here would abort before the state
-    // update and leave the toggle visibly dead.
-    storage.set(storageKey, next)
-    setThemeState(next)
+    const handleChange = () => {
+      setResolvedTheme(applyTheme("system"))
+    }
+
+    media.addEventListener("change", handleChange)
+
+    return () => {
+      media.removeEventListener("change", handleChange)
+    }
+  }, [theme])
+
+  // Synchronize changes made in another browser tab.
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== storageKey && event.key !== null) {
+        return
+      }
+
+      const nextTheme = isTheme(event.newValue) ? event.newValue : defaultTheme
+
+      setThemeState(nextTheme)
+      setResolvedTheme(applyTheme(nextTheme))
+    }
+
+    window.addEventListener("storage", handleStorage)
+
+    return () => {
+      window.removeEventListener("storage", handleStorage)
+    }
+  }, [defaultTheme, storageKey])
+
+  const value: ThemeProviderState = {
+    theme,
+    resolvedTheme,
+    setTheme,
+    isDarkMode: resolvedTheme === "dark",
   }
-  const isDarkMode = theme == "dark"
+
   return (
-    <ThemeProviderContext value={{ theme, setTheme, isDarkMode }}>
+    <ThemeProviderContext.Provider value={value}>
       <ScriptOnce>{getThemeScript(storageKey, defaultTheme)}</ScriptOnce>
       {children}
-    </ThemeProviderContext>
+    </ThemeProviderContext.Provider>
   )
 }
 
 export function useTheme() {
   const context = useContext(ThemeProviderContext)
-  if (context === undefined)
+
+  if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider")
+  }
+
   return context
 }

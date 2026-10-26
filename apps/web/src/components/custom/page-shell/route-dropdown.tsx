@@ -110,7 +110,10 @@ const RouteDropdown: React.FC<RouteDropdownProps> = ({
       return (
         <Collapsible key={node.path}>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="group w-full justify-between px-2">
+            <Button
+              variant="ghost"
+              className="group w-full justify-between px-2"
+            >
               <span className="flex items-center gap-2">
                 <PathIcon />
                 {title}
