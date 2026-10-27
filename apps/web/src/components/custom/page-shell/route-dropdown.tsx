@@ -10,6 +10,7 @@ import {
 } from "../../ui/collapsible"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CaretRightIcon, PathIcon } from "@phosphor-icons/react"
+import { disabledFeaturePaths } from "@/lib/features"
 interface RouteDropdownProps {
   hiddenRoutes?: Array<string>
 }
@@ -17,6 +18,9 @@ export const DEFAULT_HIDDEN_ROUTES = [
   "/verify-email",
   "/badminton/s",
   "/auth/*",
+  // A disabled feature's routes still exist in the tree — they just 404, so
+  // keep them out of the menu rather than offering a dead link.
+  ...disabledFeaturePaths(),
 ]
 
 function routeTitle(path: string, homeLabel: string) {
