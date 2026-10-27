@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
-import { Outlet, createFileRoute } from "@tanstack/react-router"
+import { Outlet, createFileRoute, notFound } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import DataEmpty from "@/components/custom/data/empty"
 import DataError from "@/components/custom/data/error"
@@ -10,6 +10,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { isFeatureEnabled } from "@/lib/features"
 import i18n from "@/lib/i18n"
 import { TeacherRoomSidebar } from "@/pages/teacher-room/layouts/sidebar"
 
@@ -47,6 +48,11 @@ function TeacherRoomError({
 
 export const Route = createFileRoute("/_authenticated/teacher-room")({
   staticData: { crumb: () => i18n.t("teacherRoom.sidebar.title") },
+  // Feature off: the section 404s, so a bookmarked or hand-typed URL
+  // lands on the same not-found page as a bad child path.
+  beforeLoad: () => {
+    if (!isFeatureEnabled("teacherRoom")) throw notFound()
+  },
   component: () => (
     <SidebarProvider>
       <TeacherRoomSidebar />
