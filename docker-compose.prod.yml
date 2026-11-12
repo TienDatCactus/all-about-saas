@@ -33,23 +33,19 @@ x-logging: &default-logging
 # these become external secrets with no change to the services below.
 secrets:
   db_password:
-    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/db_password
+    file: /srv/all-about-saas/secrets/db_password
   jwt_secret:
-    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/jwt_secret
+    file: /srv/all-about-saas/secrets/jwt_secret
   minio_root_password:
-    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/minio_root_password
-  # Compose refuses to start a service whose listed secret file is missing,
-  # even when the app would never read it. For a provider you don't use,
-  # `touch` an empty placeholder — its *_FILE variable stays unset (see the
-  # api service), so the file is never opened.
+    file: /srv/all-about-saas/secrets/minio_root_password
   base_password:
-    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/base_password
+    file: /srv/all-about-saas/secrets/base_password
   google_client_secret:
-    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/google_client_secret
+    file: /srv/all-about-saas/secrets/google_client_secret
   github_client_secret:
-    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/github_client_secret
+    file: /srv/all-about-saas/secrets/github_client_secret
   facebook_client_secret:
-    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/facebook_client_secret
+    file: /srv/all-about-saas/secrets/facebook_client_secret
 
 services:
   postgres:
@@ -57,18 +53,16 @@ services:
     restart: unless-stopped
     logging: *default-logging
     environment:
-      POSTGRES_USER: ${DATABASE_USER:?set DATABASE_USER}
+      POSTGRES_USER: ${DATABASE_USER}
       # The official image resolves *_FILE itself.
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-      POSTGRES_DB: ${DATABASE_NAME:?set DATABASE_NAME}
+      POSTGRES_DB: ${DATABASE_NAME}
     secrets: [db_password]
     volumes:
       - pgdata:/var/lib/postgresql/data
     # No `ports:` — the database is reachable only on the internal network.
     networks: [internal]
     healthcheck:
-      # No password needed: pg_isready over the local socket authenticates as the
-      # container's own postgres user.
       test:
         ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}']
       interval: 10s
@@ -97,8 +91,8 @@ services:
       PGHOST: postgres
       PGUSER: ${DATABASE_USER}
       PGDATABASE: ${DATABASE_NAME}
-      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
-      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS}
     secrets: [db_password]
     volumes:
       - ./backups:/backups
@@ -106,9 +100,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # `$$` everywhere: compose interpolates single `$` before the shell sees it.
-    # First dump fires at startup on purpose — a fresh deploy gets a baseline
-    # immediately instead of after the first full interval.
     entrypoint:
       - /bin/sh
       - -ceu
@@ -116,7 +107,7 @@ services:
         export PGPASSWORD="$$(tr -d '\r\n' < /run/secrets/db_password)"
         while true; do
           stamp="$$(date -u +%Y%m%dT%H%M%SZ)"
-          out="/backups/$${PGDATABASE}-$${stamp}.dump"
+          out="/backups/$$PGDATABASE-$$stamp.dump"
           if pg_dump -Fc -f "$$out.part" && [ "$$(wc -c < "$$out.part")" -gt 1024 ]; then
             mv "$$out.part" "$$out"
             echo "backup: wrote $$out ($$(wc -c < "$$out") bytes)"
@@ -133,21 +124,14 @@ services:
     restart: unless-stopped
     logging: *default-logging
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_root_password
     secrets: [minio_root_password]
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
-    # Loopback ONLY, and only the S3 API port — never the :9001 console. See the
-    # note on the api service for why the explicit 127.0.0.1 matters.
-    #
-    # Caddy does not need this (it shares the internal network and proxies to
-    # `minio:9000`), but the nginx deployment in deploy/nginx/ runs on the HOST,
-    # where docker service names do not resolve. Its `location /storage/` block
-    # proxies here, the same way it reaches the api on 127.0.0.1:8000.
     ports:
-      - '127.0.0.1:${MINIO_HOST_PORT:-9000}:9000'
+      - '127.0.0.1:9000:9000'
     networks: [internal]
     healthcheck:
       test: ['CMD', 'mc', 'ready', 'local']
@@ -176,9 +160,7 @@ services:
   # One-shot: applies migrations, then exits. `depends_on: service_completed_successfully`
   # on the api means the app never starts against an un-migrated schema.
   migrate:
-    # Same image as the api, so the migrations that run are byte-identical to
-    # the ones the running app expects.
-    image: ${API_IMAGE:-aas-prod-api}:${IMAGE_TAG:-latest}
+    image: aas-prod-api:latest
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -187,25 +169,11 @@ services:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_USER: ${DATABASE_USER}
-      # data-source.ts calls resolveFileSecrets() — the CLI never boots Nest, so
-      # main.ts is not in the picture here.
       DATABASE_PASSWORD_FILE: /run/secrets/db_password
       DATABASE_NAME: ${DATABASE_NAME}
-      # Not used by the CLI, but env validation still runs on this image.
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       FRONTEND_URL: ${FRONTEND_URL}
     secrets: [db_password, jwt_secret]
-    # The image has no dev deps (no ts-node), so this runs the plain `typeorm`
-    # binary against the COMPILED data-source. Its migration globs are
-    # __dirname-relative and match .js, so it finds dist/database/migrations/*.js.
-    #
-    # Via `npm run`, not an absolute path into node_modules. It used to invoke
-    # /app/node_modules/typeorm/cli.js, which only existed while the image copied
-    # the whole dev tree and npm happened to hoist typeorm to the root — with the
-    # production-only install it resolves to apps/api/node_modules instead, and
-    # the migration job died with MODULE_NOT_FOUND before touching the database.
-    # `npm run` puts the local node_modules/.bin on PATH, so hoisting stops
-    # mattering.
     command: ['npm', 'run', 'migration:run:prod']
     working_dir: /app/apps/api
     networks: [internal]
@@ -216,22 +184,14 @@ services:
     logging: *default-logging
 
   api:
-    # `image` + `build` together: `docker compose build` tags locally, and
-    # `docker compose pull` fetches the same tag from the registry. That is what
-    # lets CI build once and the VPS deploy the exact bytes CI produced instead
-    # of rebuilding from source on the box.
-    image: ${API_IMAGE:-aas-prod-api}:${IMAGE_TAG:-latest}
+    image: aas-prod-api:latest
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
     logging: *default-logging
-    # Loopback ONLY. A bare "8000:8000" binds 0.0.0.0, and Docker writes its own
-    # iptables rules that sit in front of ufw — the port would be open to the
-    # internet and the firewall would still report it closed. The explicit
-    # 127.0.0.1 is what keeps nginx the only way in.
     ports:
-      - '127.0.0.1:${API_HOST_PORT:-8000}:8000'
+      - '127.0.0.1:8000:8000'
     environment:
       NODE_ENV: production
       PORT: 8000
@@ -241,62 +201,28 @@ services:
       DATABASE_PASSWORD_FILE: /run/secrets/db_password
       DATABASE_NAME: ${DATABASE_NAME}
       JWT_SECRET_FILE: /run/secrets/jwt_secret
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-900}
-      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-604800}
-      FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL for the CORS allowlist}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+      FRONTEND_URL: ${FRONTEND_URL}
       COOKIE_SECURE: 'true'
       COOKIE_SAME_SITE: lax
-      # --- OAuth (values come from .env.prod; see .env.prod.example) ---
-      # Env validation enforces all-three-or-none per provider, and "" counts
-      # as unset. The `:+` interpolation ties each secret file to its CLIENT_ID:
-      # a disabled provider leaves *_CLIENT_SECRET_FILE empty, so file-secrets
-      # never opens the (placeholder) file.
-      #
-      # CALLBACK URLs are the PUBLIC ones. Under the single-domain nginx
-      # variant they carry the /api prefix that nginx strips before proxying:
-      #   https://<domain>/api/auth/<provider>/callback
-      BASE_PASSWORD_FILE: ${BASE_PASSWORD_FILE:-}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET_FILE: ${GOOGLE_CLIENT_ID:+/run/secrets/google_client_secret}
-      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET_FILE: ${GITHUB_CLIENT_ID:+/run/secrets/github_client_secret}
-      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL:-}
-      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
-      FACEBOOK_CLIENT_SECRET_FILE: ${FACEBOOK_CLIENT_ID:+/run/secrets/facebook_client_secret}
-      FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL:-}
-      # --- Object store (MoMo QR uploads) ---
-      # Without these the api booted with an unconfigured S3 client: uploads
-      # "succeeded" and returned a URL built from the string "undefined".
-      # Env validation now refuses to boot without all five.
-      #
-      # Service name, not the public hostname — the api reaches minio over the
-      # internal network, exactly as it reaches postgres.
+      BASE_PASSWORD_FILE: ${BASE_PASSWORD_FILE}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET_FILE: ${GOOGLE_CLIENT_SECRET_FILE}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET_FILE: ${GITHUB_CLIENT_SECRET_FILE}
+      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID}
+      FACEBOOK_CLIENT_SECRET_FILE: ${FACEBOOK_CLIENT_SECRET_FILE}
+      FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL}
       MINIO_ENDPOINT: http://minio:9000
-      # The bucket is created by the minio-init one-shot above; keep in step.
       MINIO_BUCKET: aas-uploads
-      # The api reads and writes with the MinIO root credentials, so the access
-      # key IS the root user and the secret comes from the same mounted file the
-      # minio service itself uses. `_FILE` for the same reason as the database
-      # password: a secret in `environment:` shows up in `docker inspect`,
-      # /proc/<pid>/environ and every child process.
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
       MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
-      # PUBLIC URL, and it must be reachable from a participant's browser — the
-      # QR <img> on the share page points here. Both reverse-proxy configs map
-      # /storage/* onto minio; see the `handle_path /storage/*` block in the
-      # Caddyfile and the `location /storage/` blocks in deploy/nginx/.
-      #
-      # Overridable because the two deployment shapes differ: the two-domain
-      # variant serves it from API_DOMAIN (the default below), while the
-      # single-domain nginx variant has no API_DOMAIN at all and wants
-      # https://<DOMAIN>/storage/aas-uploads. No trailing slash — StorageService
-      # appends `/<key>`.
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-https://${API_DOMAIN}/storage/aas-uploads}
-      # Same Docker network, no TLS between api and postgres. Turn on the moment
-      # the database lives anywhere else.
-      DATABASE_SSL: ${DATABASE_SSL:-false}
-      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      DATABASE_SSL: ${DATABASE_SSL}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX}
     secrets:
       [
         db_password,
@@ -314,7 +240,6 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      # Readiness, not liveness: this one fails when the DB is unreachable.
       test:
         [
           'CMD',
@@ -328,32 +253,19 @@ services:
       start_period: 20s
 
   web:
-    image: ${WEB_IMAGE:-aas-prod-web}:${IMAGE_TAG:-latest}
+    image: aas-prod-web:latest
     build:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        # Baked in at build time — Vite inlines import.meta.env. This is why the
-        # CD pipeline must rebuild the web image when the API domain changes; a
-        # restart with a new env var will not move it.
-        #
-        # Defaulted rather than `:?`-required for the same reason as Caddy's
-        # variables below: Compose evaluates build args even when only pulling,
-        # so a required value here blocks `docker compose pull` on a host that
-        # never builds. CI passes its own --build-arg and does not read this.
-        #
-        # If you DO build on the server, set this explicitly — a wrong value
-        # produces an image that starts fine and whose every API call goes to
-        # the wrong origin.
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://twinfoundry.org/api}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     restart: unless-stopped
     logging: *default-logging
     environment:
       NODE_ENV: production
       PORT: 3000
-    # Loopback only — see the note on the api service.
     ports:
-      - '127.0.0.1:${WEB_HOST_PORT:-3000}:3000'
+      - '127.0.0.1:3000:3000'
     networks: [internal]
     depends_on:
       api:
@@ -371,55 +283,8 @@ services:
       retries: 5
       start_period: 20s
 
-  # OPT-IN. Only starts with `--profile caddy`.
-  #
-  # The deployment target already terminates TLS with nginx + certbot, and two
-  # things cannot both own :80/:443 — without this profile, `docker compose up`
-  # on that host fails to bind, or worse, wins the race and takes the site down.
-  # Use this profile only on a host with no other web server; otherwise the api
-  # and web services publish on 127.0.0.1 for an existing proxy to reach.
-  #
-  # See deploy/nginx/ for the nginx equivalent of the Caddyfile's routing,
-  # headers and CSP.
-  caddy:
-    profiles: [caddy]
-    image: caddy:2-alpine
-    restart: unless-stopped
-    logging: *default-logging
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # /data holds the ACME account + certificates. Losing it means re-issuing
-      # on every restart, which hits Let's Encrypt rate limits.
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      # Defaulted, NOT `:?`-required — and that is not laziness.
-      #
-      # Compose interpolates every variable in the whole file BEFORE it applies
-      # profile filtering, so a `${API_DOMAIN:?}` here aborts `docker compose
-      # pull` on a host that will never start Caddy. The profile keeps the
-      # service from running; it does not keep its variables from being
-      # evaluated. A deployment fronted by nginx was failing with
-      # "required variable API_DOMAIN is missing a value" for a container it
-      # does not use.
-      #
-      # Anyone enabling `--profile caddy` is following the Caddy path and will
-      # set these; the placeholders make that obvious if they forget, because
-      # ACME will fail loudly on a domain that cannot resolve.
-      DOMAIN: ${DOMAIN:-caddy-profile-requires-DOMAIN.invalid}
-      API_DOMAIN: ${API_DOMAIN:-caddy-profile-requires-API_DOMAIN.invalid}
-    networks: [internal]
-    depends_on:
-      - api
-      - web
-
 volumes:
   pgdata:
-  caddy_data:
-  caddy_config:
   minio_data:
 
 networks:
