@@ -91,8 +91,8 @@ services:
       PGHOST: postgres
       PGUSER: ${DATABASE_USER}
       PGDATABASE: ${DATABASE_NAME}
-      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS}
-      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS}
+      BACKUP_KEEP_DAYS: 14
+      BACKUP_INTERVAL_SECONDS: 86400
     secrets: [db_password]
     volumes:
       - ./backups:/backups
@@ -120,7 +120,7 @@ services:
         done
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     logging: *default-logging
     environment:
@@ -143,7 +143,7 @@ services:
   # write still requires the root credentials). Runs once per deploy; mc
   # commands are idempotent so re-running on redeploy is harmless.
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     depends_on:
       minio:
         condition: service_healthy
