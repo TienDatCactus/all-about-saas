@@ -33,23 +33,23 @@ x-logging: &default-logging
 # these become external secrets with no change to the services below.
 secrets:
   db_password:
-    file: ./secrets/db_password
+    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/db_password
   jwt_secret:
-    file: ./secrets/jwt_secret
+    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/jwt_secret
   minio_root_password:
-    file: ./secrets/minio_root_password
+    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/minio_root_password
   # Compose refuses to start a service whose listed secret file is missing,
   # even when the app would never read it. For a provider you don't use,
   # `touch` an empty placeholder — its *_FILE variable stays unset (see the
   # api service), so the file is never opened.
   base_password:
-    file: ./secrets/base_password
+    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/base_password
   google_client_secret:
-    file: ./secrets/google_client_secret
+    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/google_client_secret
   github_client_secret:
-    file: ./secrets/github_client_secret
+    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/github_client_secret
   facebook_client_secret:
-    file: ./secrets/facebook_client_secret
+    file: ${SECRETS_DIR:-/srv/all-about-saas/secrets}/facebook_client_secret
 
 services:
   postgres:
