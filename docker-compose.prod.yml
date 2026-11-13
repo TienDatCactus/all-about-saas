@@ -120,7 +120,7 @@ services:
         done
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: pgsty/minio:latest
     restart: unless-stopped
     logging: *default-logging
     environment:
@@ -143,7 +143,7 @@ services:
   # write still requires the root credentials). Runs once per deploy; mc
   # commands are idempotent so re-running on redeploy is harmless.
   minio-init:
-    image: quay.io/minio/mc:latest
+    image: pgsty/mc:latest
     depends_on:
       minio:
         condition: service_healthy
