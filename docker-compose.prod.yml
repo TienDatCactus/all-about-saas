@@ -138,14 +138,15 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
-      - "traefik.http.routers.minio.rule=Host(`twinfoundry.org`, `www.twinfoundry.org`) && PathPrefix(`/storage`)"
-      - "traefik.http.routers.minio.entrypoints=https"
-      - "traefik.http.routers.minio.tls=true"
-      - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio.priority=1000"
-      - "traefik.http.middlewares.minio-strip.stripprefix.prefixes=/storage"
-      - "traefik.http.routers.minio.middlewares=minio-strip"
-      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+      - "traefik.http.routers.aas-minio.rule=(Host(`twinfoundry.org`) || Host(`www.twinfoundry.org`)) && PathPrefix(`/storage`)"
+      - "traefik.http.routers.aas-minio.entrypoints=https"
+      - "traefik.http.routers.aas-minio.tls=true"
+      - "traefik.http.routers.aas-minio.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.aas-minio.priority=1000"
+      - "traefik.http.routers.aas-minio.service=aas-minio"
+      - "traefik.http.services.aas-minio.loadbalancer.server.port=9000"
+      - "traefik.http.middlewares.aas-minio-strip.stripprefix.prefixes=/storage"
+      - "traefik.http.routers.aas-minio.middlewares=aas-minio-strip"
     healthcheck:
       test: ['CMD', 'mc', 'ready', 'local']
       interval: 10s
@@ -252,14 +253,15 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
-      - "traefik.http.routers.api.rule=Host(`twinfoundry.org`, `www.twinfoundry.org`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.api.entrypoints=https"
-      - "traefik.http.routers.api.tls=true"
-      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api.priority=1000"
-      - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
-      - "traefik.http.routers.api.middlewares=api-strip"
-      - "traefik.http.services.api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.aas-api.rule=(Host(`twinfoundry.org`) || Host(`www.twinfoundry.org`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.aas-api.entrypoints=https"
+      - "traefik.http.routers.aas-api.tls=true"
+      - "traefik.http.routers.aas-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.aas-api.priority=1000"
+      - "traefik.http.routers.aas-api.service=aas-api"
+      - "traefik.http.services.aas-api.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.aas-api-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.aas-api.middlewares=aas-api-strip"
     depends_on:
       postgres:
         condition: service_healthy
@@ -298,12 +300,13 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
-      - "traefik.http.routers.web.rule=Host(`twinfoundry.org`, `www.twinfoundry.org`)"
-      - "traefik.http.routers.web.entrypoints=https"
-      - "traefik.http.routers.web.tls=true"
-      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.web.priority=100"
-      - "traefik.http.services.web.loadbalancer.server.port=3000"
+      - "traefik.http.routers.aas-web.rule=Host(`twinfoundry.org`) || Host(`www.twinfoundry.org`)"
+      - "traefik.http.routers.aas-web.entrypoints=https"
+      - "traefik.http.routers.aas-web.tls=true"
+      - "traefik.http.routers.aas-web.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.aas-web.priority=100"
+      - "traefik.http.routers.aas-web.service=aas-web"
+      - "traefik.http.services.aas-web.loadbalancer.server.port=3000"
     depends_on:
       api:
         condition: service_started
