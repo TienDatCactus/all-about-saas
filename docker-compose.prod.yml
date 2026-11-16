@@ -31,8 +31,8 @@ services:
     restart: unless-stopped
     logging: *default-logging
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-aas-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin12345}
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -55,10 +55,11 @@ services:
       - "traefik.http.middlewares.aas-minio-strip.stripprefix.prefixes=/storage"
       - "traefik.http.routers.aas-minio.middlewares=aas-minio-strip"
     healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
 
   # One-shot: creates the bucket and makes it anonymously readable (GET only —
   # write still requires the root credentials). Runs once per deploy; mc
@@ -75,11 +76,12 @@ services:
       - /bin/sh
       - -ceu
       - |
-        PASSWORD="$${MINIO_ROOT_PASSWORD:-}"
-        if [ -z "$$PASSWORD" ] && [ -f /run/secrets/minio_root_password ]; then
+        USER="$${MINIO_ROOT_USER:-aas-minio}"
+        PASSWORD="$${MINIO_ROOT_PASSWORD:-minioadmin12345}"
+        if [ -f /run/secrets/minio_root_password ]; then
           PASSWORD="$$(cat /run/secrets/minio_root_password)"
         fi
-        export MC_HOST_local="http://${MINIO_ROOT_USER}:$${PASSWORD}@minio:9000"
+        export MC_HOST_local="http://$${USER}:$${PASSWORD}@minio:9000"
         mc mb -p local/aas-uploads
         mc anonymous set download local/aas-uploads
     restart: 'no'
@@ -96,16 +98,29 @@ services:
       DATABASE_HOST: ${DATABASE_HOST:-mlazqpku9t4bmxc2fmrycvur}
       DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USER: ${DATABASE_USER:-aas}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-Wep9tQuAC4+najnr+R9JK3xTSWK2Wpug}
       DATABASE_PASSWORD_FILE: ${DATABASE_PASSWORD_FILE:-}
       DATABASE_NAME: ${DATABASE_NAME:-aas}
       DATABASE_SSL: ${DATABASE_SSL:-false}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_SECRET_FILE: ${JWT_SECRET_FILE:-/run/secrets/jwt_secret}
-      FRONTEND_URL: ${FRONTEND_URL}
+      JWT_SECRET: ${JWT_SECRET:-aas_jwt_secret_super_secure_random_key_production_32}
+      JWT_SECRET_FILE: ${JWT_SECRET_FILE:-}
+      FRONTEND_URL: ${FRONTEND_URL:-https://twinfoundry.org}
     volumes:
       - ${SECRETS_DIR:-/srv/all-about-saas/secrets}:/run/secrets:ro
-    command: ['npm', 'run', 'migration:run:prod']
+    command:
+      - /bin/sh
+      - -ceu
+      - |
+        for i in $$(seq 1 30); do
+          if npm run migration:run:prod; then
+            echo "Migrations succeeded."
+            exit 0
+          fi
+          echo "Waiting for database ($$i/30)..."
+          sleep 2
+        done
+        echo "Migrations failed after 30 attempts."
+        exit 1
     working_dir: /app/apps/api
     networks:
       - internal
@@ -128,36 +143,36 @@ services:
       DATABASE_HOST: ${DATABASE_HOST:-mlazqpku9t4bmxc2fmrycvur}
       DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USER: ${DATABASE_USER:-aas}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-Wep9tQuAC4+najnr+R9JK3xTSWK2Wpug}
       DATABASE_PASSWORD_FILE: ${DATABASE_PASSWORD_FILE:-}
       DATABASE_NAME: ${DATABASE_NAME:-aas}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_SECRET_FILE: ${JWT_SECRET_FILE:-/run/secrets/jwt_secret}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
-      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
-      FRONTEND_URL: ${FRONTEND_URL}
+      JWT_SECRET: ${JWT_SECRET:-aas_jwt_secret_super_secure_random_key_production_32}
+      JWT_SECRET_FILE: ${JWT_SECRET_FILE:-}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-900}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-604800}
+      FRONTEND_URL: ${FRONTEND_URL:-https://twinfoundry.org}
       COOKIE_SECURE: 'true'
       COOKIE_SAME_SITE: lax
-      BASE_PASSWORD: ${BASE_PASSWORD}
-      BASE_PASSWORD_FILE: ${BASE_PASSWORD_FILE:-/run/secrets/base_password}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_CLIENT_SECRET_FILE: ${GOOGLE_CLIENT_SECRET_FILE}
-      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      GITHUB_CLIENT_SECRET_FILE: ${GITHUB_CLIENT_SECRET_FILE}
-      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL}
-      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID}
-      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET}
-      FACEBOOK_CLIENT_SECRET_FILE: ${FACEBOOK_CLIENT_SECRET_FILE}
-      FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL}
+      BASE_PASSWORD: ${BASE_PASSWORD:-}
+      BASE_PASSWORD_FILE: ${BASE_PASSWORD_FILE:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_SECRET_FILE: ${GOOGLE_CLIENT_SECRET_FILE:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GITHUB_CLIENT_SECRET_FILE: ${GITHUB_CLIENT_SECRET_FILE:-}
+      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL:-}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-}
+      FACEBOOK_CLIENT_SECRET_FILE: ${FACEBOOK_CLIENT_SECRET_FILE:-}
+      FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL:-}
       MINIO_ENDPOINT: http://minio:9000
       MINIO_BUCKET: aas-uploads
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_SECRET_KEY_FILE: ${MINIO_SECRET_KEY_FILE:-/run/secrets/minio_root_password}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-aas-minio}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin12345}
+      MINIO_SECRET_KEY_FILE: ${MINIO_SECRET_KEY_FILE:-}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-https://twinfoundry.org/storage/aas-uploads}
       DATABASE_SSL: ${DATABASE_SSL:-false}
       DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
     volumes:
@@ -199,7 +214,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://twinfoundry.org/api}
     restart: unless-stopped
     logging: *default-logging
     environment:
