@@ -28,7 +28,19 @@ const config = defineConfig({
   },
   plugins: [
     devtools(),
-    nitro(),
+    nitro({
+      routeRules: {
+        "/api": {
+          proxy: `${process.env.INTERNAL_API_URL || "http://api:8000"}/`,
+        },
+        "/api/**": {
+          proxy: `${process.env.INTERNAL_API_URL || "http://api:8000"}/**`,
+        },
+        "/storage/**": {
+          proxy: `${process.env.INTERNAL_MINIO_URL || "http://minio:9000"}/**`,
+        },
+      },
+    }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ["./tsconfig.json"],
