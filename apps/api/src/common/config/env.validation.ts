@@ -185,7 +185,10 @@ const envSchema = baseSchema.superRefine((env, ctx) => {
 });
 
 export function validateEnv(config: Record<string, unknown>) {
-	const result = envSchema.safeParse(config);
+	const cleaned = Object.fromEntries(
+		Object.entries(config).map(([k, v]) => [k, v === '' ? undefined : v]),
+	);
+	const result = envSchema.safeParse(cleaned);
 	if (result.success) return result.data;
 
 	// Every problem at once, not just the first: a fresh deploy usually has

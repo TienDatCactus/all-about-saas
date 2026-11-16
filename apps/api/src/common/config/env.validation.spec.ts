@@ -119,4 +119,22 @@ describe('validateEnv', () => {
 			}),
 		).not.toThrow();
 	});
+
+	it('treats empty string values for optional vars as unset', () => {
+		expect(() =>
+			validateEnv({
+				...valid(),
+				BASE_PASSWORD: '',
+				GOOGLE_CLIENT_ID: '',
+				GOOGLE_CLIENT_SECRET: '',
+				GOOGLE_CALLBACK_URL: '',
+				GITHUB_CLIENT_ID: '',
+				GITHUB_CLIENT_SECRET: '',
+				GITHUB_CALLBACK_URL: '',
+				FACEBOOK_CLIENT_ID: '',
+				FACEBOOK_CLIENT_SECRET: '',
+				FACEBOOK_CALLBACK_URL: '',
+			}),
+		).not.toThrow();
+	});
 });
