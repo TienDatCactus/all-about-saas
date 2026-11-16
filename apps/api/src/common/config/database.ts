@@ -51,6 +51,9 @@ export default registerAs('database', (): TypeOrmModuleOptions => ({
 	// deploy step, never by the app at boot. This entry only keeps the runtime
 	// DataSource consistent with that one.
 	migrations: [`${__dirname}/../../database/migrations/*.{ts,js}`],
+	migrationsRun: true,
+	retryAttempts: 10,
+	retryDelay: 3000,
 
 	ssl,
 
