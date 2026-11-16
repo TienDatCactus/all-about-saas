@@ -138,7 +138,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
-      - "traefik.http.routers.aas-minio.rule=(Host(`twinfoundry.org`) || Host(`www.twinfoundry.org`)) && PathPrefix(`/storage`)"
+      - "traefik.http.routers.aas-minio.rule=Host(`twinfoundry.org`) && PathPrefix(`/storage`)"
       - "traefik.http.routers.aas-minio.entrypoints=https"
       - "traefik.http.routers.aas-minio.tls=true"
       - "traefik.http.routers.aas-minio.tls.certresolver=letsencrypt"
@@ -253,7 +253,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
-      - "traefik.http.routers.aas-api.rule=(Host(`twinfoundry.org`) || Host(`www.twinfoundry.org`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.aas-api.rule=Host(`twinfoundry.org`) && PathPrefix(`/api`)"
       - "traefik.http.routers.aas-api.entrypoints=https"
       - "traefik.http.routers.aas-api.tls=true"
       - "traefik.http.routers.aas-api.tls.certresolver=letsencrypt"
@@ -300,7 +300,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
-      - "traefik.http.routers.aas-web.rule=Host(`twinfoundry.org`) || Host(`www.twinfoundry.org`)"
+      - "traefik.http.routers.aas-web.rule=Host(`twinfoundry.org`)"
       - "traefik.http.routers.aas-web.entrypoints=https"
       - "traefik.http.routers.aas-web.tls=true"
       - "traefik.http.routers.aas-web.tls.certresolver=letsencrypt"
