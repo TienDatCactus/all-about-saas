@@ -93,7 +93,7 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       NODE_ENV: production
-      DATABASE_HOST: ${DATABASE_HOST:-11dgofc0jkajhszzg0qjd6rd}
+      DATABASE_HOST: ${DATABASE_HOST:-mlazqpku9t4bmxc2fmrycvur}
       DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USER: ${DATABASE_USER:-aas}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
@@ -125,7 +125,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 8000
-      DATABASE_HOST: ${DATABASE_HOST:-11dgofc0jkajhszzg0qjd6rd}
+      DATABASE_HOST: ${DATABASE_HOST:-mlazqpku9t4bmxc2fmrycvur}
       DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USER: ${DATABASE_USER:-aas}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
