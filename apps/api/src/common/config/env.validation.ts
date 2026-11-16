@@ -195,7 +195,8 @@ const envSchema = baseSchema.superRefine((env, ctx) => {
 		// Both ID and secret are set. Auto-fill callback URL if missing.
 		if (!hasCallback) {
 			const base = (env.FRONTEND_URL as string) || 'https://twinfoundry.org';
-			env[callbackKey] = `${base.replace(/\/+$/, '')}/api/auth/${prefix.toLowerCase()}/callback`;
+			env[callbackKey] =
+				`${base.replace(/\/+$/, '')}/api/auth/${prefix.toLowerCase()}/callback`;
 		}
 	}
 });

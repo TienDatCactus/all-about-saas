@@ -143,7 +143,8 @@ describe('validateEnv', () => {
 			validateEnv({
 				...valid(),
 				GOOGLE_CALLBACK_URL: 'https://twinfoundry.org/api/auth/google/callback',
-				FACEBOOK_CALLBACK_URL: 'https://twinfoundry.org/api/auth/facebook/callback',
+				FACEBOOK_CALLBACK_URL:
+					'https://twinfoundry.org/api/auth/facebook/callback',
 			}),
 		).not.toThrow();
 	});
@@ -154,6 +155,8 @@ describe('validateEnv', () => {
 			GOOGLE_CLIENT_ID: 'my-google-client-id',
 			GOOGLE_CLIENT_SECRET: 'my-google-client-secret',
 		});
-		expect(env.GOOGLE_CALLBACK_URL).toBe('https://twinfoundry.org/api/auth/google/callback');
+		expect(env.GOOGLE_CALLBACK_URL).toBe(
+			'https://twinfoundry.org/api/auth/google/callback',
+		);
 	});
 });
