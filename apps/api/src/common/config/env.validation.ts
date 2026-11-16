@@ -158,22 +158,23 @@ const envSchema = baseSchema.superRefine((env, ctx) => {
 	}
 
 	for (const prefix of ['GOOGLE', 'GITHUB', 'FACEBOOK'] as const) {
-		const parts = [
-			`${prefix}_CLIENT_ID`,
-			`${prefix}_CLIENT_SECRET`,
-			`${prefix}_CALLBACK_URL`,
-		];
-		const set = parts.filter((p) => {
-			const v = env[p];
-			// The committed example ships obvious placeholders; treat them as unset
-			// so a copied .env doesn't look like a configured provider.
-			return (
-				typeof v === 'string' &&
-				v.length > 0 &&
-				!v.startsWith('your_') &&
-				v !== 'placeholder_id'
-			);
-		});
+		const idKey = `${prefix}_CLIENT_ID`;
+		const secretKey = `${prefix}_CLIENT_SECRET`;
+		const callbackKey = `${prefix}_CALLBACK_URL`;
+
+		const isConfigured = (v: unknown): boolean =>
+			typeof v === 'string' &&
+			v.length > 0 &&
+			!v.startsWith('your_') &&
+			v !== 'placeholder_id';
+
+		if (isConfigured(env[idKey]) && isConfigured(env[secretKey]) && !isConfigured(env[callbackKey])) {
+			const base = (env.FRONTEND_URL as string) || 'https://twinfoundry.org';
+			env[callbackKey] = `${base.replace(/\/+$/, '')}/api/auth/${prefix.toLowerCase()}/callback`;
+		}
+
+		const parts = [idKey, secretKey, callbackKey];
+		const set = parts.filter((p) => isConfigured(env[p]));
 		if (set.length > 0 && set.length < parts.length) {
 			ctx.addIssue({
 				code: 'custom',

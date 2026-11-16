@@ -1,4 +1,5 @@
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 /**
  * Reads secrets from files into the environment, following the `FOO_FILE`
@@ -32,21 +33,52 @@ const FILE_BACKED = [
 	// The api reads the object store with the MinIO root credentials, and the
 	// prod stack already delivers that password as the `minio_root_password`
 	// secret for the minio service itself. Same file, one reader more.
+	'MINIO_ACCESS_KEY',
 	'MINIO_SECRET_KEY',
+	'GOOGLE_CLIENT_ID',
 	'GOOGLE_CLIENT_SECRET',
+	'GOOGLE_CALLBACK_URL',
+	'GITHUB_CLIENT_ID',
 	'GITHUB_CLIENT_SECRET',
+	'GITHUB_CALLBACK_URL',
+	'FACEBOOK_CLIENT_ID',
 	'FACEBOOK_CLIENT_SECRET',
+	'FACEBOOK_CALLBACK_URL',
 ] as const;
 
+const ALIASES: Record<string, string[]> = {
+	DATABASE_PASSWORD: ['db_password', 'database_password', 'DATABASE_PASSWORD'],
+	MINIO_SECRET_KEY: ['minio_root_password', 'minio_secret_key', 'MINIO_SECRET_KEY', 'MINIO_ROOT_PASSWORD'],
+	MINIO_ACCESS_KEY: ['minio_root_user', 'minio_access_key', 'MINIO_ACCESS_KEY', 'MINIO_ROOT_USER'],
+	JWT_SECRET: ['jwt_secret', 'JWT_SECRET'],
+	BASE_PASSWORD: ['base_password', 'BASE_PASSWORD'],
+};
+
 export function resolveFileSecrets(env: NodeJS.ProcessEnv = process.env): void {
+	const secretsDir = env.SECRETS_DIR || '/run/secrets';
+
 	for (const name of FILE_BACKED) {
-		const path = env[`${name}_FILE`];
+		let path = env[`${name}_FILE`];
+		const isExplicit = Boolean(path);
+
+		if (!path) {
+			const candidateNames = ALIASES[name] ?? [name.toLowerCase(), name];
+			for (const cand of candidateNames) {
+				const checkPath = join(secretsDir, cand);
+				if (existsSync(checkPath)) {
+					path = checkPath;
+					break;
+				}
+			}
+		}
+
 		if (!path) continue;
 
 		let contents: string;
 		try {
 			contents = readFileSync(path, 'utf8');
 		} catch (error) {
+			if (!isExplicit) continue;
 			// Crash rather than fall through to an undefined secret. The alternative
 			// is booting with `JWT_SECRET=undefined`, which is precisely what env
 			// validation exists to prevent.
@@ -60,14 +92,9 @@ export function resolveFileSecrets(env: NodeJS.ProcessEnv = process.env): void {
 		// Strip one trailing line terminator in any form — CRLF, LF, or a bare CR.
 		// Not a full trim(): that would silently alter a passphrase that
 		// legitimately begins or ends with a space.
-		//
-		// The bare-CR case is not hypothetical. `openssl rand ... > secrets/x` under
-		// Git Bash writes CRLF; a `tr -d '\n'` afterwards leaves the CR behind. An
-		// earlier version of this regex required an \n, so it kept that CR while
-		// the Postgres image's own *_FILE handling dropped it — the database was
-		// initialised with one password and the API sent another, failing with
-		// "password authentication failed" and nothing on either side to see.
-		// Being less forgiving than the other reader of the same file is the bug.
-		env[name] = contents.replace(/(?:\r\n|\n|\r)$/, '');
+		const resolved = contents.replace(/(?:\r\n|\n|\r)$/, '');
+		if (resolved.length > 0) {
+			env[name] = resolved;
+		}
 	}
 }

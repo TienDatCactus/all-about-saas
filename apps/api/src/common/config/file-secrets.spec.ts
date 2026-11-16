@@ -102,4 +102,21 @@ describe('resolveFileSecrets', () => {
 		expect(() => resolveFileSecrets(env)).not.toThrow();
 		expect(env).not.toHaveProperty('SOME_OTHER');
 	});
+
+	it('auto-discovers secrets from SECRETS_DIR when present', () => {
+		secretFile('oauth-client-id-val', 'google_client_id');
+		secretFile('oauth-client-secret-val', 'google_client_secret');
+		secretFile('mypassword123', 'db_password');
+		secretFile('minio-secret-val', 'minio_root_password');
+		secretFile('aas-minio', 'minio_root_user');
+		const env: NodeJS.ProcessEnv = { SECRETS_DIR: dir };
+
+		resolveFileSecrets(env);
+
+		expect(env.GOOGLE_CLIENT_ID).toBe('oauth-client-id-val');
+		expect(env.GOOGLE_CLIENT_SECRET).toBe('oauth-client-secret-val');
+		expect(env.DATABASE_PASSWORD).toBe('mypassword123');
+		expect(env.MINIO_SECRET_KEY).toBe('minio-secret-val');
+		expect(env.MINIO_ACCESS_KEY).toBe('aas-minio');
+	});
 });

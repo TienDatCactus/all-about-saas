@@ -126,6 +126,7 @@ services:
       MINIO_ENDPOINT: http://minio:9000
       MINIO_BUCKET: aas-uploads
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-aas-minio}
+      MINIO_ACCESS_KEY_FILE: ${MINIO_ACCESS_KEY_FILE:-}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin12345}
       MINIO_SECRET_KEY_FILE: ${MINIO_SECRET_KEY_FILE:-}
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-https://twinfoundry.org/storage/aas-uploads}
