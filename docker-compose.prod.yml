@@ -132,7 +132,20 @@ services:
       - minio_data:/data
     ports:
       - '127.0.0.1:9000:9000'
-    networks: [internal]
+    networks:
+      - internal
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.minio.rule=Host(`twinfoundry.org`, `www.twinfoundry.org`) && PathPrefix(`/storage`)"
+      - "traefik.http.routers.minio.entrypoints=https"
+      - "traefik.http.routers.minio.tls=true"
+      - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio.priority=1000"
+      - "traefik.http.middlewares.minio-strip.stripprefix.prefixes=/storage"
+      - "traefik.http.routers.minio.middlewares=minio-strip"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
     healthcheck:
       test: ['CMD', 'mc', 'ready', 'local']
       interval: 10s
@@ -233,7 +246,20 @@ services:
         github_client_secret,
         facebook_client_secret,
       ]
-    networks: [internal]
+    networks:
+      - internal
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.api.rule=Host(`twinfoundry.org`, `www.twinfoundry.org`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api.entrypoints=https"
+      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.api.priority=1000"
+      - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.api.middlewares=api-strip"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -266,7 +292,18 @@ services:
       PORT: 3000
     ports:
       - '127.0.0.1:3000:3000'
-    networks: [internal]
+    networks:
+      - internal
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.web.rule=Host(`twinfoundry.org`, `www.twinfoundry.org`)"
+      - "traefik.http.routers.web.entrypoints=https"
+      - "traefik.http.routers.web.tls=true"
+      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.web.priority=100"
+      - "traefik.http.services.web.loadbalancer.server.port=3000"
     depends_on:
       api:
         condition: service_started
@@ -290,3 +327,6 @@ volumes:
 networks:
   internal:
     driver: bridge
+  coolify:
+    name: coolify
+    external: true
