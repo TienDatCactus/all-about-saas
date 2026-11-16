@@ -164,23 +164,38 @@ const envSchema = baseSchema.superRefine((env, ctx) => {
 
 		const isConfigured = (v: unknown): boolean =>
 			typeof v === 'string' &&
-			v.length > 0 &&
+			v.trim().length > 0 &&
 			!v.startsWith('your_') &&
 			v !== 'placeholder_id';
 
-		if (isConfigured(env[idKey]) && isConfigured(env[secretKey]) && !isConfigured(env[callbackKey])) {
-			const base = (env.FRONTEND_URL as string) || 'https://twinfoundry.org';
-			env[callbackKey] = `${base.replace(/\/+$/, '')}/api/auth/${prefix.toLowerCase()}/callback`;
+		const hasId = isConfigured(env[idKey]);
+		const hasSecret = isConfigured(env[secretKey]);
+		const hasCallback = isConfigured(env[callbackKey]);
+
+		// If neither ID nor secret is configured, this OAuth provider is disabled.
+		// Ignore any leftover or dangling callback URLs so they don't break boot.
+		if (!hasId && !hasSecret) {
+			delete env[idKey];
+			delete env[secretKey];
+			delete env[callbackKey];
+			continue;
 		}
 
-		const parts = [idKey, secretKey, callbackKey];
-		const set = parts.filter((p) => isConfigured(env[p]));
-		if (set.length > 0 && set.length < parts.length) {
+		// If ID is set but secret is missing (or vice-versa), report half-configured
+		if (hasId !== hasSecret) {
+			const missing = hasId ? secretKey : idKey;
 			ctx.addIssue({
 				code: 'custom',
-				path: [parts[0]],
-				message: `${prefix} OAuth is half-configured — set all of ${parts.join(', ')} or none`,
+				path: [missing],
+				message: `${prefix} OAuth is half-configured: missing ${missing}. Set both ${idKey} and ${secretKey}, or unset ${idKey} to disable ${prefix} login`,
 			});
+			continue;
+		}
+
+		// Both ID and secret are set. Auto-fill callback URL if missing.
+		if (!hasCallback) {
+			const base = (env.FRONTEND_URL as string) || 'https://twinfoundry.org';
+			env[callbackKey] = `${base.replace(/\/+$/, '')}/api/auth/${prefix.toLowerCase()}/callback`;
 		}
 	}
 });

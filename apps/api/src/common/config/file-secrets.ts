@@ -48,8 +48,18 @@ const FILE_BACKED = [
 
 const ALIASES: Record<string, string[]> = {
 	DATABASE_PASSWORD: ['db_password', 'database_password', 'DATABASE_PASSWORD'],
-	MINIO_SECRET_KEY: ['minio_root_password', 'minio_secret_key', 'MINIO_SECRET_KEY', 'MINIO_ROOT_PASSWORD'],
-	MINIO_ACCESS_KEY: ['minio_root_user', 'minio_access_key', 'MINIO_ACCESS_KEY', 'MINIO_ROOT_USER'],
+	MINIO_SECRET_KEY: [
+		'minio_root_password',
+		'minio_secret_key',
+		'MINIO_SECRET_KEY',
+		'MINIO_ROOT_PASSWORD',
+	],
+	MINIO_ACCESS_KEY: [
+		'minio_root_user',
+		'minio_access_key',
+		'MINIO_ACCESS_KEY',
+		'MINIO_ROOT_USER',
+	],
 	JWT_SECRET: ['jwt_secret', 'JWT_SECRET'],
 	BASE_PASSWORD: ['base_password', 'BASE_PASSWORD'],
 };

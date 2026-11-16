@@ -137,4 +137,23 @@ describe('validateEnv', () => {
 			}),
 		).not.toThrow();
 	});
+
+	it('ignores dangling CALLBACK_URL when CLIENT_ID and CLIENT_SECRET are absent', () => {
+		expect(() =>
+			validateEnv({
+				...valid(),
+				GOOGLE_CALLBACK_URL: 'https://twinfoundry.org/api/auth/google/callback',
+				FACEBOOK_CALLBACK_URL: 'https://twinfoundry.org/api/auth/facebook/callback',
+			}),
+		).not.toThrow();
+	});
+
+	it('auto-fills CALLBACK_URL when CLIENT_ID and CLIENT_SECRET are provided without CALLBACK_URL', () => {
+		const env = validateEnv({
+			...valid(),
+			GOOGLE_CLIENT_ID: 'my-google-client-id',
+			GOOGLE_CLIENT_SECRET: 'my-google-client-secret',
+		});
+		expect(env.GOOGLE_CALLBACK_URL).toBe('https://twinfoundry.org/api/auth/google/callback');
+	});
 });
