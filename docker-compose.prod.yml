@@ -93,9 +93,11 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       NODE_ENV: production
-      DATABASE_HOST: ${DATABASE_HOST:-mlazqpku9t4bmxc2fmrycvur}
+      DATABASE_HOST: ${DATABASE_HOST:-103.82.24.160}
       DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USER: ${DATABASE_USER:-aas}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-Wep9tQuAC4+najnr+R9JK3xTSWK2Wpug}
@@ -137,10 +139,12 @@ services:
     logging: *default-logging
     ports:
       - '127.0.0.1:8000:8000'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       NODE_ENV: production
       PORT: 8000
-      DATABASE_HOST: ${DATABASE_HOST:-mlazqpku9t4bmxc2fmrycvur}
+      DATABASE_HOST: ${DATABASE_HOST:-103.82.24.160}
       DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USER: ${DATABASE_USER:-aas}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-Wep9tQuAC4+najnr+R9JK3xTSWK2Wpug}
