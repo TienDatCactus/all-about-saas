@@ -45,7 +45,7 @@ describe('OAuth state', () => {
 					// 'strict' would withhold the cookie on the provider's cross-site
 					// redirect back, breaking every OAuth login.
 					sameSite: 'lax',
-					path: '/auth',
+					path: '/',
 				}),
 			);
 		});
@@ -69,7 +69,7 @@ describe('OAuth state', () => {
 				guardOAuthState(context(callback('abc', 'abc'), res)),
 			).not.toThrow();
 			expect(res.clearCookie).toHaveBeenCalledWith('oauth_state', {
-				path: '/auth',
+				path: '/',
 			});
 		});
 

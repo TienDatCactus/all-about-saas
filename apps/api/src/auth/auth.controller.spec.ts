@@ -447,7 +447,7 @@ describe('AuthController', () => {
 			);
 			// Single-use: a later, unrelated login must not replay this path.
 			expect(res.clearCookie).toHaveBeenCalledWith('oauth_return_to', {
-				path: '/auth',
+				path: '/',
 			});
 		});
 

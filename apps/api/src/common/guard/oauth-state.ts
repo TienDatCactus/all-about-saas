@@ -39,8 +39,11 @@ const COOKIE_OPTIONS = {
 	 * exactly the moment we need to read it, breaking every OAuth login.
 	 */
 	sameSite: 'lax' as const,
-	/** Scoped to the only routes that use it. */
-	path: '/auth',
+	/**
+	 * Scoped to the entire origin so it is sent when the app is reverse-proxied
+	 * under /api or any other prefix (e.g. /api/auth/google/callback).
+	 */
+	path: '/',
 };
 
 /**
